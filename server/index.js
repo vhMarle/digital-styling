@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { google } = require('googleapis');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -37,6 +38,13 @@ app.post('/api/auth/token', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to authenticate with Google' });
   }
+});
+
+// 3. Serve Frontend Static Files & SPA Routing
+app.use(express.static(path.join(__dirname, '../dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist', 'index.html'));
 });
 
 const PORT = process.env.PORT || 10000;
