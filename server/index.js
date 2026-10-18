@@ -1,51 +1,89 @@
 const express = require('express');
-const cors = require('cors');
-const { google } = require('googleapis');
+const session = require('express-session');
 const path = require('path');
-require('dotenv').config();
+const { google } = require('googleapis');
 
 const app = express();
-app.use(cors());
+const PORT = process.env.PORT || 3000;
+
+// Configure Session Middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'stylenest-super-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', // true on HTTPS/Render
+    maxAge: 30 * 24 * 60 * 60 * 1000 // Remember login for 30 days
+  }
+}));
+
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '../')));
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.REDIRECT_URI || 'https://digital-styling.onrender.com/api/auth/callback';
+// OAuth 2.0 Client Setup
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  'https://digital-styling.onrender.com/api/auth/callback'
+);
 
-const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-
-// 1. Generate Google OAuth Login URL
+// Get Auth URL
 app.get('/api/auth/login-url', (req, res) => {
-  const scopes = [
-    'https://www.googleapis.com/auth/userinfo.profile',
-    'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/spreadsheets'
-  ];
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: scopes,
-    prompt: 'consent'
+    scope: ['profile', 'email']
   });
   res.json({ url });
 });
 
-// 2. Exchange Auth Code for Access Tokens
-app.post('/api/auth/token', async (req, res) => {
-  const { code } = req.body;
+// Handle OAuth Callback Redirect from Google
+app.get('/api/auth/callback', async (req, res) => {
+  const { code } = req.query;
   try {
     const { tokens } = await oauth2Client.getToken(code);
-    res.json(tokens);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to authenticate with Google' });
+    oauth2Client.setCredentials(tokens);
+
+    // Fetch Google Profile
+    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+    const { data } = await oauth2.userinfo.get();
+
+    // Store user details in session
+    req.session.user = {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      picture: data.picture
+    };
+
+    // Redirect back to home page after successful login
+    res.redirect('/');
+  } catch (err) {
+    console.error('Error logging in with Google:', err);
+    res.redirect('/?error=auth_failed');
   }
 });
 
-// 3. Serve Frontend Static Files & SPA Routing
-app.use(express.static(path.join(__dirname, '../dist')));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist', 'index.html'));
+// Check Current Session Status
+app.get('/api/auth/user', (req, res) => {
+  if (req.session && req.session.user) {
+    res.json({ authenticated: true, user: req.session.user });
+  } else {
+    res.json({ authenticated: false, user: null });
+  }
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Digital Styling API running on port ${PORT}`));
+// Logout Endpoint
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.json({ success: true });
+  });
+});
+
+// Fallback SPA Route
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
