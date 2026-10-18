@@ -10,40 +10,161 @@
   <meta name="theme-color" content="#4285F4">
 
   <style>
-    body { 
-      font-family: sans-serif; 
-      padding: 2rem; 
-      text-align: center; 
-    }
-    .login-btn {
-      background-color: #4285F4;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8f9fa; color: #333; padding: 1.5rem; max-width: 900px; margin: 0 auto; }
+    
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    h1 { font-size: 1.5rem; font-weight: 700; color: #1a1a1a; }
+    
+    .login-btn, .action-btn { background-color: #4285F4; color: white; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .action-btn { background-color: #111; }
+
+    /* Navigation Filter Tabs */
+    .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 1.5rem; }
+    .filter-chip { background: #e9ecef; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+    .filter-chip.active { background: #111; color: white; }
+
+    /* Clothing Grid */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
+    .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: left; }
+    .card img { width: 100%; height: 160px; object-fit: cover; background: #eee; }
+    .card-details { padding: 10px; }
+    .card-title { font-size: 0.9rem; font-weight: 600; }
+    .card-sub { font-size: 0.75rem; color: #666; margin-top: 2px; }
+
+    /* Modal Popup */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 400px; }
+    .modal h2 { margin-bottom: 1rem; font-size: 1.2rem; }
+    .form-group { margin-bottom: 1rem; text-align: left; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+    .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem; }
   </style>
 </head>
 <body>
-  <h1>Digital Styling - Smart Wardrobe Planner</h1>
-  <p>Welcome to your personal digital wardrobe!</p>
 
-  <button class="login-btn" onclick="loginWithGoogle()">Sign in with Google</button>
+  <header>
+    <h1>Digital Styling</h1>
+    <button class="login-btn" onclick="loginWithGoogle()">Sign In</button>
+  </header>
+
+  <!-- Category Filter Tabs -->
+  <div class="filters">
+    <button class="filter-chip active" onclick="filterCategory('All')">All Items</button>
+    <button class="filter-chip" onclick="filterCategory('Tops')">Tops</button>
+    <button class="filter-chip" onclick="filterCategory('Bottoms')">Bottoms</button>
+    <button class="filter-chip" onclick="filterCategory('Outerwear')">Outerwear</button>
+    <button class="filter-chip" onclick="filterCategory('Shoes')">Shoes</button>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2 id="section-title" style="font-size: 1.1rem;">My Wardrobe</h2>
+    <button class="action-btn" onclick="openModal()">+ Add Item</button>
+  </div>
+
+  <!-- Clothing Grid Container -->
+  <div class="grid" id="wardrobe-grid"></div>
+
+  <!-- Add Item Modal -->
+  <div class="modal-overlay" id="item-modal">
+    <div class="modal">
+      <h2>Add Wardrobe Item</h2>
+      <form id="add-item-form" onsubmit="handleAddItem(event)">
+        <div class="form-group">
+          <label>Item Name</label>
+          <input type="text" id="item-name" placeholder="e.g., White Button-Down" required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="item-category">
+            <option value="Tops">Tops</option>
+            <option value="Bottoms">Bottoms</option>
+            <option value="Outerwear">Outerwear</option>
+            <option value="Shoes">Shoes</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Image URL</label>
+          <input type="url" id="item-image" placeholder="https://..." required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="filter-chip" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="action-btn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script>
+    // Sample Initial Wardrobe Data
+    let wardrobeItems = [
+      { id: 1, name: 'White Button-Down', category: 'Tops', image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=300' },
+      { id: 2, name: 'Straight-Leg Jeans', category: 'Bottoms', image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300' },
+      { id: 3, name: 'Open Duster Cardigan', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300' },
+      { id: 4, name: 'Low-Profile Sneakers', category: 'Shoes', image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300' }
+    ];
+
+    let currentCategory = 'All';
+
+    function renderGrid() {
+      const grid = document.getElementById('wardrobe-grid');
+      grid.innerHTML = '';
+
+      const filtered = currentCategory === 'All' 
+        ? wardrobeItems 
+        : wardrobeItems.filter(item => item.category === currentCategory);
+
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${item.image}" alt="${item.name}">
+          <div class="card-details">
+            <div class="card-title">${item.name}</div>
+            <div class="card-sub">${item.category}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.includes(cat) || (cat === 'All' && btn.innerText.includes('All')));
+      });
+      renderGrid();
+    }
+
+    function openModal() { document.getElementById('item-modal').classList.add('open'); }
+    function closeModal() { document.getElementById('item-modal').classList.remove('open'); }
+
+    function handleAddItem(e) {
+      e.preventDefault();
+      const name = document.getElementById('item-name').value;
+      const category = document.getElementById('item-category').value;
+      const image = document.getElementById('item-image').value;
+
+      wardrobeItems.push({ id: Date.now(), name, category, image });
+      renderGrid();
+      closeModal();
+      e.target.reset();
+    }
+
     async function loginWithGoogle() {
       try {
         const res = await fetch('/api/auth/login-url');
         const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-        }
+        if (data.url) window.location.href = data.url;
       } catch (err) {
         alert('Failed to connect to login server.');
       }
     }
+
+    // Initial Render
+    renderGrid();
   </script>
 </body>
 </html>
