@@ -1,12 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Digital Styling</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Styling - Smart Wardrobe Planner</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; text-align: center; }
+    .login-btn {
+      background-color: #4285F4;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Digital Styling - Smart Wardrobe Planner</h1>
+  <p>Welcome to your personal digital wardrobe!</p>
+  
+  <button class="login-btn" onclick="loginWithGoogle()">Sign in with Google</button>
+
+  <script>
+    async function loginWithGoogle() {
+      try {
+        const res = await fetch('/api/auth/login-url');
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        }
+      } catch (err) {
+        alert('Failed to connect to login server.');
+      }
+    }
+  </script>
+</body>
 </html>
