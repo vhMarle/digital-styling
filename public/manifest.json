@@ -1,0 +1,15 @@
+{
+  "short_name": "Digital Styling",
+  "name": "Digital Styling - Smart Wardrobe Planner",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#FAF8FC",
+  "theme_color": "#8B5CF6",
+  "display": "standalone"
+}
