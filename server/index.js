@@ -118,13 +118,14 @@ app.get('/api/clothes', async (req, res) => {
   }
 });
 
-// POST /api/clothes - Add new item & upload image to Supabase Bucket
+// POST /api/clothes - Add new item & upload image or store URL
 app.post('/api/clothes', upload.single('image'), async (req, res) => {
   try {
-    const { name, category } = req.body;
+    const { name, category, image_url } = req.body;
     const userEmail = req.session?.user?.email || 'guest@sparksequins.com';
-    let imageUrl = 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=300';
+    let finalImageUrl = image_url || null;
 
+    // 1. If a photo was uploaded via Drag & Drop or File Select
     if (req.file) {
       const fileName = `${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '_')}`;
       const { data: uploadData, error: uploadError } = await supabase
@@ -135,19 +136,28 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
           upsert: true
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Supabase upload error:', uploadError);
+        throw uploadError;
+      }
 
       const { data: publicUrlData } = supabase
         .storage
         .from('wardrobe-images')
         .getPublicUrl(fileName);
 
-      imageUrl = publicUrlData.publicUrl;
+      finalImageUrl = publicUrlData.publicUrl;
     }
 
+    // 2. Fallback placeholder if no image or URL provided
+    if (!finalImageUrl) {
+      finalImageUrl = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400';
+    }
+
+    // 3. Save entry to Supabase PostgreSQL database
     const { data, error } = await supabase
       .from('clothes')
-      .insert([{ user_email: userEmail, name, category, image_url: imageUrl }])
+      .insert([{ user_email: userEmail, name, category, image_url: finalImageUrl }])
       .select();
 
     if (error) throw error;
