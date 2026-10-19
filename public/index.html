@@ -93,7 +93,7 @@
     .squircle-thumb img { width: 80%; height: 80%; object-fit: contain; }
     .squircle-label { font-size: 0.72rem; font-weight: 600; color: var(--text-dark); text-align: center; }
 
-    /* Main Content Grid (3 Columns with isolated garment items) */
+    /* Main Content Grid (3 Columns) */
     .grid-container {
       display: grid; grid-template-columns: repeat(3, 1fr);
       gap: 1px; background: var(--border-color); margin-top: 4px;
@@ -160,9 +160,10 @@
     }
 
     .drop-zone {
-      border: 2px dashed #ccc; border-radius: 14px; padding: 18px; text-align: center;
-      background: var(--bg-surface); cursor: pointer; margin-bottom: 10px;
+      border: 2px dashed #ccc; border-radius: 14px; padding: 22px; text-align: center;
+      background: var(--bg-surface); cursor: pointer; margin-bottom: 10px; transition: all 0.2s ease;
     }
+    .drop-zone.dragover { border-color: var(--primary-purple); background: #f3e8ff; }
 
     .btn-dark {
       background: var(--text-dark); color: white; border: none; padding: 12px;
@@ -228,44 +229,47 @@
   <div class="modal-overlay" id="import-modal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 style="font-weight:700;">New Item Import</h3>
+        <h3 style="font-weight:700;">New Item</h3>
         <button class="top-nav-btn" onclick="closeImportModal()">✕</button>
       </div>
 
+      <!-- Mode Selector Buttons -->
       <div style="display:flex; gap:6px; margin-bottom:12px;">
-        <button class="btn-dark" style="flex:1; font-size:0.75rem;" onclick="setImportMode('url')">Import from URL</button>
-        <button class="btn-dark" style="flex:1; font-size:0.75rem; background:#666;" onclick="setImportMode('file')">Browse / Drag & Drop</button>
+        <button id="btn-mode-url" class="btn-dark" style="flex:1; font-size:0.75rem;" onclick="setImportMode('url')">Import from URL</button>
+        <button id="btn-mode-file" class="btn-dark" style="flex:1; font-size:0.75rem; background:#767676;" onclick="setImportMode('file')">Browse / Drag & Drop</button>
       </div>
 
-      <!-- Mode: URL -->
-      <div id="mode-url-wrap">
-        <div class="form-group">
-          <label class="form-label">Paste Product URL</label>
+      <!-- Unified Import Input / Drop Zone Box -->
+      <div class="form-group" id="import-box-container">
+        <!-- URL Input View -->
+        <div id="mode-url-wrap">
+          <label class="form-label">Product URL</label>
           <div style="display:flex; gap:6px;">
             <input type="url" id="import-url" class="input-box" placeholder="https://store.com/item">
-            <button class="btn-dark" style="width:70px;" onclick="fetchUrlDetails()">Parse</button>
+            <button class="btn-dark" style="width:80px;" onclick="fetchUrlDetails()">Parse</button>
+          </div>
+        </div>
+
+        <!-- Drag & Drop / File Select View -->
+        <div id="mode-file-wrap" style="display:none;">
+          <label class="form-label">Drag & Drop Image or Browse</label>
+          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <div id="drop-text">📸 Drag & Drop photo here or <u>Browse File</u></div>
+            <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
           </div>
         </div>
       </div>
 
-      <!-- Mode: Drag & Drop / File -->
-      <div id="mode-file-wrap" style="display:none;">
-        <div class="drop-zone" onclick="document.getElementById('file-input').click()">
-          <div id="drop-text">📸 Drag & Drop photo here or <u>Browse</u></div>
-          <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
-        </div>
-      </div>
-
-      <!-- Live Canvas Background Segmentation/Removal -->
+      <!-- Background Segmentation Preview Canvas -->
       <div class="form-group" style="text-align:center;">
         <label class="form-label">Background Segmentation Preview</label>
-        <canvas id="segmentation-canvas" style="max-width:100%; height:180px; background:#f4f4f6; border-radius:12px; object-fit:contain;"></canvas>
+        <canvas id="segmentation-canvas" style="max-width:100%; height:180px; background:#f4f4f6; border-radius:12px; object-fit:contain; border:1px solid #e5e5e5;"></canvas>
       </div>
 
-      <!-- Extracted Details Form -->
+      <!-- Extracted / Editable Details Form -->
       <div class="form-group">
         <label class="form-label">Item Name</label>
-        <input type="text" id="item-name" class="input-box" placeholder="e.g. Linen Blouse">
+        <input type="text" id="item-name" class="input-box" placeholder="e.g. Linen Wrap Dress">
       </div>
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -285,18 +289,30 @@
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
         <div class="form-group">
           <label class="form-label">Site / Brand</label>
           <input type="text" id="item-brand" class="input-box" placeholder="e.g. Zara">
         </div>
         <div class="form-group">
-          <label class="form-label">Color / Size</label>
-          <input type="text" id="item-color-size" class="input-box" placeholder="e.g. White / M">
+          <label class="form-label">Color</label>
+          <input type="text" id="item-color" class="input-box" placeholder="e.g. Black">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Size</label>
+          <select id="item-size" class="input-box">
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M" selected>M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="XXL">XXL</option>
+            <option value="Custom">Custom</option>
+          </select>
         </div>
       </div>
 
-      <button class="btn-dark" style="margin-top:10px;" onclick="saveNewItem()">Save to Closet DB</button>
+      <button id="save-db-btn" class="btn-dark" style="margin-top:10px;" onclick="saveNewItem()">Save to Closet DB</button>
     </div>
   </div>
 
@@ -328,14 +344,18 @@
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
         <div class="form-group">
           <label class="form-label">Brand</label>
           <input type="text" id="edit-brand" class="input-box">
         </div>
         <div class="form-group">
-          <label class="form-label">Color / Size</label>
+          <label class="form-label">Color</label>
           <input type="text" id="edit-color" class="input-box">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Size</label>
+          <input type="text" id="edit-size" class="input-box">
         </div>
       </div>
 
@@ -358,6 +378,45 @@
       'Bottoms': ['Jeans', 'Pants', 'Skirts', 'Shorts'],
       'Dresses': ['Midi', 'Maxi', 'Mini', 'Gown']
     };
+
+    // --- Prevent Browser Default File Opening ---
+    ['dragover', 'drop'].forEach(eventName => {
+      window.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+    });
+
+    // --- Drag & Drop Target Handlers ---
+    const dropZone = document.getElementById('drop-zone');
+    if (dropZone) {
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('dragover');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('dragover');
+        }, false);
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+          const file = dt.files[0];
+          document.getElementById('drop-text').innerHTML = `✅ Selected: <strong>${file.name}</strong>`;
+          const reader = new FileReader();
+          reader.onload = (event) => processImageSegmentation(event.target.result);
+          reader.readAsDataURL(file);
+        }
+      });
+    }
 
     async function loadClothes() {
       try {
@@ -470,15 +529,47 @@
 
     function openImportModal() {
       document.getElementById('import-modal').classList.add('open');
-      populateSubTypes();
+      setImportMode('url');
     }
+
     function closeImportModal() {
       document.getElementById('import-modal').classList.remove('open');
+      resetImportForm();
+    }
+
+    function resetImportForm() {
+      document.getElementById('import-url').value = '';
+      document.getElementById('file-input').value = '';
+      document.getElementById('drop-text').innerHTML = `📸 Drag & Drop photo here or <u>Browse File</u>`;
+      document.getElementById('item-name').value = '';
+      document.getElementById('item-brand').value = '';
+      document.getElementById('item-color').value = '';
+      document.getElementById('item-size').value = 'M';
+      
+      const canvas = document.getElementById('segmentation-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      processedCanvasData = null;
     }
 
     function setImportMode(mode) {
-      document.getElementById('mode-url-wrap').style.display = mode === 'url' ? 'block' : 'none';
-      document.getElementById('mode-file-wrap').style.display = mode === 'file' ? 'block' : 'none';
+      resetImportForm();
+
+      const btnUrl = document.getElementById('btn-mode-url');
+      const btnFile = document.getElementById('btn-mode-file');
+
+      if (mode === 'url') {
+        btnUrl.style.background = '#111111';
+        btnFile.style.background = '#767676';
+        document.getElementById('mode-url-wrap').style.display = 'block';
+        document.getElementById('mode-file-wrap').style.display = 'none';
+      } else {
+        btnFile.style.background = '#111111';
+        btnUrl.style.background = '#767676';
+        document.getElementById('mode-url-wrap').style.display = 'none';
+        document.getElementById('mode-file-wrap').style.display = 'block';
+      }
+      populateSubTypes();
     }
 
     function populateSubTypes() {
@@ -507,7 +598,8 @@
       if (data.success) {
         document.getElementById('item-name').value = data.data.name;
         document.getElementById('item-brand').value = data.data.brand;
-        document.getElementById('item-color-size').value = `${data.data.color} / ${data.data.size}`;
+        document.getElementById('item-color').value = data.data.color || 'Black';
+        document.getElementById('item-size').value = data.data.size || 'M';
         processImageSegmentation(data.data.image_url);
       }
     }
@@ -515,6 +607,7 @@
     function handleFileSelect(e) {
       if (e.target.files.length > 0) {
         const file = e.target.files[0];
+        document.getElementById('drop-text').innerHTML = `✅ Selected: <strong>${file.name}</strong>`;
         const reader = new FileReader();
         reader.onload = (event) => processImageSegmentation(event.target.result);
         reader.readAsDataURL(file);
@@ -527,51 +620,76 @@
       const img = new Image();
       img.crossOrigin = 'Anonymous';
       img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
+        canvas.width = img.width || 300;
+        canvas.height = img.height || 300;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
 
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imgData.data;
-        for (let i = 0; i < data.length; i += 4) {
-          if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) {
-            data[i+3] = 0;
+        try {
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imgData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) {
+              data[i+3] = 0; // Transparent light background
+            }
           }
+          ctx.putImageData(imgData, 0, 0);
+          processedCanvasData = canvas.toDataURL('image/png');
+        } catch (e) {
+          // Cross-origin fallback
+          processedCanvasData = src;
         }
-        ctx.putImageData(imgData, 0, 0);
-        processedCanvasData = canvas.toDataURL('image/png');
+      };
+      img.onerror = () => {
+        processedCanvasData = src;
       };
       img.src = src;
     }
 
     async function saveNewItem() {
+      const btn = document.getElementById('save-db-btn');
+      btn.disabled = true;
+      btn.innerText = 'Saving...';
+
       const name = document.getElementById('item-name').value;
       const category = document.getElementById('item-category').value;
       const sub_type = document.getElementById('item-subtype').value;
       const brand = document.getElementById('item-brand').value;
-      const colorSize = document.getElementById('item-color-size').value.split('/');
+      const color = document.getElementById('item-color').value;
+      const size = document.getElementById('item-size').value;
+      const imageUrlInput = document.getElementById('import-url').value;
 
       const payload = {
         name: name || 'Garment Item',
         category,
         sub_type,
         brand: brand || 'Generic',
-        color: colorSize[0] ? colorSize[0].trim() : 'Multi',
-        size: colorSize[1] ? colorSize[1].trim() : 'Standard',
-        image_data: processedCanvasData
+        color: color || 'Multi',
+        size: size || 'M',
+        image_url: imageUrlInput || null,
+        image_data: processedCanvasData || null
       };
 
-      const res = await fetch('/api/clothes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.success) {
-        clothesData.unshift(data.item);
-        renderCarousel();
-        renderGrid();
-        closeImportModal();
+      try {
+        const res = await fetch('/api/clothes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          clothesData.unshift(data.item);
+          renderCarousel();
+          renderGrid();
+          closeImportModal();
+        } else {
+          alert('Failed to save item to database.');
+        }
+      } catch (err) {
+        alert('Error saving item');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Save to Closet DB';
       }
     }
 
@@ -582,7 +700,8 @@
       document.getElementById('edit-category').value = item.category;
       document.getElementById('edit-subtype').value = item.sub_type || 'General';
       document.getElementById('edit-brand').value = item.brand || 'N/A';
-      document.getElementById('edit-color').value = `${item.color || ''} / ${item.size || ''}`;
+      document.getElementById('edit-color').value = item.color || 'Multi';
+      document.getElementById('edit-size').value = item.size || 'M';
       document.getElementById('detail-modal').classList.add('open');
     }
 
@@ -596,11 +715,13 @@
       const category = document.getElementById('edit-category').value;
       const sub_type = document.getElementById('edit-subtype').value;
       const brand = document.getElementById('edit-brand').value;
+      const color = document.getElementById('edit-color').value;
+      const size = document.getElementById('edit-size').value;
 
       const res = await fetch(`/api/clothes/${currentDetailItem.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, category, sub_type, brand })
+        body: JSON.stringify({ name, category, sub_type, brand, color, size })
       });
       const data = await res.json();
       if (data.success) {

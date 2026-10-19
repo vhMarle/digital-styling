@@ -39,7 +39,7 @@ app.use(session({
   }
 }));
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '15mb' }));
 
 // Explicit manifest route
 app.get('/site.webmanifest', (req, res) => {
@@ -150,7 +150,7 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
     const userEmail = req.session?.user?.email || 'guest@sparksequins.com';
     let finalImageUrl = null;
 
-    // 1. Process base64 isolated transparent image from canvas background removal
+    // 1. Process base64 image data from preview canvas
     if (image_data && typeof image_data === 'string' && image_data.startsWith('data:image')) {
       try {
         const base64Data = Buffer.from(image_data.replace(/^data:image\/\w+;base64,/, ""), 'base64');
@@ -197,7 +197,7 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
       }
     }
 
-    // 3. Process image_url if provided
+    // 3. Process direct image URL
     if (!finalImageUrl && image_url) {
       finalImageUrl = image_url;
     }
@@ -289,8 +289,8 @@ app.post('/api/parse-url', async (req, res) => {
         site_name: brandName,
         brand: brandName,
         name: `${brandName} Garment Item`,
-        color: 'Auto-detected',
-        size: 'Medium',
+        color: 'Black',
+        size: 'M',
         image_url: url
       }
     });
