@@ -293,7 +293,6 @@ app.delete('/api/clothes/:id', async (req, res) => {
   }
 });
 
-// Advanced Intelligent URL Parser with Color & Brand Extraction
 app.post('/api/parse-url', async (req, res) => {
   try {
     const { url } = req.body;
@@ -301,7 +300,6 @@ app.post('/api/parse-url', async (req, res) => {
 
     const lowerUrl = url.toLowerCase();
 
-    // Extract Brand
     let brandName = 'ASOS Luxe';
     if (lowerUrl.includes('asos')) {
       if (lowerUrl.includes('asos-luxe') || lowerUrl.includes('luxe')) brandName = 'ASOS Luxe';
@@ -315,7 +313,6 @@ app.post('/api/parse-url', async (req, res) => {
       } catch (e) {}
     }
 
-    // Extract Color from URL slug (e.g., "-in-dark-green" or "-in-black")
     let extractedColor = 'Dark Green';
     const colorMatch = lowerUrl.match(/-in-([a-z-]+)(\/|\?|$)/);
     if (colorMatch && colorMatch[1]) {
@@ -330,7 +327,6 @@ app.post('/api/parse-url', async (req, res) => {
       }
     }
 
-    // Category & Sub-type detection
     let category = 'Dresses';
     let subType = 'Maxi';
 
