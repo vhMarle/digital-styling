@@ -223,6 +223,12 @@ html, body {
   width: 100%;
 }
 
+/* Much lighter dummy URL placeholder */
+.url-search-bar input::placeholder {
+  color: #d8b4b4;
+  opacity: 0.7;
+}
+
 .go-btn {
   background-color: #d9b8af;
   border: none;

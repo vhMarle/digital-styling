@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import './App.css';
 
-// Exact Category & Sub-Type mapping based on your uploaded specification
+// Exact Category & Sub-Type mapping based on your specification
 const CATEGORY_SUBTYPES = {
   'Tops': ['Sleeveless', 'Short Sleeve', '3/4 Sleeve', 'Long Sleeve'],
   'Bottoms': ['Jeans', 'Dress Trousers', 'Leggings & Jeggings'],
@@ -9,7 +9,7 @@ const CATEGORY_SUBTYPES = {
   'Loungewear': ['Joggers', 'Sweatpants', 'Yoga Pants'],
   'Dresses': ['Mini', 'Midi', 'Maxi', 'Tea-Length', 'Ball Gown / Floor Length'],
   'Skirts': ['A-Line Skirts', 'Pencil Skirt', 'Mini & Midi Skirts', 'Maxi'],
-  'Bags': [], // If no subtypes, can be empty or handled
+  'Bags': [],
   'Accessories': ['Bag', 'Belt', 'Jewellery', 'Scarf']
 };
 
@@ -26,7 +26,7 @@ export default function App() {
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
-  // Handle file selection from Camera or Gallery
+  // Handle file selection from Camera or Gallery with proper preview generation
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -51,7 +51,7 @@ export default function App() {
 
   // Handle URL submit or fetch preview
   const handleUrlSubmit = () => {
-    if (urlInput.trim()) {
+    if (urlInput.trim() && urlInput !== 'https://sparksandsequins...') {
       setPreviewImage(urlInput.trim());
     }
   };
@@ -138,7 +138,7 @@ export default function App() {
               />
             </div>
 
-            {/* URL Search Bar with Placeholder */}
+            {/* URL Search Bar with Faded Placeholder */}
             <div className="url-search-bar">
               <span className="search-magnifier">🔍</span>
               <input 
