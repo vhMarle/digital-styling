@@ -26,7 +26,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg-white); color: var(--text-dark); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 85px; }
+    body { background: var(--bg-white); color: var(--text-dark); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 90px; }
 
     /* Top Navigation Bar */
     header.top-nav {
@@ -131,18 +131,21 @@
       font-size: 0.65rem; color: var(--text-muted); cursor: pointer; border: none; background: none;
     }
     .nav-tab.active { color: var(--text-dark); font-weight: 700; }
+    
+    /* Standalone Floating Center CTA Button */
     .center-cta {
-      width: 52px; height: 52px; background: var(--text-dark); color: white;
+      position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+      width: 54px; height: 54px; background: var(--text-dark); color: white;
       border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 1.8rem; font-weight: 400; cursor: pointer; margin-top: -18px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.3); z-index: 1005;
+      font-size: 2rem; font-weight: 400; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35); z-index: 9999;
       border: 3px solid #ffffff; user-select: none;
     }
 
     /* Modals */
     .modal-overlay {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      z-index: 2000; align-items: center; justify-content: center; padding: 16px;
+      z-index: 20000; align-items: center; justify-content: center; padding: 16px;
     }
     .modal-overlay.open { display: flex; }
     .modal-card {
@@ -214,14 +217,17 @@
   <!-- Utility Back-To-Top FAB -->
   <button class="fab-back-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
 
-  <!-- Fixed Bottom Navigation Bar with Direct Inline onclick on Center CTA -->
+  <!-- Fixed Bottom Navigation Bar -->
   <nav class="bottom-nav">
     <button class="nav-tab">🏠<br>Home</button>
     <button class="nav-tab">👗<br>Outfits</button>
-    <div class="center-cta" onclick="openImportModal()">+</div>
+    <div style="width: 50px;"></div> <!-- Spacer for center FAB button -->
     <button class="nav-tab">✨<br>Feed</button>
     <button class="nav-tab">📥<br>Inbox</button>
   </nav>
+
+  <!-- Standalone Center Floating Action Button (Guaranteed Clickable) -->
+  <div class="center-cta" onclick="openImportModal()">+</div>
 
   <!-- Import / New Item Modal -->
   <div class="modal-overlay" id="import-modal">
@@ -602,3 +608,181 @@
       list.forEach(sub => {
         const opt = document.createElement('option');
         opt.value = sub;
+        opt.innerText = sub;
+        subSelect.appendChild(opt);
+      });
+    }
+
+    async function fetchUrlDetails() {
+      const url = document.getElementById('import-url').value;
+      if (!url) return alert('Please enter a valid URL');
+
+      const res = await fetch('/api/parse-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('item-name').value = data.data.name;
+        document.getElementById('item-category').value = data.data.category;
+        populateSubTypes();
+        document.getElementById('item-subtype').value = data.data.sub_type;
+        document.getElementById('item-brand').value = data.data.brand;
+        document.getElementById('item-color').value = data.data.color || '';
+        document.getElementById('item-size').value = data.data.size || '';
+
+        processImageSegmentation(data.data.image_url);
+      }
+    }
+
+    function handleFileSelect(e) {
+      if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        document.getElementById('drop-text').innerHTML = `✅ Selected: <strong>${file.name}</strong>`;
+        clearMetadataFields();
+
+        const reader = new FileReader();
+        reader.onload = (event) => processImageSegmentation(event.target.result);
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function processImageSegmentation(src) {
+      const canvas = document.getElementById('segmentation-canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+
+      img.onload = () => {
+        canvas.width = img.width || 300;
+        canvas.height = img.height || 300;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+
+        try {
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imgData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) {
+              data[i+3] = 0;
+            }
+          }
+          ctx.putImageData(imgData, 0, 0);
+          processedCanvasData = canvas.toDataURL('image/png');
+        } catch (e) {
+          processedCanvasData = src;
+        }
+      };
+      img.onerror = () => {
+        canvas.width = 300;
+        canvas.height = 300;
+        ctx.fillStyle = '#f4f4f6';
+        ctx.fillRect(0, 0, 300, 300);
+        ctx.fillStyle = '#111111';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Garment Preview', 150, 150);
+        processedCanvasData = src;
+      };
+      img.src = src;
+    }
+
+    async function saveNewItem() {
+      const btn = document.getElementById('save-db-btn');
+      btn.disabled = true;
+      btn.innerText = 'Saving...';
+
+      const name = document.getElementById('item-name').value;
+      const category = document.getElementById('item-category').value;
+      const sub_type = document.getElementById('item-subtype').value;
+      const brand = document.getElementById('item-brand').value;
+      const color = document.getElementById('item-color').value;
+      const size = document.getElementById('item-size').value;
+      const imageUrlInput = document.getElementById('import-url').value;
+
+      const payload = {
+        name: name || 'Garment Item',
+        category,
+        sub_type,
+        brand: brand || '',
+        color: color || '',
+        size: size || '',
+        image_url: imageUrlInput || null,
+        image_data: processedCanvasData || null
+      };
+
+      try {
+        const res = await fetch('/api/clothes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          clothesData.unshift(data.item);
+          renderCarousel();
+          renderGrid();
+          closeImportModal();
+        } else {
+          alert('Failed to save item to database: ' + (data.message || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error saving item');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Add to Closet';
+      }
+    }
+
+    function openDetailModal(item) {
+      currentDetailItem = item;
+      document.getElementById('detail-img').src = item.image_url;
+      document.getElementById('edit-name').value = item.name;
+      document.getElementById('edit-category').value = item.category;
+      document.getElementById('edit-subtype').value = item.sub_type || 'General';
+      document.getElementById('edit-brand').value = item.brand || '';
+      document.getElementById('edit-color').value = item.color || '';
+      document.getElementById('edit-size').value = item.size || '';
+      document.getElementById('detail-modal').classList.add('open');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detail-modal').classList.remove('open');
+    }
+
+    async function updateItem() {
+      if (!currentDetailItem) return;
+      const name = document.getElementById('edit-name').value;
+      const category = document.getElementById('edit-category').value;
+      const sub_type = document.getElementById('edit-subtype').value;
+      const brand = document.getElementById('edit-brand').value;
+      const color = document.getElementById('edit-color').value;
+      const size = document.getElementById('edit-size').value;
+
+      const res = await fetch(`/api/clothes/${currentDetailItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, category, sub_type, brand, color, size })
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeDetailModal();
+        loadClothes();
+      }
+    }
+
+    async function deleteItem() {
+      if (!currentDetailItem || !confirm('Delete this item permanently?')) return;
+      const res = await fetch(`/api/clothes/${currentDetailItem.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        closeDetailModal();
+        loadClothes();
+      }
+    }
+
+    loadClothes();
+  </script>
+</body>
+</html>
