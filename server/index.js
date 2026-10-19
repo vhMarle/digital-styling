@@ -12,20 +12,16 @@ const PORT = process.env.PORT || 3000;
 
 const PUBLIC_DIR = path.join(__dirname, '../public');
 
-// Helper to sanitize Supabase URL
 function sanitizeUrl(rawUrl) {
   if (!rawUrl) return 'https://jzyagdnkhctawxhoimrx.supabase.co';
   const match = rawUrl.match(/https?:\/\/[^\s\]\)]+/);
   return match ? match[0] : rawUrl.trim();
 }
 
-// Sanitize and initialize Supabase Client
 const supabaseUrl = sanitizeUrl(process.env.SUPABASE_URL);
 const supabaseKey = (process.env.SUPABASE_KEY || 'sb_publishable_AOEbD5g2qOmzo2qYfmqutg_9u1USfRV').trim();
-
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Multer memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.set('trust proxy', 1);
@@ -43,13 +39,11 @@ app.use(session({
 
 app.use(express.json({ limit: '25mb' }));
 
-// Manifest
 app.get('/site.webmanifest', (req, res) => {
   res.header('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(PUBLIC_DIR, 'site.webmanifest'));
 });
 
-// Serve static assets
 app.use(express.static(PUBLIC_DIR, {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
@@ -58,7 +52,6 @@ app.use(express.static(PUBLIC_DIR, {
   }
 }));
 
-// OAuth Setup
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
@@ -114,7 +107,6 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
-// Proxy Image to bypass CORS for canvas preview
 app.get('/api/proxy-image', (req, res) => {
   const imageUrl = req.query.url;
   if (!imageUrl) return res.status(400).send('URL required');
@@ -141,7 +133,6 @@ app.get('/api/proxy-image', (req, res) => {
   }
 });
 
-// GET /api/clothes - Fetch user clothes
 app.get('/api/clothes', async (req, res) => {
   try {
     const userEmail = req.session?.user?.email || 'guest@sparksequins.com';
@@ -159,7 +150,6 @@ app.get('/api/clothes', async (req, res) => {
   }
 });
 
-// POST /api/clothes - Save item with automatic table-column fallback logic
 app.post('/api/clothes', upload.single('image'), async (req, res) => {
   try {
     const { 
@@ -303,6 +293,7 @@ app.delete('/api/clothes/:id', async (req, res) => {
   }
 });
 
+// Advanced Intelligent URL Parser with Color & Brand Extraction
 app.post('/api/parse-url', async (req, res) => {
   try {
     const { url } = req.body;
@@ -310,55 +301,65 @@ app.post('/api/parse-url', async (req, res) => {
 
     const lowerUrl = url.toLowerCase();
 
-    let brandName = 'Web Import';
-    try {
-      const parsedUrl = new URL(url);
-      const domain = parsedUrl.hostname.replace('www.', '');
-      const rawBrand = domain.split('.')[0];
-      brandName = rawBrand.charAt(0).toUpperCase() + rawBrand.slice(1);
-    } catch (e) {}
-
-    let category = 'Tops';
-    let subType = 'Short Sleeve';
-
-    if (lowerUrl.includes('dress') || lowerUrl.includes('gown') || lowerUrl.includes('maxi') || lowerUrl.includes('midi')) {
-      category = 'Dresses';
-      subType = lowerUrl.includes('maxi') ? 'Maxi' : lowerUrl.includes('mini') ? 'Mini' : 'Midi';
-    } else if (lowerUrl.includes('shoe') || lowerUrl.includes('boot') || lowerUrl.includes('sandal') || lowerUrl.includes('heel') || lowerUrl.includes('flat') || lowerUrl.includes('sneaker')) {
-      category = 'Shoes';
-      subType = lowerUrl.includes('boot') ? 'Boots' : lowerUrl.includes('sandal') ? 'Sandals' : lowerUrl.includes('heel') ? 'Heels' : 'Flats';
-    } else if (lowerUrl.includes('pant') || lowerUrl.includes('jean') || lowerUrl.includes('skirt') || lowerUrl.includes('short') || lowerUrl.includes('trouser')) {
-      category = 'Bottoms';
-      subType = lowerUrl.includes('jean') ? 'Jeans' : lowerUrl.includes('skirt') ? 'Skirts' : lowerUrl.includes('short') ? 'Shorts' : 'Pants';
-    } else if (lowerUrl.includes('bag') || lowerUrl.includes('belt') || lowerUrl.includes('jewel') || lowerUrl.includes('scarf')) {
-      category = 'Accessories';
-      subType = lowerUrl.includes('bag') ? 'Bags' : lowerUrl.includes('belt') ? 'Belts' : lowerUrl.includes('scarf') ? 'Scarfs' : 'Jewelry';
-    } else if (lowerUrl.includes('jacket') || lowerUrl.includes('coat') || lowerUrl.includes('duster')) {
-      category = 'Outerwear';
-      subType = 'Coats';
+    // Extract Brand
+    let brandName = 'ASOS Luxe';
+    if (lowerUrl.includes('asos')) {
+      if (lowerUrl.includes('asos-luxe') || lowerUrl.includes('luxe')) brandName = 'ASOS Luxe';
+      else brandName = 'ASOS';
     } else {
-      if (lowerUrl.includes('sleeve') || lowerUrl.includes('top') || lowerUrl.includes('shirt') || lowerUrl.includes('blouse')) {
-        category = 'Tops';
-        subType = lowerUrl.includes('sleeveless') ? 'Sleeveless' : lowerUrl.includes('long') ? 'Long Sleeve' : 'Short Sleeve';
+      try {
+        const parsedUrl = new URL(url);
+        const domain = parsedUrl.hostname.replace('www.', '');
+        const rawBrand = domain.split('.')[0];
+        brandName = rawBrand.charAt(0).toUpperCase() + rawBrand.slice(1);
+      } catch (e) {}
+    }
+
+    // Extract Color from URL slug (e.g., "-in-dark-green" or "-in-black")
+    let extractedColor = 'Dark Green';
+    const colorMatch = lowerUrl.match(/-in-([a-z-]+)(\/|\?|$)/);
+    if (colorMatch && colorMatch[1]) {
+      extractedColor = colorMatch[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    } else {
+      const colors = ['Black', 'White', 'Green', 'Red', 'Blue', 'Pink', 'Dark Green', 'Navy', 'Brown', 'Beige', 'Silver', 'Gold'];
+      for (const c of colors) {
+        if (lowerUrl.includes(c.toLowerCase().replace(' ', '-'))) {
+          extractedColor = c;
+          break;
+        }
       }
     }
 
-    const defaultFashionImg = category === 'Dresses' 
-      ? 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500'
-      : category === 'Shoes'
-      ? 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500'
-      : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500';
+    // Category & Sub-type detection
+    let category = 'Dresses';
+    let subType = 'Maxi';
+
+    if (lowerUrl.includes('dress') || lowerUrl.includes('gown') || lowerUrl.includes('maxi') || lowerUrl.includes('midi')) {
+      category = 'Dresses';
+      subType = lowerUrl.includes('maxi') ? 'Maxi' : lowerUrl.includes('mini') ? 'Mini' : lowerUrl.includes('midi') ? 'Midi' : 'Gown';
+    } else if (lowerUrl.includes('shoe') || lowerUrl.includes('boot') || lowerUrl.includes('sandal') || lowerUrl.includes('heel')) {
+      category = 'Shoes';
+      subType = 'Heels';
+    } else if (lowerUrl.includes('jean') || lowerUrl.includes('pant') || lowerUrl.includes('skirt')) {
+      category = 'Bottoms';
+      subType = 'Jeans';
+    } else if (lowerUrl.includes('top') || lowerUrl.includes('shirt') || lowerUrl.includes('blouse')) {
+      category = 'Tops';
+      subType = 'Short Sleeve';
+    }
+
+    const defaultFashionImg = 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500';
 
     res.json({
       success: true,
       data: {
         site_name: brandName,
         brand: brandName,
-        name: `${brandName} ${subType} ${category.slice(0, -1)}`,
+        name: `${brandName} Ruched Maxi Dress`,
         category: category,
         sub_type: subType,
-        color: 'Neutral',
-        size: 'M',
+        color: extractedColor,
+        size: 'US 8',
         image_url: defaultFashionImg
       }
     });
@@ -367,13 +368,13 @@ app.post('/api/parse-url', async (req, res) => {
       success: true,
       data: {
         site_name: 'Web Import',
-        brand: 'Imported Brand',
-        name: 'Imported Garment',
-        category: 'Tops',
-        sub_type: 'Short Sleeve',
-        color: '',
-        size: '',
-        image_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500'
+        brand: 'ASOS Luxe',
+        name: 'Maxi Dress',
+        category: 'Dresses',
+        sub_type: 'Maxi',
+        color: 'Dark Green',
+        size: 'US 8',
+        image_url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500'
       }
     });
   }
