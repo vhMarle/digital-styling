@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
+import MainPage from './components/MainPage';
+import UploadItem from './components/UploadItem';
+import './App.css';
 
 export default function App() {
-  const [items, setItems] = useState([]);
+  const [currentView, setCurrentView] = useState('main'); // 'main' or 'upload'
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      <h1>Digital Styling - Smart Wardrobe Planner</h1>
-      <p>Welcome to your personal digital wardrobe!</p>
+    <div>
+      {currentView === 'main' ? (
+        <MainPage onOpenUpload={() => setCurrentView('upload')} />
+      ) : (
+        <UploadItem onBack={() => setCurrentView('main')} />
+      )}
     </div>
   );
 }
