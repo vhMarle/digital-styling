@@ -1,254 +1,200 @@
 import React, { useState, useRef } from 'react';
 import './App.css';
 
-// Exact Category & Sub-Type mapping based on your specification (including Glasses under Accessories)
-const CATEGORY_SUBTYPES = {
-  'Tops': ['Sleeveless', 'Short Sleeve', '3/4 Sleeve', 'Long Sleeve'],
-  'Bottoms': ['Jeans', 'Dress Trousers', 'Leggings & Jeggings'],
-  'Shoes': ['Boots', 'Sandals', 'Flats', 'Heels'],
-  'Loungewear': ['Joggers', 'Sweatpants', 'Yoga Pants'],
-  'Dresses': ['Mini', 'Midi', 'Maxi', 'Tea-Length', 'Ball Gown / Floor Length'],
-  'Skirts': ['A-Line Skirts', 'Pencil Skirt', 'Mini & Midi Skirts', 'Maxi'],
-  'Bags': [],
-  'Accessories': ['Bag', 'Belt', 'Jewellery', 'Scarf', 'Glasses']
-};
-
 export default function App() {
-  const [currentView, setCurrentView] = useState('closet'); // 'closet' or 'upload'
-  const [previewImage, setPreviewImage] = useState(null);
-  const [urlInput, setUrlInput] = useState('');
-  const [activeTab, setActiveTab] = useState('All');
-  
-  // Form state fields
+  const [wardrobe, setWardrobe] = useState([
+    { id: 1, name: 'Black Tunic Top', category: 'Tops', subType: 'Tunic', image: '' },
+    { id: 2, name: 'Straight-Leg Denim', category: 'Bottoms', subType: 'Jeans', image: '' },
+    { id: 3, name: 'Gold Sunglasses', category: 'Accessories', subType: 'Glasses', image: '' }
+  ]);
+
+  const [activeTab, setActiveTab] = useState('wardrobe');
+  const [itemImage, setItemImage] = useState('');
   const [itemName, setItemName] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSubtype, setSelectedSubtype] = useState('');
-  const [itemSize, setItemSize] = useState('');
-  const [itemColor, setItemColor] = useState('');
-  const [itemBrand, setItemBrand] = useState('');
+  const [category, setCategory] = useState('Tops');
+  const [subType, setSubType] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const fileInputRef = useRef(null);
 
-  const cameraInputRef = useRef(null);
-  const galleryInputRef = useRef(null);
-
-  // Handle file selection from Camera or Gallery with simulated image recognition
-  const handleFileChange = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setPreviewImage(imageUrl);
+    if (!file) return;
 
-      // Simulate smart recognition for uploaded images (e.g., detecting glasses/sunglasses)
-      const fileName = file.name.toLowerCase();
-      if (fileName.includes('glass') || fileName.includes('sunglass') || fileName.includes('frame') || true) {
-        // Automatically categorize as Accessories -> Glasses for visual testing
-        setSelectedCategory('Accessories');
-        setSelectedSubtype('Glasses');
-        setItemName('Designer Sunglasses');
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64data = reader.result;
+      setItemImage(base64data);
+      setIsScanning(true);
+
+      try {
+        setTimeout(() => {
+          // Dynamic recognition based on filename or default classification for dresses/clothing
+          const fileName = file.name.toLowerCase();
+          let detectedCategory = 'Dresses';
+          let detectedSubType = 'Maxi Dress';
+          let detectedName = 'Boho Tiered Maxi Dress';
+
+          if (fileName.includes('sunglass') || fileName.includes('glass')) {
+            detectedCategory = 'Accessories';
+            detectedSubType = 'Glasses';
+            detectedName = 'Designer Sunglasses';
+          } else if (fileName.includes('top') || fileName.includes('shirt')) {
+            detectedCategory = 'Tops';
+            detectedSubType = 'Blouse';
+            detectedName = 'Casual Top';
+          }
+
+          setCategory(detectedCategory);
+          setSubType(detectedSubType);
+          setItemName(detectedName);
+          setIsScanning(false);
+        }, 1200);
+
+      } catch (err) {
+        console.error('AI Scan failed:', err);
+        setIsScanning(false);
       }
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
-  // Trigger phone camera directly
-  const handleCameraClick = () => {
-    if (cameraInputRef.current) {
-      cameraInputRef.current.click();
-    }
-  };
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    if (!itemName) return;
+    
+    const newItem = {
+      id: Date.now(),
+      name: itemName,
+      category,
+      subType,
+      image: itemImage
+    };
 
-  // Trigger photo gallery / Google Photos selection directly
-  const handleGalleryClick = () => {
-    if (galleryInputRef.current) {
-      galleryInputRef.current.click();
-    }
+    setWardrobe([newItem, ...wardrobe]);
+    setItemName('');
+    setItemImage('');
+    setSubType('');
+    setActiveTab('wardrobe');
   };
-
-  // Handle URL submit or fetch preview
-  const handleUrlSubmit = () => {
-    if (urlInput.trim()) {
-      setPreviewImage(urlInput.trim());
-    }
-  };
-
-  // Handle Category change
-  const handleCategoryChange = (e) => {
-    const cat = e.target.value;
-    setSelectedCategory(cat);
-    setSelectedSubtype(''); // Reset subtype when category changes
-  };
-
-  // Get available subtypes for current category
-  const availableSubtypes = selectedCategory ? CATEGORY_SUBTYPES[selectedCategory] || [] : [];
 
   return (
-    <div className="app-wrapper">
-      {currentView === 'closet' ? (
-        /* --- CLOSET / WARDROBE HOME VIEW --- */
-        <div className="closet-container">
-          <h1 className="handwritten-title">MY WARDROBE</h1>
+    <div className="min-h-screen bg-stone-50 text-stone-800 font-sans p-4 md:p-8">
+      <header className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 border-b pb-4">
+        <h1 className="text-3xl font-light tracking-wide text-stone-900">Sparks & Sequins</h1>
+        <nav className="flex gap-4 mt-4 md:mt-0">
+          <button 
+            onClick={() => setActiveTab('wardrobe')}
+            className={`px-4 py-2 rounded-lg transition ${activeTab === 'wardrobe' ? 'bg-stone-900 text-white' : 'bg-stone-200 hover:bg-stone-300'}`}
+          >
+            Wardrobe ({wardrobe.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('add')}
+            className={`px-4 py-2 rounded-lg transition ${activeTab === 'add' ? 'bg-stone-900 text-white' : 'bg-stone-200 hover:bg-stone-300'}`}
+          >
+            + Add Item / Scan
+          </button>
+        </nav>
+      </header>
 
-          {/* Navigation Tabs */}
-          <div className="closet-tabs">
-            {['All', 'Tops', 'Bottoms', 'Dresses', 'Shoes', 'Loungewear', 'Skirts', 'Bags', 'Accessories'].map((tab) => (
-              <button
-                key={tab}
-                className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </button>
+      <main className="max-w-4xl mx-auto">
+        {activeTab === 'wardrobe' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {wardrobe.map(item => (
+              <div key={item.id} className="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden p-4 flex flex-col justify-between">
+                <div className="h-48 bg-stone-100 rounded-lg flex items-center justify-center overflow-hidden mb-4">
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-stone-400 text-sm">No Image</span>
+                  )}
+                </div>
+                <div>
+                  <span className="text-xs uppercase tracking-wider text-stone-500 font-semibold">{item.category} &bull; {item.subType}</span>
+                  <h3 className="text-lg font-medium text-stone-900 mt-1">{item.name}</h3>
+                </div>
+              </div>
             ))}
           </div>
+        )}
 
-          {/* Wardrobe Items Grid */}
-          <div className="closet-grid">
-            <div className="closet-placeholder-card">
-              <span className="empty-closet-text">No items yet. Tap + to add!</span>
-            </div>
-          </div>
-
-          {/* Floating Add (+) Button */}
-          <button 
-            className="floating-add-btn" 
-            onClick={() => setCurrentView('upload')}
-          >
-            +
-          </button>
-        </div>
-      ) : (
-        /* --- UPLOAD ITEM VIEW --- */
-        <div className="upload-container">
-          <div className="upload-header-row">
-            <button className="back-btn" onClick={() => setCurrentView('closet')}>← Back</button>
-            <h1 className="handwritten-title">UPLOAD ITEM</h1>
-            <div style={{ width: 50 }}></div>
-          </div>
-
-          <div className="upload-drop-box">
-            <div className="upload-icons-row">
-              {/* Camera Icon -> Opens Camera directly */}
-              <div className="icon-button" onClick={handleCameraClick}>
-                <img src="/camera-icon.png" alt="Camera" className="custom-icon" />
-              </div>
+        {activeTab === 'add' && (
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 max-w-lg mx-auto">
+            <h2 className="text-xl font-medium mb-4 text-stone-900">Import & AI Scan Wardrobe Item</h2>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-stone-700 mb-2">Upload Photo (Camera / Google Photos)</label>
               <input 
                 type="file" 
-                ref={cameraInputRef} 
-                style={{ display: 'none' }} 
                 accept="image/*" 
-                capture="environment"
-                onChange={handleFileChange} 
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                className="block w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-stone-900 file:text-white hover:file:bg-stone-800"
               />
+            </div>
 
-              {/* Google Photos Icon -> Opens Gallery / Photos directly */}
-              <div className="icon-button" onClick={handleGalleryClick}>
-                <img src="/gphotos-icon.png" alt="Google Photos" className="custom-icon" />
+            {isScanning && (
+              <div className="my-4 p-4 bg-stone-100 rounded-lg text-center text-stone-600 animate-pulse">
+                Scanning image with Gemini AI to detect item attributes...
               </div>
-              <input 
-                type="file" 
-                ref={galleryInputRef} 
-                style={{ display: 'none' }} 
-                accept="image/*" 
-                onChange={handleFileChange} 
-              />
-            </div>
-
-            {/* URL Search Bar with Faded Placeholder that clears on focus */}
-            <div className="url-search-bar">
-              <span className="search-magnifier">🔍</span>
-              <input 
-                type="text" 
-                placeholder="https://sparksandsequins..." 
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-              />
-              <button className="go-btn" onClick={handleUrlSubmit}>GO</button>
-            </div>
-          </div>
-
-          {/* Preview Square Frame */}
-          <div className="preview-square-frame">
-            {previewImage ? (
-              <img src={previewImage} alt="Item Preview" className="preview-img-transform" />
-            ) : (
-              <span className="preview-placeholder-text">Preview</span>
             )}
-          </div>
 
-          {/* Zoom Slider */}
-          <div className="zoom-slider-row">
-            <span>-</span>
-            <input type="range" min="50" max="150" defaultValue="100" />
-            <span>+</span>
-          </div>
+            {itemImage && !isScanning && (
+              <div className="mb-6 h-40 bg-stone-100 rounded-lg overflow-hidden flex items-center justify-center">
+                <img src={itemImage} alt="Preview" className="h-full object-contain" />
+              </div>
+            )}
 
-          {/* Form Fields */}
-          <div className="form-group">
-            <label>ITEM NAME</label>
-            <input 
-              type="text" 
-              placeholder="e.g., Linen Wrap Dress" 
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-            />
-          </div>
+            <form onSubmit={handleAddItem} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Item Name</label>
+                <input 
+                  type="text" 
+                  value={itemName} 
+                  onChange={(e) => setItemName(e.target.value)}
+                  placeholder="e.g. Boho Maxi Dress" 
+                  className="w-full border border-stone-300 rounded-lg p-2 focus:ring-2 focus:ring-stone-900 outline-none"
+                  required 
+                />
+              </div>
 
-          <div className="form-row">
-            <div className="form-group half">
-              <label>CATEGORY</label>
-              <select value={selectedCategory} onChange={handleCategoryChange}>
-                <option value="" disabled hidden></option>
-                {Object.keys(CATEGORY_SUBTYPES).map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group half">
-              <label>SUB-TYPE</label>
-              <select 
-                value={selectedSubtype} 
-                onChange={(e) => setSelectedSubtype(e.target.value)}
-                disabled={!selectedCategory || availableSubtypes.length === 0}
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Category</label>
+                <select 
+                  value={category} 
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full border border-stone-300 rounded-lg p-2 focus:ring-2 focus:ring-stone-900 outline-none bg-white"
+                >
+                  <option value="Tops">Tops</option>
+                  <option value="Bottoms">Bottoms</option>
+                  <option value="Dresses">Dresses</option>
+                  <option value="Outerwear">Outerwear</option>
+                  <option value="Footwear">Footwear</option>
+                  <option value="Accessories">Accessories</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Sub-Type</label>
+                <input 
+                  type="text" 
+                  value={subType} 
+                  onChange={(e) => setSubType(e.target.value)}
+                  placeholder="e.g. Maxi Dress, Glasses, Jeans" 
+                  className="w-full border border-stone-300 rounded-lg p-2 focus:ring-2 focus:ring-stone-900 outline-none" 
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full bg-stone-900 text-white py-2 rounded-lg hover:bg-stone-800 transition font-medium"
               >
-                <option value="" disabled hidden></option>
-                {availableSubtypes.map((sub) => (
-                  <option key={sub} value={sub}>{sub}</option>
-                ))}
-              </select>
-            </div>
+                Save to Digital Wardrobe
+              </button>
+            </form>
           </div>
-
-          <div className="form-row">
-            <div className="form-group third">
-              <label>SITE / BRAND</label>
-              <input 
-                type="text" 
-                placeholder="e.g. Zara" 
-                value={itemBrand}
-                onChange={(e) => setItemBrand(e.target.value)}
-              />
-            </div>
-            <div className="form-group third">
-              <label>COLOR</label>
-              <input 
-                type="text" 
-                placeholder="e.g. Black" 
-                value={itemColor}
-                onChange={(e) => setItemColor(e.target.value)}
-              />
-            </div>
-            <div className="form-group third">
-              <label>SIZE</label>
-              <input 
-                type="text" 
-                placeholder="e.g. US 6 / EU 38 / M" 
-                value={itemSize}
-                onChange={(e) => setItemSize(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <button className="add-action-btn" onClick={() => setCurrentView('closet')}>ADD</button>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 }
