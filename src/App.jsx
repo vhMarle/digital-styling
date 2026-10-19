@@ -6,9 +6,11 @@ export default function App() {
   const [previewImage, setPreviewImage] = useState(null);
   const [urlInput, setUrlInput] = useState('');
   const [activeTab, setActiveTab] = useState('All');
-  const fileInputRef = useRef(null);
+  
+  const cameraInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
 
-  // Handle local file selection (Camera / Device)
+  // Handle file selection from Camera or Gallery
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -17,10 +19,17 @@ export default function App() {
     }
   };
 
-  // Trigger hidden file input when clicking the camera icon
+  // Trigger phone camera directly
   const handleCameraClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
+  };
+
+  // Trigger photo gallery / Google Photos selection directly
+  const handleGalleryClick = () => {
+    if (galleryInputRef.current) {
+      galleryInputRef.current.click();
     }
   };
 
@@ -77,22 +86,30 @@ export default function App() {
 
           <div className="upload-drop-box">
             <div className="upload-icons-row">
-              {/* Camera Icon */}
+              {/* Camera Icon -> Opens Camera directly */}
               <div className="icon-button" onClick={handleCameraClick}>
                 <img src="/camera-icon.png" alt="Camera" className="custom-icon" />
               </div>
               <input 
                 type="file" 
-                ref={fileInputRef} 
+                ref={cameraInputRef} 
+                style={{ display: 'none' }} 
+                accept="image/*" 
+                capture="environment"
+                onChange={handleFileChange} 
+              />
+
+              {/* Google Photos Icon -> Opens Gallery / Photos directly */}
+              <div className="icon-button" onClick={handleGalleryClick}>
+                <img src="/gphotos-icon.png" alt="Google Photos" className="custom-icon" />
+              </div>
+              <input 
+                type="file" 
+                ref={galleryInputRef} 
                 style={{ display: 'none' }} 
                 accept="image/*" 
                 onChange={handleFileChange} 
               />
-
-              {/* Google Photos Icon */}
-              <div className="icon-button" onClick={() => alert("Google Photos picker triggered")}>
-                <img src="/gphotos-icon.png" alt="Google Photos" className="custom-icon" />
-              </div>
             </div>
 
             {/* URL Search Bar with Placeholder */}
