@@ -3,19 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Digital Wardrobe - Smart Wardrobe Planner</title>
+  <title>Sparks & Sequins - Smart Wardrobe Planner</title>
 
   <!-- Browser Favicons -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 
-  <!-- Apple Touch Icon for iOS Home Screen -->
+  <!-- Apple Touch Icon -->
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
-  <!-- Manifest for Android PWA / Home Screen -->
+  <!-- Manifest for PWA -->
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#7c3aed">
+
+  <!-- Supabase JS Client Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
@@ -39,7 +42,6 @@
       min-height: 100vh; 
     }
 
-    /* Desktop Sidebar Navigation */
     .sidebar { 
       width: 240px; 
       background: var(--bg-card); 
@@ -76,7 +78,6 @@
       font-weight: 600; 
     }
 
-    /* Main Content Area */
     .main-wrapper { 
       flex: 1; 
       display: flex; 
@@ -105,11 +106,9 @@
 
     .content { padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%; }
 
-    /* View Sections */
     .view-section { display: none; }
     .view-section.active { display: block; }
 
-    /* General UI Elements */
     .page-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; }
     .chip-group { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 1.25rem; }
     .chip { 
@@ -125,7 +124,6 @@
     }
     .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-    /* Closet Grid */
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
     .card { 
       background: var(--bg-card); 
@@ -139,7 +137,6 @@
     .card-title { font-size: 0.85rem; font-weight: 600; }
     .card-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 
-    /* Style Me View */
     .style-card { 
       background: var(--bg-card); 
       border-radius: var(--radius); 
@@ -172,7 +169,6 @@
       font-size: 0.95rem; 
     }
 
-    /* Modal Overlay */
     .modal-overlay { 
       display: none; 
       position: fixed; 
@@ -193,19 +189,7 @@
       max-height: 90vh; 
       overflow-y: auto; 
     }
-    .dropzone { 
-      border: 2px dashed #d1d5db; 
-      border-radius: 12px; 
-      padding: 1.5rem; 
-      text-align: center; 
-      color: var(--text-muted); 
-      font-size: 0.85rem; 
-      cursor: pointer; 
-      margin-bottom: 1rem; 
-      background: var(--bg-main); 
-    }
 
-    /* Mobile Bottom Navigation */
     .mobile-nav { 
       display: none; 
       position: fixed; 
@@ -238,12 +222,12 @@
 </head>
 <body>
 
-  <!-- Desktop Sidebar -->
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="brand">✦ Digital Wardrobe</div>
+    <div class="brand">✨ Sparks & Sequins</div>
     <ul class="nav-menu">
       <li class="nav-item active" onclick="switchTab('closet')">📁 My Closet</li>
-      <li class="nav-item" onclick="switchTab('styleme')">✦ Style Me</li>
+      <li class="nav-item" onclick="switchTab('styleme')">✨ Style Me</li>
       <li class="nav-item" onclick="switchTab('insights')">📊 Insights</li>
     </ul>
   </aside>
@@ -251,7 +235,7 @@
   <!-- Main Layout -->
   <div class="main-wrapper">
     <header>
-      <input type="text" class="search-bar" placeholder="Search your wardrobe...">
+      <input type="text" class="search-bar" placeholder="Search Sparks & Sequins...">
       <div class="user-profile">
         <button class="chip" style="background: var(--primary-light); color: var(--primary); border:none;" onclick="loginWithGoogle()">Sign In with Google</button>
       </div>
@@ -280,7 +264,7 @@
 
       <!-- Style Me Section -->
       <section id="styleme-view" class="view-section">
-        <h2 class="page-title">Style Me ✦</h2>
+        <h2 class="page-title">Style Me ✨</h2>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Tell us the vibe. Get your custom outfit look.</p>
 
         <div class="style-card">
@@ -303,12 +287,12 @@
           </div>
         </div>
 
-        <button class="btn-primary" onclick="alert('AI Look Generation coming soon!')">✦ Generate My Look</button>
+        <button class="btn-primary" onclick="alert('AI Look Generation coming soon!')">✨ Generate My Look</button>
       </section>
 
       <!-- Insights Section -->
       <section id="insights-view" class="view-section">
-        <h2 class="page-title">Your Closet at a Glance</h2>
+        <h2 class="page-title">Closet Insights</h2>
         <div class="style-card" style="text-align: center; padding: 2rem;">
           <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">68%</div>
           <p style="color: var(--text-muted);">Casual Style Focus</p>
@@ -318,13 +302,14 @@
     </div>
   </div>
 
-  <!-- Add Clothing Modal -->
+  <!-- Add Item Modal -->
   <div class="modal-overlay" id="add-modal">
     <div class="modal">
       <h2 style="margin-bottom: 1rem;">Add Clothing</h2>
       <form onsubmit="handleAddItem(event)">
-        <div class="dropzone">
-          📸 <strong>Add Photos</strong><br>Tap to upload image
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; font-weight:600;">Upload Photo</label>
+          <input type="file" id="item-file" accept="image/*" style="width:100%; margin-top:4px;">
         </div>
 
         <div style="margin-bottom: 1rem;">
@@ -343,11 +328,6 @@
           </select>
         </div>
 
-        <div style="margin-bottom: 1rem;">
-          <label style="font-size: 0.8rem; font-weight:600;">Image URL</label>
-          <input type="url" id="item-image" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); margin-top:4px;" required>
-        </div>
-
         <div style="display:flex; gap:10px; margin-top:1.5rem;">
           <button type="button" class="chip" style="flex:1;" onclick="closeModal()">Cancel</button>
           <button type="submit" class="btn-primary" style="flex:1;">Save Item</button>
@@ -356,21 +336,15 @@
     </div>
   </div>
 
-  <!-- Mobile Navigation Bar -->
+  <!-- Mobile Navigation -->
   <nav class="mobile-nav">
     <div class="mobile-item active" onclick="switchTab('closet')">📁<br>Wardrobe</div>
-    <div class="mobile-item" onclick="switchTab('styleme')">✦<br>Style Me</div>
+    <div class="mobile-item" onclick="switchTab('styleme')">✨<br>Style Me</div>
     <div class="mobile-item" onclick="switchTab('insights')">📊<br>Insights</div>
   </nav>
 
   <script>
-    let wardrobeItems = [
-      { id: 1, name: 'White Linen Shirt', category: 'Tops', image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=300' },
-      { id: 2, name: 'Straight-Leg Denim', category: 'Bottoms', image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300' },
-      { id: 3, name: 'Open Duster Coat', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300' },
-      { id: 4, name: 'White Adidas Sneakers', category: 'Shoes', image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300' }
-    ];
-
+    let wardrobeItems = [];
     let currentCategory = 'All';
 
     async function checkAuthSession() {
@@ -409,7 +383,6 @@
     function switchTab(tab) {
       document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
       document.getElementById(tab + '-view').classList.add('active');
-      
       document.querySelectorAll('.nav-item, .mobile-item').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(tab));
       });
@@ -427,11 +400,16 @@
         ? wardrobeItems 
         : wardrobeItems.filter(i => i.category === currentCategory);
 
+      if (filtered.length === 0) {
+        grid.innerHTML = `<p style="color:var(--text-muted); grid-column: 1/-1; text-align:center; padding: 2rem;">No items found. Tap + Add Clothes to start!</p>`;
+        return;
+      }
+
       filtered.forEach(item => {
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-          <img src="${item.image}" alt="${item.name}">
+          <img src="${item.image_url || 'https://via.placeholder.com/150'}" alt="${item.name}">
           <div class="card-body">
             <div class="card-title">${item.name}</div>
             <div class="card-sub">${item.category}</div>
@@ -454,9 +432,8 @@
       e.preventDefault();
       const name = document.getElementById('item-name').value;
       const category = document.getElementById('item-category').value;
-      const image = document.getElementById('item-image').value;
-
-      wardrobeItems.push({ id: Date.now(), name, category, image });
+      
+      wardrobeItems.push({ id: Date.now(), name, category, image_url: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=300' });
       renderGrid();
       closeModal();
       e.target.reset();
