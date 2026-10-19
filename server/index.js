@@ -6,7 +6,7 @@ const { google } = require('googleapis');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust Render's reverse proxy for secure cookies
+// Trust Render's reverse proxy for secure HTTPS cookies
 app.set('trust proxy', 1);
 
 // Configure Session Middleware
@@ -15,7 +15,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production', // true on HTTPS
+    secure: process.env.NODE_ENV === 'production', // true on HTTPS/Render
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
   }
@@ -24,12 +24,14 @@ app.use(session({
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 
+// OAuth 2.0 Client Setup
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   'https://digital-styling.onrender.com/api/auth/callback'
 );
 
+// Get OAuth Login URL
 app.get('/api/auth/login-url', (req, res) => {
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -38,6 +40,7 @@ app.get('/api/auth/login-url', (req, res) => {
   res.json({ url });
 });
 
+// Handle Redirect Callback from Google
 app.get('/api/auth/callback', async (req, res) => {
   const { code } = req.query;
   try {
@@ -47,6 +50,7 @@ app.get('/api/auth/callback', async (req, res) => {
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data } = await oauth2.userinfo.get();
 
+    // Store user profile in session
     req.session.user = {
       id: data.id,
       name: data.name,
@@ -54,7 +58,7 @@ app.get('/api/auth/callback', async (req, res) => {
       picture: data.picture
     };
 
-    // Force save session before redirecting
+    // Force write session to cookie before redirecting
     req.session.save((err) => {
       if (err) console.error('Session save error:', err);
       res.redirect('/');
@@ -65,6 +69,7 @@ app.get('/api/auth/callback', async (req, res) => {
   }
 });
 
+// Check Current Session Status
 app.get('/api/auth/user', (req, res) => {
   if (req.session && req.session.user) {
     res.json({ authenticated: true, user: req.session.user });
@@ -73,6 +78,7 @@ app.get('/api/auth/user', (req, res) => {
   }
 });
 
+// Logout Endpoint
 app.post('/api/auth/logout', (req, res) => {
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
@@ -80,6 +86,7 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
+// Fallback SPA Route
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
