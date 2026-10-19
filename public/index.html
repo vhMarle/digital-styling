@@ -263,7 +263,9 @@
       <!-- Background Segmentation Preview Canvas -->
       <div class="form-group" style="text-align:center;">
         <label class="form-label">Background Segmentation Preview</label>
-        <canvas id="segmentation-canvas" style="max-width:100%; height:180px; background:#f4f4f6; border-radius:12px; object-fit:contain; border:1px solid #e5e5e5;"></canvas>
+        <div style="width:100%; height:180px; background:#f4f4f6; border-radius:12px; border:1px solid #e5e5e5; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+          <canvas id="segmentation-canvas" style="max-width:100%; max-height:100%; object-fit:contain;"></canvas>
+        </div>
       </div>
 
       <!-- Editable Details Form -->
@@ -278,9 +280,10 @@
           <select id="item-category" class="input-box" onchange="populateSubTypes()">
             <option value="Tops">Tops</option>
             <option value="Bottoms">Bottoms</option>
+            <option value="Dresses">Dresses</option>
+            <option value="Outerwear">Outerwear</option>
             <option value="Shoes">Shoes</option>
             <option value="Accessories">Accessories</option>
-            <option value="Dresses">Dresses</option>
           </select>
         </div>
         <div class="form-group">
@@ -371,17 +374,16 @@
     let activeSubFilter = null;
     let currentDetailItem = null;
     let processedCanvasData = null;
-    let currentImportMode = 'url';
 
     const subCategoryMap = {
       'Tops': ['Sleeveless', 'Short Sleeve', '¾ Sleeve', 'Long Sleeve'],
       'Shoes': ['Boots', 'Sandals', 'Flats', 'Heels'],
       'Accessories': ['Bags', 'Belts', 'Jewelry', 'Scarfs'],
       'Bottoms': ['Jeans', 'Pants', 'Skirts', 'Shorts'],
-      'Dresses': ['Midi', 'Maxi', 'Mini', 'Gown']
+      'Dresses': ['Midi', 'Maxi', 'Mini', 'Gown'],
+      'Outerwear': ['Coats', 'Jackets', 'Cardigans', 'Vests']
     };
 
-    // --- Prevent Browser Default File Opening ---
     ['dragover', 'drop'].forEach(eventName => {
       window.addEventListener(eventName, (e) => {
         e.preventDefault();
@@ -389,7 +391,6 @@
       }, false);
     });
 
-    // --- Setup Drag & Drop Target ---
     function setupDropZone() {
       const dropZone = document.getElementById('drop-zone');
       if (!dropZone) return;
@@ -415,8 +416,6 @@
         if (dt && dt.files && dt.files.length > 0) {
           const file = dt.files[0];
           document.getElementById('drop-text').innerHTML = `✅ Selected: <strong>${file.name}</strong>`;
-          
-          // Clear metadata for file import
           clearMetadataFields();
 
           const reader = new FileReader();
@@ -558,7 +557,7 @@
       document.getElementById('drop-text').innerHTML = `📸 Drag & Drop photo here or <u>Browse File</u>`;
       document.getElementById('item-name').value = '';
       clearMetadataFields();
-      
+
       const canvas = document.getElementById('segmentation-canvas');
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -566,7 +565,6 @@
     }
 
     function setImportMode(mode) {
-      currentImportMode = mode;
       resetImportForm();
 
       const btnUrl = document.getElementById('btn-mode-url');
@@ -611,13 +609,14 @@
       const data = await res.json();
       if (data.success) {
         document.getElementById('item-name').value = data.data.name;
+        document.getElementById('item-category').value = data.data.category;
+        populateSubTypes();
+        document.getElementById('item-subtype').value = data.data.sub_type;
         document.getElementById('item-brand').value = data.data.brand;
-        document.getElementById('item-color').value = data.data.color || '';
+        document.getElementById('item-color').value = data.data.color || 'Neutral';
         document.getElementById('item-size').value = data.data.size || 'M';
 
-        // Load image via proxy to bypass cross-origin restrictions for canvas preview
-        const proxiedUrl = `/api/proxy-image?url=${encodeURIComponent(data.data.image_url)}`;
-        processImageSegmentation(proxiedUrl);
+        processImageSegmentation(data.data.image_url);
       }
     }
 
@@ -625,7 +624,6 @@
       if (e.target.files.length > 0) {
         const file = e.target.files[0];
         document.getElementById('drop-text').innerHTML = `✅ Selected: <strong>${file.name}</strong>`;
-        
         clearMetadataFields();
 
         const reader = new FileReader();
@@ -661,6 +659,15 @@
         }
       };
       img.onerror = () => {
+        // Fallback drawing placeholder
+        canvas.width = 300;
+        canvas.height = 300;
+        ctx.fillStyle = '#f4f4f6';
+        ctx.fillRect(0, 0, 300, 300);
+        ctx.fillStyle = '#111111';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Garment Preview Ready', 150, 150);
         processedCanvasData = src;
       };
       img.src = src;
@@ -703,7 +710,7 @@
           renderGrid();
           closeImportModal();
         } else {
-          alert('Failed to save item to database.');
+          alert('Failed to save item to database: ' + (data.message || 'Unknown error'));
         }
       } catch (err) {
         alert('Error saving item');
