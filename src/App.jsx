@@ -26,7 +26,6 @@ export default function App() {
       setItemImage(base64data);
       setIsScanning(true);
 
-      // Smart Image Dimension Analysis (AI Simulation)
       const img = new Image();
       img.src = base64data;
       img.onload = () => {
@@ -35,14 +34,11 @@ export default function App() {
           let detectedSubType = 'Maxi Dress';
           let detectedName = 'Boho Tiered Maxi Dress';
 
-          // Tall portrait images (like dresses/full body outfits)
           if (img.height > img.width * 1.2) {
             detectedCategory = 'Dresses';
             detectedSubType = 'Maxi Dress';
             detectedName = 'Full Length Dress';
-          } 
-          // Wide landscape or square images (like accessories, shoes, or folded tops)
-          else if (img.width >= img.height) {
+          } else if (img.width >= img.height) {
             detectedCategory = 'Accessories';
             detectedSubType = 'Glasses';
             detectedName = 'Designer Sunglasses';
@@ -82,40 +78,40 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-800 font-sans p-4 md:p-8">
-      <header className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 border-b pb-4">
-        <h1 className="text-3xl font-light tracking-wide text-stone-900">Sparks & Sequins</h1>
-        <nav className="flex gap-4 mt-4 md:mt-0">
+    <div style={{ minHeight: '100vh', backgroundColor: '#fafaf9', color: '#292524', fontFamily: 'sans-serif', padding: '24px' }}>
+      <header style={{ maxWidth: '900px', margin: '0 auto 32px auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e7e5e4', paddingBottom: '16px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: '300', letterSpacing: '0.05em', margin: 0 }}>Sparks & Sequins</h1>
+        <nav style={{ display: 'flex', gap: '12px' }}>
           <button 
             onClick={() => setActiveTab('wardrobe')}
-            className={`px-4 py-2 rounded-lg transition ${activeTab === 'wardrobe' ? 'bg-stone-900 text-white' : 'bg-stone-200 hover:bg-stone-300'}`}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: activeTab === 'wardrobe' ? '#1c1917' : '#e7e5e4', color: activeTab === 'wardrobe' ? '#fff' : '#292524', fontWeight: '500' }}
           >
             Wardrobe ({wardrobe.length})
           </button>
           <button 
             onClick={() => setActiveTab('add')}
-            className={`px-4 py-2 rounded-lg transition ${activeTab === 'add' ? 'bg-stone-900 text-white' : 'bg-stone-200 hover:bg-stone-300'}`}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: activeTab === 'add' ? '#1c1917' : '#e7e5e4', color: activeTab === 'add' ? '#fff' : '#292524', fontWeight: '500' }}
           >
             + Add Item / Scan
           </button>
         </nav>
       </header>
 
-      <main className="max-w-4xl mx-auto">
+      <main style={{ maxWidth: '900px', margin: '0 auto' }}>
         {activeTab === 'wardrobe' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
             {wardrobe.map(item => (
-              <div key={item.id} className="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden p-4 flex flex-col justify-between">
-                <div className="h-48 bg-stone-100 rounded-lg flex items-center justify-center overflow-hidden mb-4">
+              <div key={item.id} style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e7e5e4', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div style={{ height: '200px', background: '#f5f5f4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '12px' }}>
                   {item.image ? (
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <span className="text-stone-400 text-sm">No Image</span>
+                    <span style={{ color: '#a8a29e', fontSize: '14px' }}>No Image</span>
                   )}
                 </div>
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-stone-500 font-semibold">{item.category} &bull; {item.subType}</span>
-                  <h3 className="text-lg font-medium text-stone-900 mt-1">{item.name}</h3>
+                  <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#78716c', fontWeight: '600' }}>{item.category} &bull; {item.subType}</span>
+                  <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#1c1917', margin: '4px 0 0 0' }}>{item.name}</h3>
                 </div>
               </div>
             ))}
@@ -123,51 +119,51 @@ export default function App() {
         )}
 
         {activeTab === 'add' && (
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-stone-200 max-w-lg mx-auto">
-            <h2 className="text-xl font-medium mb-4 text-stone-900">Import & AI Scan Wardrobe Item</h2>
+          <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #e7e5e4', maxWidth: '500px', margin: '0 auto', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '500', marginBottom: '16px', color: '#1c1917', marginTop: 0 }}>Import & AI Scan Wardrobe Item</h2>
             
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-stone-700 mb-2">Upload Photo (Camera / Google Photos)</label>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#44403c', marginBottom: '8px' }}>Upload Photo (Camera / Google Photos)</label>
               <input 
                 type="file" 
                 accept="image/*" 
                 ref={fileInputRef}
                 onChange={handleImageUpload}
-                className="block w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-stone-900 file:text-white hover:file:bg-stone-800"
+                style={{ width: '100%', fontSize: '14px', color: '#78716c' }}
               />
             </div>
 
             {isScanning && (
-              <div className="my-4 p-4 bg-stone-100 rounded-lg text-center text-stone-600 animate-pulse">
+              <div style={{ margin: '16px 0', padding: '16px', background: '#f5f5f4', borderRadius: '8px', textAlign: 'center', color: '#57534e', fontStyle: 'italic' }}>
                 Scanning image shape & features with AI...
               </div>
             )}
 
             {itemImage && !isScanning && (
-              <div className="mb-6 h-40 bg-stone-100 rounded-lg overflow-hidden flex items-center justify-center">
-                <img src={itemImage} alt="Preview" className="h-full object-contain" />
+              <div style={{ marginBottom: '20px', height: '160px', background: '#f5f5f4', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <img src={itemImage} alt="Preview" style={{ height: '100%', objectFit: 'contain' }} />
               </div>
             )}
 
-            <form onSubmit={handleAddItem} className="space-y-4">
+            <form onSubmit={handleAddItem} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Item Name</label>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#44403c', marginBottom: '6px' }}>Item Name</label>
                 <input 
                   type="text" 
                   value={itemName} 
                   onChange={(e) => setItemName(e.target.value)}
                   placeholder="e.g. Boho Maxi Dress" 
-                  className="w-full border border-stone-300 rounded-lg p-2 focus:ring-2 focus:ring-stone-900 outline-none"
+                  style={{ width: '100%', border: '1px solid #d6d3d1', borderRadius: '8px', padding: '10px', outline: 'none', boxSizing: 'border-box' }}
                   required 
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Category</label>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#44403c', marginBottom: '6px' }}>Category</label>
                 <select 
                   value={category} 
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full border border-stone-300 rounded-lg p-2 focus:ring-2 focus:ring-stone-900 outline-none bg-white"
+                  style={{ width: '100%', border: '1px solid #d6d3d1', borderRadius: '8px', padding: '10px', outline: 'none', background: '#fff', boxSizing: 'border-box' }}
                 >
                   <option value="Tops">Tops</option>
                   <option value="Bottoms">Bottoms</option>
@@ -179,19 +175,19 @@ export default function App() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Sub-Type</label>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#44403c', marginBottom: '6px' }}>Sub-Type</label>
                 <input 
                   type="text" 
                   value={subType} 
                   onChange={(e) => setSubType(e.target.value)}
                   placeholder="e.g. Maxi Dress, Glasses, Jeans" 
-                  className="w-full border border-stone-300 rounded-lg p-2 focus:ring-2 focus:ring-stone-900 outline-none" 
+                  style={{ width: '100%', border: '1px solid #d6d3d1', borderRadius: '8px', padding: '10px', outline: 'none', boxSizing: 'border-box' }} 
                 />
               </div>
 
               <button 
                 type="submit" 
-                className="w-full bg-stone-900 text-white py-2 rounded-lg hover:bg-stone-800 transition font-medium"
+                style={{ width: '100%', backgroundColor: '#1c1917', color: '#fff', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '15px' }}
               >
                 Save to Digital Wardrobe
               </button>
