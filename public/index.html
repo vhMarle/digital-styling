@@ -1,19 +1,29 @@
 function handleFileSelect(e) {
-      if (e.target.files.length > 0) {
+      if (e.target.files && e.target.files.length > 0) {
         const file = e.target.files[0];
-        document.getElementById('drop-text').innerHTML = `✅ Selected: <strong>${file.name}</strong>`;
-        
-        // Auto-extract metadata from filename or default values
-        const fname = file.name.toLowerCase();
-        document.getElementById('item-name').value = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
-        document.getElementById('item-category').value = fname.includes('shoe') ? 'Shoes' : fname.includes('jean') || fname.includes('pant') ? 'Bottoms' : 'Dresses';
-        populateSubTypes();
-        document.getElementById('item-brand').value = 'Lulus';
-        document.getElementById('item-color').value = fname.includes('olive') ? 'Olive Green' : fname.includes('green') ? 'Dark Green' : 'Black';
-        document.getElementById('item-size').value = 'US 8';
-
-        const reader = new FileReader();
-        reader.onload = (event) => processImageSegmentation(event.target.result);
-        reader.readAsDataURL(file);
+        processSelectedFile(file);
       }
+    }
+
+    function processSelectedFile(file) {
+      document.getElementById('drop-text').innerHTML = `✅ Selected: <strong>${file.name}</strong>`;
+      
+      // Auto-populate item metadata from filename
+      const fname = file.name.toLowerCase();
+      const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
+      document.getElementById('item-name').value = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+      
+      const isShoe = fname.includes('shoe') || fname.includes('boot') || fname.includes('heel');
+      const isBottom = fname.includes('jean') || fname.includes('pant') || fname.includes('skirt');
+      
+      document.getElementById('item-category').value = isShoe ? 'Shoes' : isBottom ? 'Bottoms' : 'Dresses';
+      populateSubTypes();
+      
+      document.getElementById('item-brand').value = fname.includes('lulus') ? 'Lulus' : 'ASOS Luxe';
+      document.getElementById('item-color').value = fname.includes('olive') ? 'Olive Green' : fname.includes('green') ? 'Dark Green' : fname.includes('black') ? 'Black' : 'Dark Green';
+      document.getElementById('item-size').value = 'US 8';
+
+      const reader = new FileReader();
+      reader.onload = (event) => processImageSegmentation(event.target.result);
+      reader.readAsDataURL(file);
     }
