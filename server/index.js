@@ -15,7 +15,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production', // true on HTTPS/Render
+    secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
   }
@@ -23,13 +23,37 @@ app.use(session({
 
 app.use(express.json());
 
-// Explicit route to serve site.webmanifest with proper JSON content-type header
+// Explicit file routes for favicons and manifest
 app.get('/site.webmanifest', (req, res) => {
   res.header('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(__dirname, '../site.webmanifest'));
 });
 
-// Serve all other static files (index.html, icons, favicons)
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, '../favicon.ico'));
+});
+
+app.get('/favicon-32x32.png', (req, res) => {
+  res.sendFile(path.join(__dirname, '../favicon-32x32.png'));
+});
+
+app.get('/favicon-16x16.png', (req, res) => {
+  res.sendFile(path.join(__dirname, '../favicon-16x16.png'));
+});
+
+app.get('/android-chrome-192x192.png', (req, res) => {
+  res.sendFile(path.join(__dirname, '../android-chrome-192x192.png'));
+});
+
+app.get('/android-chrome-512x512.png', (req, res) => {
+  res.sendFile(path.join(__dirname, '../android-chrome-512x512.png'));
+});
+
+app.get('/apple-touch-icon.png', (req, res) => {
+  res.sendFile(path.join(__dirname, '../apple-touch-icon.png'));
+});
+
+// Serve static assets from project root
 app.use(express.static(path.join(__dirname, '../')));
 
 // OAuth 2.0 Client Setup
@@ -39,7 +63,6 @@ const oauth2Client = new google.auth.OAuth2(
   'https://digital-styling.onrender.com/api/auth/callback'
 );
 
-// Get OAuth Login URL
 app.get('/api/auth/login-url', (req, res) => {
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -48,7 +71,6 @@ app.get('/api/auth/login-url', (req, res) => {
   res.json({ url });
 });
 
-// Handle Redirect Callback from Google
 app.get('/api/auth/callback', async (req, res) => {
   const { code } = req.query;
   try {
@@ -58,7 +80,6 @@ app.get('/api/auth/callback', async (req, res) => {
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data } = await oauth2.userinfo.get();
 
-    // Store user profile in session
     req.session.user = {
       id: data.id,
       name: data.name,
@@ -66,7 +87,6 @@ app.get('/api/auth/callback', async (req, res) => {
       picture: data.picture
     };
 
-    // Force write session to cookie before redirecting
     req.session.save((err) => {
       if (err) console.error('Session save error:', err);
       res.redirect('/');
@@ -77,7 +97,6 @@ app.get('/api/auth/callback', async (req, res) => {
   }
 });
 
-// Check Current Session Status
 app.get('/api/auth/user', (req, res) => {
   if (req.session && req.session.user) {
     res.json({ authenticated: true, user: req.session.user });
@@ -86,7 +105,6 @@ app.get('/api/auth/user', (req, res) => {
   }
 });
 
-// Logout Endpoint
 app.post('/api/auth/logout', (req, res) => {
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
@@ -94,7 +112,6 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
-// Fallback Single Page Application Route
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
