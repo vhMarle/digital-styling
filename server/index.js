@@ -4,6 +4,8 @@ const path = require('path');
 const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 const { google } = require('googleapis');
+const https = require('https');
+const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,7 +41,7 @@ app.use(session({
   }
 }));
 
-app.use(express.json({ limit: '15mb' }));
+app.use(express.json({ limit: '25mb' }));
 
 // Explicit manifest route
 app.get('/site.webmanifest', (req, res) => {
@@ -109,6 +111,21 @@ app.post('/api/auth/logout', (req, res) => {
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
     res.json({ success: true });
+  });
+});
+
+// Proxy Image endpoint to bypass browser CORS on web URLs for preview canvas
+app.get('/api/proxy-image', (req, res) => {
+  const imageUrl = req.query.url;
+  if (!imageUrl) return res.status(400).send('URL required');
+
+  const client = imageUrl.startsWith('https') ? https : http;
+  client.get(imageUrl, (response) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', response.headers['content-type'] || 'image/jpeg');
+    response.pipe(res);
+  }).on('error', (err) => {
+    res.status(500).send('Image fetch failed');
   });
 });
 
@@ -209,13 +226,13 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
 
     const itemPayload = {
       user_email: userEmail,
-      name: name || 'Untitled Item',
+      name: name || 'Garment Item',
       category: category || 'Tops',
       sub_type: sub_type || 'General',
-      brand: brand || 'Unspecified',
-      site_name: site_name || 'Manual Import',
-      color: color || 'Multi',
-      size: size || 'Standard',
+      brand: brand || '',
+      site_name: site_name || '',
+      color: color || '',
+      size: size || '',
       image_url: finalImageUrl
     };
 
@@ -269,7 +286,7 @@ app.delete('/api/clothes/:id', async (req, res) => {
   }
 });
 
-// POST /api/parse-url - Safely extract metadata from URL
+// POST /api/parse-url - Extract Metadata and direct image link from website URL
 app.post('/api/parse-url', async (req, res) => {
   try {
     const { url } = req.body;
@@ -288,8 +305,8 @@ app.post('/api/parse-url', async (req, res) => {
       data: {
         site_name: brandName,
         brand: brandName,
-        name: `${brandName} Garment Item`,
-        color: 'Black',
+        name: `${brandName} Item`,
+        color: 'Neutral',
         size: 'M',
         image_url: url
       }
@@ -299,10 +316,10 @@ app.post('/api/parse-url', async (req, res) => {
       success: true,
       data: {
         site_name: 'Web Import',
-        brand: 'Unknown Brand',
+        brand: '',
         name: 'Imported Item',
-        color: 'Custom',
-        size: 'M',
+        color: '',
+        size: '',
         image_url: req.body.url
       }
     });
