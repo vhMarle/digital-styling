@@ -223,7 +223,6 @@ html, body {
   width: 100%;
 }
 
-/* Much lighter dummy URL placeholder */
 .url-search-bar input::placeholder {
   color: #d8b4b4;
   opacity: 0.7;
@@ -304,6 +303,15 @@ html, body {
   box-sizing: border-box;
 }
 
+/* Make disabled sub-type much greyer and faded */
+.form-group select:disabled {
+  background-color: #eee9e3;
+  color: #b5ada6;
+  border-color: #e8e2dc;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .form-row {
   display: flex;
   gap: 10px;
@@ -332,7 +340,7 @@ html, body {
   margin-top: 15px;
   margin-bottom: 30px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  transition: background-color 0.2s;
+  transition: background-color: 0.2s;
   box-sizing: border-box;
 }
 

@@ -51,7 +51,7 @@ export default function App() {
 
   // Handle URL submit or fetch preview
   const handleUrlSubmit = () => {
-    if (urlInput.trim() && urlInput !== 'https://sparksandsequins...') {
+    if (urlInput.trim()) {
       setPreviewImage(urlInput.trim());
     }
   };
@@ -138,7 +138,7 @@ export default function App() {
               />
             </div>
 
-            {/* URL Search Bar with Faded Placeholder */}
+            {/* URL Search Bar with Faded Placeholder that clears on focus */}
             <div className="url-search-bar">
               <span className="search-magnifier">🔍</span>
               <input 
@@ -177,7 +177,7 @@ export default function App() {
             <div className="form-group half">
               <label>CATEGORY</label>
               <select value={selectedCategory} onChange={handleCategoryChange}>
-                <option value="">Select Category</option>
+                <option value="" disabled hidden></option>
                 {Object.keys(CATEGORY_SUBTYPES).map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
@@ -190,7 +190,7 @@ export default function App() {
                 onChange={(e) => setSelectedSubtype(e.target.value)}
                 disabled={!selectedCategory || availableSubtypes.length === 0}
               >
-                <option value="">{selectedCategory ? (availableSubtypes.length > 0 ? 'Select Sub-Type' : 'None available') : 'Select Category First'}</option>
+                <option value="" disabled hidden></option>
                 {availableSubtypes.map((sub) => (
                   <option key={sub} value={sub}>{sub}</option>
                 ))}
@@ -210,7 +210,7 @@ export default function App() {
             <div className="form-group third">
               <label>SIZE</label>
               <select>
-                <option>--</option>
+                <option value="" disabled hidden></option>
                 <option>XS</option>
                 <option>S</option>
                 <option>M</option>
