@@ -1,6 +1,8 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const multer = require('multer');
+const { createClient } = require('@supabase/supabase-js');
 const { google } = require('googleapis');
 
 const app = express();
@@ -8,30 +10,36 @@ const PORT = process.env.PORT || 3000;
 
 const PUBLIC_DIR = path.join(__dirname, '../public');
 
-// Trust Render's reverse proxy for secure HTTPS cookies
+// Initialize Supabase Client
+const supabaseUrl = process.env.SUPABASE_URL || 'https://jzyagdnkhctawxhoimrx.supabase.co';
+const supabaseKey = process.env.SUPABASE_KEY || 'sb_publishable_AOEbD5g2qOmzo2qYfmqutg_9u1USfRV';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Multer memory storage for direct buffer upload to Supabase Storage
+const upload = multer({ storage: multer.memoryStorage() });
+
 app.set('trust proxy', 1);
 
-// Configure Session Middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'stylenest-super-secret-key',
+  secret: process.env.SESSION_SECRET || 'sparks-and-sequins-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: { 
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    maxAge: 30 * 24 * 60 * 60 * 1000
   }
 }));
 
 app.use(express.json());
 
-// Explicit manifest route with application/manifest+json MIME type
+// Explicit manifest route with correct JSON MIME type
 app.get('/site.webmanifest', (req, res) => {
   res.header('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(PUBLIC_DIR, 'site.webmanifest'));
 });
 
-// Serve static assets from public folder
+// Serve static assets from public directory
 app.use(express.static(PUBLIC_DIR));
 
 // OAuth 2.0 Client Setup
@@ -88,6 +96,66 @@ app.post('/api/auth/logout', (req, res) => {
     res.clearCookie('connect.sid');
     res.json({ success: true });
   });
+});
+
+// --- SUPABASE CLOTHES API ---
+
+// GET /api/clothes - Fetch user clothes from Supabase
+app.get('/api/clothes', async (req, res) => {
+  try {
+    const userEmail = req.session?.user?.email || 'guest@sparksequins.com';
+    const { data, error } = await supabase
+      .from('clothes')
+      .select('*')
+      .eq('user_email', userEmail)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json({ success: true, clothes: data || [] });
+  } catch (err) {
+    console.error('Error fetching clothes:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch clothes' });
+  }
+});
+
+// POST /api/clothes - Add new item & upload image to Supabase Bucket
+app.post('/api/clothes', upload.single('image'), async (req, res) => {
+  try {
+    const { name, category } = req.body;
+    const userEmail = req.session?.user?.email || 'guest@sparksequins.com';
+    let imageUrl = 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=300';
+
+    if (req.file) {
+      const fileName = `${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('wardrobe-images')
+        .upload(fileName, req.file.buffer, {
+          contentType: req.file.mimetype,
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase
+        .storage
+        .from('wardrobe-images')
+        .getPublicUrl(fileName);
+
+      imageUrl = publicUrlData.publicUrl;
+    }
+
+    const { data, error } = await supabase
+      .from('clothes')
+      .insert([{ user_email: userEmail, name, category, image_url: imageUrl }])
+      .select();
+
+    if (error) throw error;
+    res.json({ success: true, item: data[0] });
+  } catch (err) {
+    console.error('Error saving item:', err);
+    res.status(500).json({ success: false, message: 'Failed to save item' });
+  }
 });
 
 app.get('*', (req, res) => {
