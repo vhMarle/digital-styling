@@ -144,7 +144,7 @@ export default function App() {
           {/* Form Fields */}
           <div className="form-group">
             <label>ITEM NAME</label>
-            <input type="text" placeholder="e.g., Linen Blazer" />
+            <input type="text" placeholder="e.g., Linen Wrap Dress" />
           </div>
 
           <div className="form-row">
@@ -159,31 +159,35 @@ export default function App() {
               </select>
             </div>
             <div className="form-group half">
-              <label>COLOR</label>
-              <input type="text" placeholder="e.g., Beige" />
+              <label>SUB-TYPE</label>
+              <select>
+                <option>Sleeveless</option>
+                <option>Short Sleeve</option>
+                <option>Long Sleeve</option>
+                <option>Crop</option>
+              </select>
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group third">
-              <label>SEASON</label>
-              <select>
-                <option>All Season</option>
-                <option>Spring/Summer</option>
-                <option>Fall/Winter</option>
-              </select>
+              <label>SITE / BRAND</label>
+              <input type="text" placeholder="e.g. Zara" />
             </div>
             <div className="form-group third">
-              <label>OCCASION</label>
-              <select>
-                <option>Casual</option>
-                <option>Work</option>
-                <option>Evening</option>
-              </select>
+              <label>COLOR</label>
+              <input type="text" placeholder="e.g. Black" />
             </div>
             <div className="form-group third">
-              <label>BRAND</label>
-              <input type="text" placeholder="Brand" />
+              <label>SIZE</label>
+              <select>
+                <option>--</option>
+                <option>XS</option>
+                <option>S</option>
+                <option>M</option>
+                <option>L</option>
+                <option>XL</option>
+              </select>
             </div>
           </div>
 
