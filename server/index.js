@@ -177,7 +177,6 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
     const userEmail = req.session?.user?.email || 'guest@sparksequins.com';
     let finalImageUrl = null;
 
-    // 1. Process base64 canvas image to bucket
     if (image_data && typeof image_data === 'string' && image_data.startsWith('data:image')) {
       try {
         const base64Data = Buffer.from(image_data.replace(/^data:image\/\w+;base64,/, ""), 'base64');
@@ -200,7 +199,6 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
       }
     }
 
-    // 2. Process uploaded file buffer
     if (!finalImageUrl && req.file) {
       try {
         const fileName = `${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '_')}`;
@@ -232,7 +230,6 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
       finalImageUrl = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400';
     }
 
-    // Full Payload
     const fullPayload = {
       user_email: userEmail,
       name: name || 'Garment Item',
@@ -245,12 +242,9 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
       image_url: finalImageUrl
     };
 
-    // Attempt Full Payload Insert
     let insertResult = await supabase.from('clothes').insert([fullPayload]).select();
 
-    // Fallback Payload if database schema lacks optional new columns
     if (insertResult.error) {
-      console.warn('Full payload insert failed, trying minimal standard schema:', insertResult.error.message);
       const minimalPayload = {
         user_email: userEmail,
         name: name || 'Garment Item',
@@ -269,7 +263,6 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
   }
 });
 
-// PUT /api/clothes/:id - Edit item
 app.put('/api/clothes/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -297,7 +290,6 @@ app.put('/api/clothes/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/clothes/:id
 app.delete('/api/clothes/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -311,7 +303,6 @@ app.delete('/api/clothes/:id', async (req, res) => {
   }
 });
 
-// Intelligent URL Parser & Category Detection
 app.post('/api/parse-url', async (req, res) => {
   try {
     const { url } = req.body;
@@ -319,7 +310,6 @@ app.post('/api/parse-url', async (req, res) => {
 
     const lowerUrl = url.toLowerCase();
 
-    // Brand Detection
     let brandName = 'Web Import';
     try {
       const parsedUrl = new URL(url);
@@ -328,7 +318,6 @@ app.post('/api/parse-url', async (req, res) => {
       brandName = rawBrand.charAt(0).toUpperCase() + rawBrand.slice(1);
     } catch (e) {}
 
-    // Smart Category & Sub-Type Keyword Matching
     let category = 'Tops';
     let subType = 'Short Sleeve';
 
@@ -354,7 +343,6 @@ app.post('/api/parse-url', async (req, res) => {
       }
     }
 
-    // High quality fashion placeholder fallback image if image extraction fails
     const defaultFashionImg = category === 'Dresses' 
       ? 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500'
       : category === 'Shoes'
