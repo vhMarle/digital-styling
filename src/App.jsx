@@ -1,12 +1,28 @@
 import React, { useState, useRef } from 'react';
 import './App.css';
 
+// Exact Category & Sub-Type mapping based on your uploaded specification
+const CATEGORY_SUBTYPES = {
+  'Tops': ['Sleeveless', 'Short Sleeve', '3/4 Sleeve', 'Long Sleeve'],
+  'Bottoms': ['Jeans', 'Dress Trousers', 'Leggings & Jeggings'],
+  'Shoes': ['Boots', 'Sandals', 'Flats', 'Heels'],
+  'Loungewear': ['Joggers', 'Sweatpants', 'Yoga Pants'],
+  'Dresses': ['Mini', 'Midi', 'Maxi', 'Tea-Length', 'Ball Gown / Floor Length'],
+  'Skirts': ['A-Line Skirts', 'Pencil Skirt', 'Mini & Midi Skirts', 'Maxi'],
+  'Bags': [], // If no subtypes, can be empty or handled
+  'Accessories': ['Bag', 'Belt', 'Jewellery', 'Scarf']
+};
+
 export default function App() {
   const [currentView, setCurrentView] = useState('closet'); // 'closet' or 'upload'
   const [previewImage, setPreviewImage] = useState(null);
   const [urlInput, setUrlInput] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   
+  // Form state fields
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubtype, setSelectedSubtype] = useState('');
+
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
@@ -40,6 +56,16 @@ export default function App() {
     }
   };
 
+  // Handle Category change
+  const handleCategoryChange = (e) => {
+    const cat = e.target.value;
+    setSelectedCategory(cat);
+    setSelectedSubtype(''); // Reset subtype when category changes
+  };
+
+  // Get available subtypes for current category
+  const availableSubtypes = selectedCategory ? CATEGORY_SUBTYPES[selectedCategory] || [] : [];
+
   return (
     <div className="app-wrapper">
       {currentView === 'closet' ? (
@@ -49,7 +75,7 @@ export default function App() {
 
           {/* Navigation Tabs */}
           <div className="closet-tabs">
-            {['All', 'Tops', 'Bottoms', 'Dresses', 'Shoes'].map((tab) => (
+            {['All', 'Tops', 'Bottoms', 'Dresses', 'Shoes', 'Loungewear', 'Skirts', 'Bags', 'Accessories'].map((tab) => (
               <button
                 key={tab}
                 className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
@@ -150,21 +176,24 @@ export default function App() {
           <div className="form-row">
             <div className="form-group half">
               <label>CATEGORY</label>
-              <select>
-                <option>Tops</option>
-                <option>Bottoms</option>
-                <option>Dresses</option>
-                <option>Shoes</option>
-                <option>Accessories</option>
+              <select value={selectedCategory} onChange={handleCategoryChange}>
+                <option value="">Select Category</option>
+                {Object.keys(CATEGORY_SUBTYPES).map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
               </select>
             </div>
             <div className="form-group half">
               <label>SUB-TYPE</label>
-              <select>
-                <option>Sleeveless</option>
-                <option>Short Sleeve</option>
-                <option>Long Sleeve</option>
-                <option>Crop</option>
+              <select 
+                value={selectedSubtype} 
+                onChange={(e) => setSelectedSubtype(e.target.value)}
+                disabled={!selectedCategory || availableSubtypes.length === 0}
+              >
+                <option value="">{selectedCategory ? (availableSubtypes.length > 0 ? 'Select Sub-Type' : 'None available') : 'Select Category First'}</option>
+                {availableSubtypes.map((sub) => (
+                  <option key={sub} value={sub}>{sub}</option>
+                ))}
               </select>
             </div>
           </div>
