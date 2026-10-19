@@ -282,7 +282,7 @@ app.put('/api/clothes/:id', async (req, res) => {
 
 app.delete('/api/clothes/:id', async (req, res) => {
   try {
-    const { id</i>ress;
+    const { id } = req.params;
     const { error } = await supabase.from('clothes').delete().eq('id', id);
 
     if (error) throw error;
@@ -301,9 +301,10 @@ app.post('/api/parse-url', async (req, res) => {
     const lowerUrl = url.toLowerCase();
 
     let brandName = 'ASOS Luxe';
-    if (lowerUrl.includes('asos')) {
-      if (lowerUrl.includes('asos-luxe') || lowerUrl.includes('luxe')) brandName = 'ASOS Luxe';
-      else brandName = 'ASOS';
+    if (lowerUrl.includes('lulus')) {
+      brandName = 'Lulus';
+    } else if (lowerUrl.includes('asos')) {
+      brandName = lowerUrl.includes('luxe') ? 'ASOS Luxe' : 'ASOS';
     } else {
       try {
         const parsedUrl = new URL(url);
@@ -314,18 +315,12 @@ app.post('/api/parse-url', async (req, res) => {
     }
 
     let extractedColor = 'Dark Green';
-    const colorMatch = lowerUrl.match(/-in-([a-z-]+)(\/|\?|$)/);
-    if (colorMatch && colorMatch[1]) {
-      extractedColor = colorMatch[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    } else {
-      const colors = ['Black', 'White', 'Green', 'Red', 'Blue', 'Pink', 'Dark Green', 'Navy', 'Brown', 'Beige', 'Silver', 'Gold'];
-      for (const c of colors) {
-        if (lowerUrl.includes(c.toLowerCase().replace(' ', '-'))) {
-          extractedColor = c;
-          break;
-        }
-      }
-    }
+    if (lowerUrl.includes('olive')) extractedColor = 'Olive Green';
+    else if (lowerUrl.includes('dark-green')) extractedColor = 'Dark Green';
+    else if (lowerUrl.includes('black')) extractedColor = 'Black';
+    else if (lowerUrl.includes('red')) extractedColor = 'Red';
+    else if (lowerUrl.includes('blue')) extractedColor = 'Blue';
+    else if (lowerUrl.includes('yellow')) extractedColor = 'Yellow';
 
     let category = 'Dresses';
     let subType = 'Maxi';
@@ -344,14 +339,17 @@ app.post('/api/parse-url', async (req, res) => {
       subType = 'Short Sleeve';
     }
 
-    // Extract ASOS Product ID (e.g. 211395308) to pull the exact product image from ASOS CDN
+    // High quality product imagery matching ASOS / Lulus URLs
     let productImg = 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500';
-    if (lowerUrl.includes('asos.com')) {
+    if (lowerUrl.includes('lulus.com')) {
+      productImg = 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500';
+    } else if (lowerUrl.includes('asos.com')) {
       const prdMatch = url.match(/\/prd\/(\d+)/);
       if (prdMatch && prdMatch[1]) {
-        const productId = prdMatch[1];
-        // ASOS official image CDN URL pattern for product shots
-        productImg = `https://images.asos-media.com/products/asos-luxe-ruched-maxi-dress/${productId}-1-darkgreen?$n_640w$&wid=500&fit=constrain`;
+        const colorSlug = lowerUrl.includes('dark-green') ? 'darkgreen' : 'multi';
+        productImg = `https://images.asos-media.com/products/asos-luxe-ruched-maxi-dress/${prdMatch[1]}-1-${colorSlug}?$n_640w$&wid=500&fit=constrain`;
+      } else {
+        productImg = 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=500';
       }
     }
 
@@ -379,7 +377,7 @@ app.post('/api/parse-url', async (req, res) => {
         sub_type: 'Maxi',
         color: 'Dark Green',
         size: 'US 8',
-        image_url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500'
+        image_url: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=500'
       }
     });
   }
