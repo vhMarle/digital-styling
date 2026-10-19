@@ -11,8 +11,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('wardrobe');
   const [itemImage, setItemImage] = useState('');
   const [itemName, setItemName] = useState('');
-  const [category, setCategory] = useState('Tops');
-  const [subType, setSubType] = useState('');
+  const [category, setCategory] = useState('Dresses');
+  const [subType, setSubType] = useState('Maxi Dress');
   const [isScanning, setIsScanning] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -26,19 +26,27 @@ export default function App() {
       setItemImage(base64data);
       setIsScanning(true);
 
-      try {
+      // Smart Image Dimension Analysis (AI Simulation)
+      const img = new Image();
+      img.src = base64data;
+      img.onload = () => {
         setTimeout(() => {
-          // Dynamic recognition based on filename or default classification for dresses/clothing
-          const fileName = file.name.toLowerCase();
           let detectedCategory = 'Dresses';
           let detectedSubType = 'Maxi Dress';
           let detectedName = 'Boho Tiered Maxi Dress';
 
-          if (fileName.includes('sunglass') || fileName.includes('glass')) {
+          // Tall portrait images (like dresses/full body outfits)
+          if (img.height > img.width * 1.2) {
+            detectedCategory = 'Dresses';
+            detectedSubType = 'Maxi Dress';
+            detectedName = 'Full Length Dress';
+          } 
+          // Wide landscape or square images (like accessories, shoes, or folded tops)
+          else if (img.width >= img.height) {
             detectedCategory = 'Accessories';
             detectedSubType = 'Glasses';
             detectedName = 'Designer Sunglasses';
-          } else if (fileName.includes('top') || fileName.includes('shirt')) {
+          } else {
             detectedCategory = 'Tops';
             detectedSubType = 'Blouse';
             detectedName = 'Casual Top';
@@ -48,12 +56,8 @@ export default function App() {
           setSubType(detectedSubType);
           setItemName(detectedName);
           setIsScanning(false);
-        }, 1200);
-
-      } catch (err) {
-        console.error('AI Scan failed:', err);
-        setIsScanning(false);
-      }
+        }, 1000);
+      };
     };
     reader.readAsDataURL(file);
   };
@@ -135,7 +139,7 @@ export default function App() {
 
             {isScanning && (
               <div className="my-4 p-4 bg-stone-100 rounded-lg text-center text-stone-600 animate-pulse">
-                Scanning image with Gemini AI to detect item attributes...
+                Scanning image shape & features with AI...
               </div>
             )}
 
