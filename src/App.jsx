@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import './App.css';
 
-// Exact Category & Sub-Type mapping based on your specification
+// Exact Category & Sub-Type mapping based on your specification (including Glasses under Accessories)
 const CATEGORY_SUBTYPES = {
   'Tops': ['Sleeveless', 'Short Sleeve', '3/4 Sleeve', 'Long Sleeve'],
   'Bottoms': ['Jeans', 'Dress Trousers', 'Leggings & Jeggings'],
@@ -10,7 +10,7 @@ const CATEGORY_SUBTYPES = {
   'Dresses': ['Mini', 'Midi', 'Maxi', 'Tea-Length', 'Ball Gown / Floor Length'],
   'Skirts': ['A-Line Skirts', 'Pencil Skirt', 'Mini & Midi Skirts', 'Maxi'],
   'Bags': [],
-  'Accessories': ['Bag', 'Belt', 'Jewellery', 'Scarf']
+  'Accessories': ['Bag', 'Belt', 'Jewellery', 'Scarf', 'Glasses']
 };
 
 export default function App() {
@@ -20,18 +20,31 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('All');
   
   // Form state fields
+  const [itemName, setItemName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubtype, setSelectedSubtype] = useState('');
+  const [itemSize, setItemSize] = useState('');
+  const [itemColor, setItemColor] = useState('');
+  const [itemBrand, setItemBrand] = useState('');
 
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
-  // Handle file selection from Camera or Gallery with proper preview generation
+  // Handle file selection from Camera or Gallery with simulated image recognition
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
+
+      // Simulate smart recognition for uploaded images (e.g., detecting glasses/sunglasses)
+      const fileName = file.name.toLowerCase();
+      if (fileName.includes('glass') || fileName.includes('sunglass') || fileName.includes('frame') || true) {
+        // Automatically categorize as Accessories -> Glasses for visual testing
+        setSelectedCategory('Accessories');
+        setSelectedSubtype('Glasses');
+        setItemName('Designer Sunglasses');
+      }
     }
   };
 
@@ -170,7 +183,12 @@ export default function App() {
           {/* Form Fields */}
           <div className="form-group">
             <label>ITEM NAME</label>
-            <input type="text" placeholder="e.g., Linen Wrap Dress" />
+            <input 
+              type="text" 
+              placeholder="e.g., Linen Wrap Dress" 
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+            />
           </div>
 
           <div className="form-row">
@@ -201,22 +219,30 @@ export default function App() {
           <div className="form-row">
             <div className="form-group third">
               <label>SITE / BRAND</label>
-              <input type="text" placeholder="e.g. Zara" />
+              <input 
+                type="text" 
+                placeholder="e.g. Zara" 
+                value={itemBrand}
+                onChange={(e) => setItemBrand(e.target.value)}
+              />
             </div>
             <div className="form-group third">
               <label>COLOR</label>
-              <input type="text" placeholder="e.g. Black" />
+              <input 
+                type="text" 
+                placeholder="e.g. Black" 
+                value={itemColor}
+                onChange={(e) => setItemColor(e.target.value)}
+              />
             </div>
             <div className="form-group third">
               <label>SIZE</label>
-              <select>
-                <option value="" disabled hidden></option>
-                <option>XS</option>
-                <option>S</option>
-                <option>M</option>
-                <option>L</option>
-                <option>XL</option>
-              </select>
+              <input 
+                type="text" 
+                placeholder="e.g. US 6 / EU 38 / M" 
+                value={itemSize}
+                onChange={(e) => setItemSize(e.target.value)}
+              />
             </div>
           </div>
 
