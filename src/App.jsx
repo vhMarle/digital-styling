@@ -3,6 +3,7 @@ import './App.css';
 
 export default function App() {
   const [previewImage, setPreviewImage] = useState(null);
+  const [urlInput, setUrlInput] = useState('');
   const fileInputRef = useRef(null);
 
   // Handle local file selection (Camera / Device)
@@ -18,6 +19,13 @@ export default function App() {
   const handleCameraClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  // Handle URL submit or fetch preview
+  const handleUrlSubmit = () => {
+    if (urlInput.trim()) {
+      setPreviewImage(urlInput.trim());
     }
   };
 
@@ -45,11 +53,16 @@ export default function App() {
           </div>
         </div>
 
-        {/* URL Search Bar */}
+        {/* URL Search Bar with Placeholder */}
         <div className="url-search-bar">
           <span className="search-magnifier">🔍</span>
-          <input type="text" placeholder="https://sparksandsequins..." />
-          <button className="go-btn">GO</button>
+          <input 
+            type="text" 
+            placeholder="https://sparksandsequins..." 
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+          />
+          <button className="go-btn" onClick={handleUrlSubmit}>GO</button>
         </div>
       </div>
 
@@ -62,8 +75,60 @@ export default function App() {
         )}
       </div>
 
-      {/* Form Fields & Add Button */}
-      {/* ... rest of your form components ... */}
+      {/* Zoom Slider */}
+      <div className="zoom-slider-row">
+        <span>-</span>
+        <input type="range" min="50" max="150" defaultValue="100" />
+        <span>+</span>
+      </div>
+
+      {/* Form Fields */}
+      <div className="form-group">
+        <label>ITEM NAME</label>
+        <input type="text" placeholder="e.g., Linen Blazer" />
+      </div>
+
+      <div className="form-row">
+        <div className="form-group half">
+          <label>CATEGORY</label>
+          <select>
+            <option>Tops</option>
+            <option>Bottoms</option>
+            <option>Dresses</option>
+            <option>Shoes</option>
+            <option>Accessories</option>
+          </select>
+        </div>
+        <div className="form-group half">
+          <label>COLOR</label>
+          <input type="text" placeholder="e.g., Beige" />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group third">
+          <label>SEASON</label>
+          <select>
+            <option>All Season</option>
+            <option>Spring/Summer</option>
+            <option>Fall/Winter</option>
+          </select>
+        </div>
+        <div className="form-group third">
+          <label>OCCASION</label>
+          <select>
+            <option>Casual</option>
+            <option>Work</option>
+            <option>Evening</option>
+          </select>
+        </div>
+        <div className="form-group third">
+          <label>BRAND</label>
+          <input type="text" placeholder="Brand" />
+        </div>
+      </div>
+
+      <button className="add-action-btn">ADD</button>
     </div>
   );
 }
