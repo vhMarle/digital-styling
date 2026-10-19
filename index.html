@@ -3,14 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StyleNest - Smart Wardrobe Planner</title>
-  <link rel="manifest" href="/manifest.json">
+  <title>Digital Wardrobe - Smart Wardrobe Planner</title>
+
+  <!-- Browser Favicons -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+
+  <!-- Apple Touch Icon for iOS Home Screen -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+  <!-- Manifest for Android PWA / Home Screen -->
+  <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#7c3aed">
 
   <style>
     :root {
       --primary: #7c3aed;
       --primary-light: #f3e8ff;
+      --primary-hover: #6d28d9;
       --bg-main: #fafafa;
       --bg-card: #ffffff;
       --text-main: #1f2937;
@@ -20,50 +31,202 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-main); color: var(--text-main); display: flex; min-height: 100vh; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      background: var(--bg-main); 
+      color: var(--text-main); 
+      display: flex; 
+      min-height: 100vh; 
+    }
 
-    .sidebar { width: 240px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 1.5rem; display: flex; flex-direction: column; gap: 2rem; }
-    .brand { font-size: 1.25rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    /* Desktop Sidebar Navigation */
+    .sidebar { 
+      width: 240px; 
+      background: var(--bg-card); 
+      border-right: 1px solid var(--border); 
+      padding: 1.5rem; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 2rem; 
+    }
+    .brand { 
+      font-size: 1.2rem; 
+      font-weight: 800; 
+      color: var(--primary); 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+    }
     .nav-menu { display: flex; flex-direction: column; gap: 6px; list-style: none; }
-    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; color: var(--text-muted); font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: 0.2s; }
-    .nav-item:hover, .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .nav-item { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      padding: 10px 14px; 
+      border-radius: 12px; 
+      color: var(--text-muted); 
+      font-size: 0.95rem; 
+      font-weight: 500; 
+      cursor: pointer; 
+      transition: 0.2s; 
+    }
+    .nav-item:hover, .nav-item.active { 
+      background: var(--primary-light); 
+      color: var(--primary); 
+      font-weight: 600; 
+    }
 
-    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding-bottom: 70px; }
-    header { background: var(--bg-card); padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .search-bar { background: var(--bg-main); border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; width: 280px; font-size: 0.9rem; }
+    /* Main Content Area */
+    .main-wrapper { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      overflow-y: auto; 
+      padding-bottom: 70px; 
+    }
+    header { 
+      background: var(--bg-card); 
+      padding: 1rem 1.5rem; 
+      border-bottom: 1px solid var(--border); 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+    .search-bar { 
+      background: var(--bg-main); 
+      border: 1px solid var(--border); 
+      padding: 8px 16px; 
+      border-radius: 20px; 
+      width: 280px; 
+      font-size: 0.9rem; 
+    }
     .user-profile { display: flex; align-items: center; gap: 10px; }
     .avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 
     .content { padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+    /* View Sections */
     .view-section { display: none; }
     .view-section.active { display: block; }
 
+    /* General UI Elements */
     .page-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; }
     .chip-group { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 1.25rem; }
-    .chip { background: var(--bg-card); border: 1px solid var(--border); padding: 8px 18px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+    .chip { 
+      background: var(--bg-card); 
+      border: 1px solid var(--border); 
+      padding: 8px 18px; 
+      border-radius: 20px; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      color: var(--text-muted); 
+      cursor: pointer; 
+      white-space: nowrap; 
+    }
     .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
+    /* Closet Grid */
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
-    .card { background: var(--bg-card); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+    .card { 
+      background: var(--bg-card); 
+      border-radius: var(--radius); 
+      overflow: hidden; 
+      border: 1px solid var(--border); 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+    }
     .card img { width: 100%; height: 170px; object-fit: cover; background: #f0f0f0; }
     .card-body { padding: 10px; }
     .card-title { font-size: 0.85rem; font-weight: 600; }
     .card-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 
-    .style-card { background: var(--bg-card); border-radius: var(--radius); padding: 1.5rem; border: 1px solid var(--border); margin-bottom: 1rem; }
+    /* Style Me View */
+    .style-card { 
+      background: var(--bg-card); 
+      border-radius: var(--radius); 
+      padding: 1.5rem; 
+      border: 1px solid var(--border); 
+      margin-bottom: 1rem; 
+    }
     .option-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin-top: 10px; }
-    .opt-btn { background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+    .opt-btn { 
+      background: var(--bg-main); 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      padding: 12px; 
+      text-align: center; 
+      font-size: 0.8rem; 
+      font-weight: 600; 
+      cursor: pointer; 
+    }
     .opt-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
 
-    .btn-primary { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; font-size: 0.95rem; }
+    .btn-primary { 
+      background: var(--primary); 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      border-radius: 12px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      width: 100%; 
+      font-size: 0.95rem; 
+    }
 
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    /* Modal Overlay */
+    .modal-overlay { 
+      display: none; 
+      position: fixed; 
+      inset: 0; 
+      background: rgba(0,0,0,0.4); 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 1000; 
+      padding: 1rem; 
+    }
     .modal-overlay.open { display: flex; }
-    .modal { background: white; border-radius: 20px; padding: 1.5rem; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
-    .dropzone { border: 2px dashed #d1d5db; border-radius: 12px; padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; margin-bottom: 1rem; background: var(--bg-main); }
+    .modal { 
+      background: white; 
+      border-radius: 20px; 
+      padding: 1.5rem; 
+      width: 100%; 
+      max-width: 420px; 
+      max-height: 90vh; 
+      overflow-y: auto; 
+    }
+    .dropzone { 
+      border: 2px dashed #d1d5db; 
+      border-radius: 12px; 
+      padding: 1.5rem; 
+      text-align: center; 
+      color: var(--text-muted); 
+      font-size: 0.85rem; 
+      cursor: pointer; 
+      margin-bottom: 1rem; 
+      background: var(--bg-main); 
+    }
 
-    .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 12px; justify-content: space-around; z-index: 900; }
-    .mobile-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.7rem; color: var(--text-muted); cursor: pointer; }
+    /* Mobile Bottom Navigation */
+    .mobile-nav { 
+      display: none; 
+      position: fixed; 
+      bottom: 0; 
+      left: 0; 
+      right: 0; 
+      background: var(--bg-card); 
+      border-top: 1px solid var(--border); 
+      padding: 8px 12px; 
+      justify-content: space-around; 
+      z-index: 900; 
+    }
+    .mobile-item { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 4px; 
+      font-size: 0.7rem; 
+      color: var(--text-muted); 
+      cursor: pointer; 
+    }
     .mobile-item.active { color: var(--primary); font-weight: 700; }
 
     @media (max-width: 768px) {
@@ -75,8 +238,9 @@
 </head>
 <body>
 
+  <!-- Desktop Sidebar -->
   <aside class="sidebar">
-    <div class="brand">✦ StyleNest</div>
+    <div class="brand">✦ Digital Wardrobe</div>
     <ul class="nav-menu">
       <li class="nav-item active" onclick="switchTab('closet')">📁 My Closet</li>
       <li class="nav-item" onclick="switchTab('styleme')">✦ Style Me</li>
@@ -84,15 +248,18 @@
     </ul>
   </aside>
 
+  <!-- Main Layout -->
   <div class="main-wrapper">
     <header>
       <input type="text" class="search-bar" placeholder="Search your wardrobe...">
       <div class="user-profile">
-        <button class="chip" style="background: var(--primary-light); color: var(--primary); border:none;" onclick="loginWithGoogle()">Sign In</button>
+        <button class="chip" style="background: var(--primary-light); color: var(--primary); border:none;" onclick="loginWithGoogle()">Sign In with Google</button>
       </div>
     </header>
 
     <div class="content">
+      
+      <!-- My Closet Section -->
       <section id="closet-view" class="view-section active">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
           <h2 class="page-title">My Closet</h2>
@@ -111,186 +278,5 @@
         <div class="grid" id="wardrobe-grid"></div>
       </section>
 
-      <section id="styleme-view" class="view-section">
-        <h2 class="page-title">Style Me ✦</h2>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Tell us the vibe. Get your custom outfit look.</p>
-
-        <div class="style-card">
-          <h3>Select Your Mood</h3>
-          <div class="option-grid">
-            <div class="opt-btn active" onclick="toggleOption(this)">Confident</div>
-            <div class="opt-btn" onclick="toggleOption(this)">Relaxed</div>
-            <div class="opt-btn" onclick="toggleOption(this)">Energetic</div>
-            <div class="opt-btn" onclick="toggleOption(this)">Elegant</div>
-          </div>
-        </div>
-
-        <div class="style-card">
-          <h3>What's the occasion?</h3>
-          <div class="option-grid">
-            <div class="opt-btn active" onclick="toggleOption(this)">Casual</div>
-            <div class="opt-btn" onclick="toggleOption(this)">Work</div>
-            <div class="opt-btn" onclick="toggleOption(this)">Date</div>
-            <div class="opt-btn" onclick="toggleOption(this)">Travel</div>
-          </div>
-        </div>
-
-        <button class="btn-primary" onclick="alert('AI Look Generation coming soon!')">✦ Generate My Look</button>
-      </section>
-
-      <section id="insights-view" class="view-section">
-        <h2 class="page-title">Your Closet at a Glance</h2>
-        <div class="style-card" style="text-align: center; padding: 2rem;">
-          <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">68%</div>
-          <p style="color: var(--text-muted);">Casual Style Focus</p>
-        </div>
-      </section>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="add-modal">
-    <div class="modal">
-      <h2 style="margin-bottom: 1rem;">Add Clothing</h2>
-      <form onsubmit="handleAddItem(event)">
-        <div class="dropzone">
-          📸 <strong>Add Photos</strong><br>Tap to upload image
-        </div>
-
-        <div style="margin-bottom: 1rem;">
-          <label style="font-size: 0.8rem; font-weight:600;">Item Name</label>
-          <input type="text" id="item-name" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); margin-top:4px;" required>
-        </div>
-
-        <div style="margin-bottom: 1rem;">
-          <label style="font-size: 0.8rem; font-weight:600;">Category</label>
-          <select id="item-category" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); margin-top:4px;">
-            <option value="Tops">Tops</option>
-            <option value="Bottoms">Bottoms</option>
-            <option value="Outerwear">Outerwear</option>
-            <option value="Shoes">Shoes</option>
-            <option value="Accessories">Accessories</option>
-          </select>
-        </div>
-
-        <div style="margin-bottom: 1rem;">
-          <label style="font-size: 0.8rem; font-weight:600;">Image URL</label>
-          <input type="url" id="item-image" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); margin-top:4px;" required>
-        </div>
-
-        <div style="display:flex; gap:10px; margin-top:1.5rem;">
-          <button type="button" class="chip" style="flex:1;" onclick="closeModal()">Cancel</button>
-          <button type="submit" class="btn-primary" style="flex:1;">Save Item</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <nav class="mobile-nav">
-    <div class="mobile-item active" onclick="switchTab('closet')">📁<br>Wardrobe</div>
-    <div class="mobile-item" onclick="switchTab('styleme')">✦<br>Style Me</div>
-    <div class="mobile-item" onclick="switchTab('insights')">📊<br>Insights</div>
-  </nav>
-
-  <script>
-    let wardrobeItems = [
-      { id: 1, name: 'White Linen Shirt', category: 'Tops', image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=300' },
-      { id: 2, name: 'Straight-Leg Denim', category: 'Bottoms', image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300' },
-      { id: 3, name: 'Open Duster Coat', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300' },
-      { id: 4, name: 'White Adidas Sneakers', category: 'Shoes', image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300' }
-    ];
-
-    let currentCategory = 'All';
-
-    // Check login state on page load
-    async function checkAuthSession() {
-      try {
-        const res = await fetch('/api/auth/user');
-        const data = await res.json();
-        const profileContainer = document.querySelector('.user-profile');
-
-        if (data.authenticated && data.user) {
-          profileContainer.innerHTML = `
-            <img src="${data.user.picture}" class="avatar" alt="${data.user.name}">
-            <span style="font-size:0.85rem; font-weight:600;">${data.user.name}</span>
-            <button class="chip" style="background:#fee2e2; color:#ef4444; border:none; margin-left:8px;" onclick="logout()">Logout</button>
-          `;
-        }
-      } catch (err) {
-        console.error('Session check failed', err);
-      }
-    }
-
-    async function loginWithGoogle() {
-      try {
-        const res = await fetch('/api/auth/login-url');
-        const data = await res.json();
-        if (data.url) window.location.href = data.url;
-      } catch (err) {
-        alert('Failed to connect to login server.');
-      }
-    }
-
-    async function logout() {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      window.location.reload();
-    }
-
-    function switchTab(tab) {
-      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-      document.getElementById(tab + '-view').classList.add('active');
-      document.querySelectorAll('.nav-item, .mobile-item').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(tab));
-      });
-    }
-
-    function toggleOption(btn) {
-      btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    }
-
-    function renderGrid() {
-      const grid = document.getElementById('wardrobe-grid');
-      grid.innerHTML = '';
-      const filtered = currentCategory === 'All' ? wardrobeItems : wardrobeItems.filter(i => i.category === currentCategory);
-
-      filtered.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <img src="${item.image}" alt="${item.name}">
-          <div class="card-body">
-            <div class="card-title">${item.name}</div>
-            <div class="card-sub">${item.category}</div>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    function filterCategory(cat) {
-      currentCategory = cat;
-      document.querySelectorAll('.chip-group .chip').forEach(c => c.classList.toggle('active', c.innerText === cat));
-      renderGrid();
-    }
-
-    function openModal() { document.getElementById('add-modal').classList.add('open'); }
-    function closeModal() { document.getElementById('add-modal').classList.remove('open'); }
-
-    function handleAddItem(e) {
-      e.preventDefault();
-      const name = document.getElementById('item-name').value;
-      const category = document.getElementById('item-category').value;
-      const image = document.getElementById('item-image').value;
-
-      wardrobeItems.push({ id: Date.now(), name, category, image });
-      renderGrid();
-      closeModal();
-      e.target.reset();
-    }
-
-    // Initialize session check and wardrobe grid
-    checkAuthSession();
-    renderGrid();
-  </script>
-</body>
-</html>
+      <!-- Style Me Section -->
+      <section id="styleme-view" class="view
