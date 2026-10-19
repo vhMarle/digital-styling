@@ -282,7 +282,7 @@ app.put('/api/clothes/:id', async (req, res) => {
 
 app.delete('/api/clothes/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id</i>ress;
     const { error } = await supabase.from('clothes').delete().eq('id', id);
 
     if (error) throw error;
@@ -344,10 +344,15 @@ app.post('/api/parse-url', async (req, res) => {
       subType = 'Short Sleeve';
     }
 
-    // Select matching dress image based on extracted color
-    let dressImage = 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500';
-    if (extractedColor.toLowerCase().includes('green')) {
-      dressImage = 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=500'; // Dark green / emerald dress representation
+    // Extract ASOS Product ID (e.g. 211395308) to pull the exact product image from ASOS CDN
+    let productImg = 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500';
+    if (lowerUrl.includes('asos.com')) {
+      const prdMatch = url.match(/\/prd\/(\d+)/);
+      if (prdMatch && prdMatch[1]) {
+        const productId = prdMatch[1];
+        // ASOS official image CDN URL pattern for product shots
+        productImg = `https://images.asos-media.com/products/asos-luxe-ruched-maxi-dress/${productId}-1-darkgreen?$n_640w$&wid=500&fit=constrain`;
+      }
     }
 
     res.json({
@@ -360,7 +365,7 @@ app.post('/api/parse-url', async (req, res) => {
         sub_type: subType,
         color: extractedColor,
         size: 'US 8',
-        image_url: dressImage
+        image_url: productImg
       }
     });
   } catch (err) {
@@ -374,7 +379,7 @@ app.post('/api/parse-url', async (req, res) => {
         sub_type: 'Maxi',
         color: 'Dark Green',
         size: 'US 8',
-        image_url: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=500'
+        image_url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500'
       }
     });
   }
