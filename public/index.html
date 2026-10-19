@@ -29,7 +29,7 @@
       --bg-card: #ffffff;
       --text-main: #1f2937;
       --text-muted: #6b7280;
-      --border: #f3f4f6;
+      --border: #e5e7eb;
       --radius: 16px;
     }
 
@@ -146,4 +146,481 @@
     }
     .option-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin-top: 10px; }
     .opt-btn { 
-      background: var(--bg-main);
+      background: var(--bg-main); 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      padding: 12px; 
+      text-align: center; 
+      font-size: 0.8rem; 
+      font-weight: 600; 
+      cursor: pointer; 
+    }
+    .opt-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+
+    .btn-primary { 
+      background: var(--primary); 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      border-radius: 12px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      width: 100%; 
+      font-size: 0.95rem; 
+    }
+
+    /* Modal & File Upload Styling */
+    .modal-overlay { 
+      display: none; 
+      position: fixed; 
+      inset: 0; 
+      background: rgba(0,0,0,0.4); 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 1000; 
+      padding: 1rem; 
+    }
+    .modal-overlay.open { display: flex; }
+    .modal { 
+      background: white; 
+      border-radius: 20px; 
+      padding: 1.5rem; 
+      width: 100%; 
+      max-width: 460px; 
+      max-height: 90vh; 
+      overflow-y: auto; 
+    }
+
+    .drop-zone {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 6px;
+    }
+    .drop-zone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .drop-zone-text {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-top: 4px;
+      font-size: 0.9rem;
+    }
+
+    .mobile-nav { 
+      display: none; 
+      position: fixed; 
+      bottom: 0; 
+      left: 0; 
+      right: 0; 
+      background: var(--bg-card); 
+      border-top: 1px solid var(--border); 
+      padding: 8px 12px; 
+      justify-content: space-around; 
+      z-index: 900; 
+    }
+    .mobile-item { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 4px; 
+      font-size: 0.7rem; 
+      color: var(--text-muted); 
+      cursor: pointer; 
+    }
+    .mobile-item.active { color: var(--primary); font-weight: 700; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .mobile-nav { display: flex; }
+      .search-bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">✨ Sparks & Sequins</div>
+    <ul class="nav-menu">
+      <li class="nav-item active" onclick="switchTab('closet')">📁 My Closet</li>
+      <li class="nav-item" onclick="switchTab('styleme')">✨ Style Me</li>
+      <li class="nav-item" onclick="switchTab('insights')">📊 Insights</li>
+    </ul>
+  </aside>
+
+  <!-- Main Layout -->
+  <div class="main-wrapper">
+    <header>
+      <input type="text" class="search-bar" placeholder="Search Sparks & Sequins...">
+      <div class="user-profile">
+        <button class="chip" style="background: var(--primary-light); color: var(--primary); border:none;" onclick="loginWithGoogle()">Sign In with Google</button>
+      </div>
+    </header>
+
+    <div class="content">
+      
+      <!-- My Closet Section -->
+      <section id="closet-view" class="view-section active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 class="page-title">My Closet</h2>
+          <button class="chip active" onclick="openModal()">+ Add Item</button>
+        </div>
+
+        <!-- Dynamic Category Chips -->
+        <div class="chip-group" id="category-chips">
+          <button class="chip active" onclick="filterCategory('All')">All</button>
+          <button class="chip" onclick="filterCategory('Tops')">Tops</button>
+          <button class="chip" onclick="filterCategory('Bottoms')">Bottoms</button>
+          <button class="chip" onclick="filterCategory('Outerwear')">Outerwear</button>
+          <button class="chip" onclick="filterCategory('Shoes')">Shoes</button>
+          <button class="chip" onclick="filterCategory('Accessories')">Accessories</button>
+        </div>
+
+        <div class="grid" id="wardrobe-grid"></div>
+      </section>
+
+      <!-- Style Me Section -->
+      <section id="styleme-view" class="view-section">
+        <h2 class="page-title">Style Me ✨</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Tell us the vibe. Get your custom outfit look.</p>
+
+        <div class="style-card">
+          <h3>Select Your Mood</h3>
+          <div class="option-grid">
+            <div class="opt-btn active" onclick="toggleOption(this)">Confident</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Relaxed</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Energetic</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Elegant</div>
+          </div>
+        </div>
+
+        <div class="style-card">
+          <h3>What's the occasion?</h3>
+          <div class="option-grid">
+            <div class="opt-btn active" onclick="toggleOption(this)">Casual</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Work</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Date</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Travel</div>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="alert('AI Look Generation coming soon!')">✨ Generate My Look</button>
+      </section>
+
+      <!-- Insights Section -->
+      <section id="insights-view" class="view-section">
+        <h2 class="page-title">Closet Insights</h2>
+        <div class="style-card" style="text-align: center; padding: 2rem;">
+          <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">68%</div>
+          <p style="color: var(--text-muted);">Casual Style Focus</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Add Item Modal -->
+  <div class="modal-overlay" id="add-modal">
+    <div class="modal">
+      <h2 style="margin-bottom: 1rem;">Add Item</h2>
+      <form onsubmit="handleAddItem(event)">
+        
+        <!-- Drag & Drop / File Upload / Camera Zone -->
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; font-weight:600;">Item Image</label>
+          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('item-file').click()">
+            <div class="drop-zone-text" id="drop-zone-label">
+              📸 <strong>Drag & Drop photo here</strong> or <span style="color:var(--primary); text-decoration:underline;">Choose File</span>
+            </div>
+            <input type="file" id="item-file" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+          </div>
+        </div>
+
+        <!-- URL Import Option -->
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; font-weight:600;">...or Import with Image URL</label>
+          <input type="url" id="item-url" placeholder="https://example.com/photo.jpg" class="input-field">
+        </div>
+
+        <!-- Item Name -->
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; font-weight:600;">Item Name</label>
+          <input type="text" id="item-name" placeholder="e.g. Silk Wrap Blouse" class="input-field" required>
+        </div>
+
+        <!-- Dynamic Category Selector -->
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; font-weight:600;">Category</label>
+          <select id="item-category" class="input-field" onchange="handleCategorySelect(this)">
+            <option value="Tops">Tops</option>
+            <option value="Bottoms">Bottoms</option>
+            <option value="Outerwear">Outerwear</option>
+            <option value="Shoes">Shoes</option>
+            <option value="Accessories">Accessories</option>
+            <option value="__NEW__">+ Add New Category...</option>
+          </select>
+          <input type="text" id="custom-category" placeholder="Enter new category name..." class="input-field" style="display:none; margin-top:6px;">
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:1.5rem;">
+          <button type="button" class="chip" style="flex:1;" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex:1;">Save Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Mobile Navigation -->
+  <nav class="mobile-nav">
+    <div class="mobile-item active" onclick="switchTab('closet')">📁<br>Wardrobe</div>
+    <div class="mobile-item" onclick="switchTab('styleme')">✨<br>Style Me</div>
+    <div class="mobile-item" onclick="switchTab('insights')">📊<br>Insights</div>
+  </nav>
+
+  <script>
+    let wardrobeItems = [];
+    let currentCategory = 'All';
+    let selectedFile = null;
+
+    // --- Drag & Drop Listener Setup ---
+    const dropZone = document.getElementById('drop-zone');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files.length > 0) {
+        selectedFile = files[0];
+        document.getElementById('drop-zone-label').innerText = `✅ Selected: ${selectedFile.name}`;
+      }
+    });
+
+    function handleFileSelect(e) {
+      if (e.target.files.length > 0) {
+        selectedFile = e.target.files[0];
+        document.getElementById('drop-zone-label').innerText = `✅ Selected: ${selectedFile.name}`;
+      }
+    }
+
+    // --- Dynamic Category Handler ---
+    function handleCategorySelect(selectEl) {
+      const customInput = document.getElementById('custom-category');
+      if (selectEl.value === '__NEW__') {
+        customInput.style.display = 'block';
+        customInput.required = true;
+        customInput.focus();
+      } else {
+        customInput.style.display = 'none';
+        customInput.required = false;
+      }
+    }
+
+    async function checkAuthSession() {
+      try {
+        const res = await fetch('/api/auth/user');
+        const data = await res.json();
+        const profileContainer = document.querySelector('.user-profile');
+
+        if (data.authenticated && data.user) {
+          profileContainer.innerHTML = `
+            <img src="${data.user.picture}" class="avatar" alt="${data.user.name}">
+            <span style="font-size:0.85rem; font-weight:600;">${data.user.name}</span>
+            <button class="chip" style="background:#fee2e2; color:#ef4444; border:none; margin-left:8px;" onclick="logout()">Logout</button>
+          `;
+        }
+      } catch (err) {
+        console.error('Session check failed', err);
+      }
+    }
+
+    async function loadClothes() {
+      try {
+        const res = await fetch('/api/clothes');
+        const data = await res.json();
+        if (data.success) {
+          wardrobeItems = data.clothes;
+          updateCategoryChips();
+          renderGrid();
+        }
+      } catch (err) {
+        console.error('Failed to load clothes', err);
+      }
+    }
+
+    function updateCategoryChips() {
+      const existingCategories = ['All', 'Tops', 'Bottoms', 'Outerwear', 'Shoes', 'Accessories'];
+      const extraCategories = Array.from(new Set(wardrobeItems.map(i => i.category)))
+        .filter(cat => !existingCategories.includes(cat));
+
+      const chipGroup = document.getElementById('category-chips');
+      
+      // Clear extra chips
+      document.querySelectorAll('.chip-extra').forEach(el => el.remove());
+
+      const selectDropdown = document.getElementById('item-category');
+
+      extraCategories.forEach(cat => {
+        // Add chip button
+        const btn = document.createElement('button');
+        btn.className = 'chip chip-extra';
+        btn.innerText = cat;
+        btn.onclick = () => filterCategory(cat);
+        chipGroup.appendChild(btn);
+
+        // Add to modal dropdown if missing
+        if (!Array.from(selectDropdown.options).some(o => o.value === cat)) {
+          const opt = document.createElement('option');
+          opt.value = cat;
+          opt.innerText = cat;
+          selectDropdown.insertBefore(opt, selectDropdown.options[selectDropdown.options.length - 1]);
+        }
+      });
+    }
+
+    async function loginWithGoogle() {
+      try {
+        const res = await fetch('/api/auth/login-url');
+        const data = await res.json();
+        if (data.url) window.location.href = data.url;
+      } catch (err) {
+        alert('Failed to connect to login server.');
+      }
+    }
+
+    async function logout() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.reload();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.getElementById(tab + '-view').classList.add('active');
+      document.querySelectorAll('.nav-item, .mobile-item').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(tab));
+      });
+    }
+
+    function toggleOption(btn) {
+      btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('wardrobe-grid');
+      grid.innerHTML = '';
+      const filtered = currentCategory === 'All' 
+        ? wardrobeItems 
+        : wardrobeItems.filter(i => i.category === currentCategory);
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<p style="color:var(--text-muted); grid-column: 1/-1; text-align:center; padding: 2rem;">No items found. Tap <strong>+ Add Item</strong> to upload your first item!</p>`;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${item.image_url || 'https://via.placeholder.com/150'}" alt="${item.name}">
+          <div class="card-body">
+            <div class="card-title">${item.name}</div>
+            <div class="card-sub">${item.category}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.chip-group .chip').forEach(c => c.classList.toggle('active', c.innerText === cat));
+      renderGrid();
+    }
+
+    function openModal() { document.getElementById('add-modal').classList.add('open'); }
+    function closeModal() { 
+      document.getElementById('add-modal').classList.remove('open'); 
+      selectedFile = null;
+      document.getElementById('drop-zone-label').innerHTML = `📸 <strong>Drag & Drop photo here</strong> or <span style="color:var(--primary); text-decoration:underline;">Choose File</span>`;
+      document.getElementById('custom-category').style.display = 'none';
+    }
+
+    async function handleAddItem(e) {
+      e.preventDefault();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Saving...';
+
+      const name = document.getElementById('item-name').value;
+      const categorySelect = document.getElementById('item-category').value;
+      const customCategory = document.getElementById('custom-category').value;
+      const imageUrlInput = document.getElementById('item-url').value;
+
+      const category = categorySelect === '__NEW__' ? customCategory : categorySelect;
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('category', category);
+
+      if (selectedFile) {
+        formData.append('image', selectedFile);
+      } else if (imageUrlInput) {
+        formData.append('image_url', imageUrlInput);
+      }
+
+      try {
+        const res = await fetch('/api/clothes', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          wardrobeItems.unshift(data.item);
+          updateCategoryChips();
+          renderGrid();
+          closeModal();
+          e.target.reset();
+        } else {
+          alert('Error saving item');
+        }
+      } catch (err) {
+        alert('Failed to upload item');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Save Item';
+      }
+    }
+
+    checkAuthSession();
+    loadClothes();
+  </script>
+</body>
+</html>
