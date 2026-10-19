@@ -9,11 +9,7 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-
-  <!-- Apple Touch Icon -->
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-
-  <!-- Manifest for PWA -->
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#ffffff">
 
@@ -329,7 +325,7 @@
       </div>
 
       <div style="text-align:center; padding:10px; background:var(--bg-surface); border-radius:14px; margin-bottom:12px;">
-        <img id="detail-img" src="" style="max-height:200px; object-fit:contain;">
+        <img id="detail-img" src="" style="max-height:200px; object-fit:contain;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23767676\' stroke-width=\'1.5\'><path d=\'M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H5v10a2 2 0 002 2h10a2 2 0 002-2V10h1.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z\'/></svg>'">
       </div>
 
       <div class="form-group">
@@ -480,12 +476,13 @@
     }
 
     function createSquircleCard(label, imgUrl, onClick, isActive = false) {
+      const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23767676\' stroke-width=\'1.5\'><path d=\'M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H5v10a2 2 0 002 2h10a2 2 0 002-2V10h1.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z\'/></svg>";
       const div = document.createElement('div');
       div.className = `squircle-card ${isActive ? 'active' : ''}`;
       div.onclick = onClick;
       div.innerHTML = `
         <div class="squircle-thumb">
-          <img src="${imgUrl}" alt="${label}">
+          <img src="${imgUrl}" alt="${label}" onerror="this.src='${fallbackSvg}'">
         </div>
         <div class="squircle-label">${label}</div>
       `;
@@ -518,11 +515,13 @@
         return;
       }
 
+      const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23767676\' stroke-width=\'1.5\'><path d=\'M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H5v10a2 2 0 002 2h10a2 2 0 002-2V10h1.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z\'/></svg>";
+
       filtered.forEach(item => {
         const cell = document.createElement('div');
         cell.className = 'grid-cell';
         cell.innerHTML = `
-          <img src="${item.image_url}" alt="${item.name}">
+          <img src="${item.image_url}" alt="${item.name}" onerror="this.src='${fallbackSvg}'">
           <div class="grid-action-plus" onclick="event.stopPropagation(); openDetailModal(${JSON.stringify(item).replace(/"/g, '&quot;')})">+</div>
         `;
         cell.onclick = () => openDetailModal(item);
@@ -609,165 +608,3 @@
       const data = await res.json();
       if (data.success) {
         document.getElementById('item-name').value = data.data.name;
-        document.getElementById('item-category').value = data.data.category;
-        populateSubTypes();
-        document.getElementById('item-subtype').value = data.data.sub_type;
-        document.getElementById('item-brand').value = data.data.brand;
-        document.getElementById('item-color').value = data.data.color || 'Neutral';
-        document.getElementById('item-size').value = data.data.size || 'M';
-
-        processImageSegmentation(data.data.image_url);
-      }
-    }
-
-    function handleFileSelect(e) {
-      if (e.target.files.length > 0) {
-        const file = e.target.files[0];
-        document.getElementById('drop-text').innerHTML = `✅ Selected: <strong>${file.name}</strong>`;
-        clearMetadataFields();
-
-        const reader = new FileReader();
-        reader.onload = (event) => processImageSegmentation(event.target.result);
-        reader.readAsDataURL(file);
-      }
-    }
-
-    function processImageSegmentation(src) {
-      const canvas = document.getElementById('segmentation-canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-
-      img.onload = () => {
-        canvas.width = img.width || 300;
-        canvas.height = img.height || 300;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-
-        try {
-          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const data = imgData.data;
-          for (let i = 0; i < data.length; i += 4) {
-            if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) {
-              data[i+3] = 0;
-            }
-          }
-          ctx.putImageData(imgData, 0, 0);
-          processedCanvasData = canvas.toDataURL('image/png');
-        } catch (e) {
-          processedCanvasData = src;
-        }
-      };
-      img.onerror = () => {
-        // Fallback drawing placeholder
-        canvas.width = 300;
-        canvas.height = 300;
-        ctx.fillStyle = '#f4f4f6';
-        ctx.fillRect(0, 0, 300, 300);
-        ctx.fillStyle = '#111111';
-        ctx.font = '14px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Garment Preview Ready', 150, 150);
-        processedCanvasData = src;
-      };
-      img.src = src;
-    }
-
-    async function saveNewItem() {
-      const btn = document.getElementById('save-db-btn');
-      btn.disabled = true;
-      btn.innerText = 'Saving...';
-
-      const name = document.getElementById('item-name').value;
-      const category = document.getElementById('item-category').value;
-      const sub_type = document.getElementById('item-subtype').value;
-      const brand = document.getElementById('item-brand').value;
-      const color = document.getElementById('item-color').value;
-      const size = document.getElementById('item-size').value;
-      const imageUrlInput = document.getElementById('import-url').value;
-
-      const payload = {
-        name: name || 'Garment Item',
-        category,
-        sub_type,
-        brand: brand || '',
-        color: color || '',
-        size: size || '',
-        image_url: imageUrlInput || null,
-        image_data: processedCanvasData || null
-      };
-
-      try {
-        const res = await fetch('/api/clothes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (data.success) {
-          clothesData.unshift(data.item);
-          renderCarousel();
-          renderGrid();
-          closeImportModal();
-        } else {
-          alert('Failed to save item to database: ' + (data.message || 'Unknown error'));
-        }
-      } catch (err) {
-        alert('Error saving item');
-      } finally {
-        btn.disabled = false;
-        btn.innerText = 'Add to Closet';
-      }
-    }
-
-    function openDetailModal(item) {
-      currentDetailItem = item;
-      document.getElementById('detail-img').src = item.image_url;
-      document.getElementById('edit-name').value = item.name;
-      document.getElementById('edit-category').value = item.category;
-      document.getElementById('edit-subtype').value = item.sub_type || 'General';
-      document.getElementById('edit-brand').value = item.brand || '';
-      document.getElementById('edit-color').value = item.color || '';
-      document.getElementById('edit-size').value = item.size || '';
-      document.getElementById('detail-modal').classList.add('open');
-    }
-
-    function closeDetailModal() {
-      document.getElementById('detail-modal').classList.remove('open');
-    }
-
-    async function updateItem() {
-      if (!currentDetailItem) return;
-      const name = document.getElementById('edit-name').value;
-      const category = document.getElementById('edit-category').value;
-      const sub_type = document.getElementById('edit-subtype').value;
-      const brand = document.getElementById('edit-brand').value;
-      const color = document.getElementById('edit-color').value;
-      const size = document.getElementById('edit-size').value;
-
-      const res = await fetch(`/api/clothes/${currentDetailItem.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, category, sub_type, brand, color, size })
-      });
-      const data = await res.json();
-      if (data.success) {
-        closeDetailModal();
-        loadClothes();
-      }
-    }
-
-    async function deleteItem() {
-      if (!currentDetailItem || !confirm('Delete this item permanently?')) return;
-      const res = await fetch(`/api/clothes/${currentDetailItem.id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (data.success) {
-        closeDetailModal();
-        loadClothes();
-      }
-    }
-
-    loadClothes();
-  </script>
-</body>
-</html>
