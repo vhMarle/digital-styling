@@ -1,390 +1,689 @@
-const express = require('express');
-const session = require('express-session');
-const path = require('path');
-const multer = require('multer');
-const { createClient } = require('@supabase/supabase-js');
-const { google } = require('googleapis');
-const https = require('https');
-const http = require('http');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sparks & Sequins - All Clothes</title>
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+  <!-- Browser Favicons -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#ffffff">
 
-const PUBLIC_DIR = path.join(__dirname, '../public');
-
-function sanitizeUrl(rawUrl) {
-  if (!rawUrl) return 'https://jzyagdnkhctawxhoimrx.supabase.co';
-  const match = rawUrl.match(/https?:\/\/[^\s\]\)]+/);
-  return match ? match[0] : rawUrl.trim();
-}
-
-const supabaseUrl = sanitizeUrl(process.env.SUPABASE_URL);
-const supabaseKey = (process.env.SUPABASE_KEY || 'sb_publishable_AOEbD5g2qOmzo2qYfmqutg_9u1USfRV').trim();
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-const upload = multer({ storage: multer.memoryStorage() });
-
-app.set('trust proxy', 1);
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'sparks-and-sequins-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 30 * 24 * 60 * 60 * 1000
-  }
-}));
-
-app.use(express.json({ limit: '25mb' }));
-
-app.get('/site.webmanifest', (req, res) => {
-  res.header('Content-Type', 'application/manifest+json');
-  res.sendFile(path.join(PUBLIC_DIR, 'site.webmanifest'));
-});
-
-app.use(express.static(PUBLIC_DIR, {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  <style>
+    :root {
+      --bg-white: #ffffff;
+      --bg-surface: #f4f4f6;
+      --text-dark: #111111;
+      --text-muted: #767676;
+      --border-color: #eeeeee;
+      --accent: #111111;
+      --primary-purple: #7c3aed;
+      --radius-squircle: 20px;
     }
-  }
-}));
 
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  'https://digital-styling.onrender.com/api/auth/callback'
-);
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg-white); color: var(--text-dark); display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 85px; }
 
-app.get('/api/auth/login-url', (req, res) => {
-  const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: ['profile', 'email']
-  });
-  res.json({ url });
-});
+    /* Top Navigation Bar */
+    header.top-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg-white);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .top-nav-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-dark); }
+    .top-nav-title { font-size: 1.1rem; font-weight: 700; text-align: center; }
 
-app.get('/api/auth/callback', async (req, res) => {
-  const { code } = req.query;
-  try {
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
+    /* Search & Filter Component */
+    .search-filter-container {
+      display: flex; gap: 10px; padding: 12px 18px; align-items: center;
+    }
+    .filter-btn {
+      background: var(--bg-surface); border: none; padding: 10px 14px;
+      border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .search-bar-wrap {
+      flex: 1; background: var(--bg-surface); border-radius: 12px; display: flex; align-items: center; padding: 0 12px;
+    }
+    .search-input {
+      width: 100%; border: none; background: transparent; padding: 10px 6px;
+      font-size: 0.9rem; color: var(--text-dark); outline: none;
+    }
 
-    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
-    const { data } = await oauth2.userinfo.get();
+    /* Horizontal Category Scroll Tabs */
+    .category-scroll {
+      display: flex; gap: 18px; overflow-x: auto; padding: 10px 18px;
+      border-bottom: 1px solid var(--border-color); scrollbar-width: none;
+    }
+    .category-scroll::-webkit-scrollbar { display: none; }
+    .cat-tab {
+      background: none; border: none; font-size: 0.9rem; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; white-space: nowrap; padding-bottom: 6px;
+      position: relative;
+    }
+    .cat-tab.active { color: var(--text-dark); }
+    .cat-tab.active::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 3px; background: var(--text-dark); border-radius: 3px;
+    }
 
-    req.session.user = {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      picture: data.picture
+    /* Sub-Category Squircle Carousel Section */
+    .carousel-section { padding: 14px 18px; background: var(--bg-white); border-bottom: 1px solid var(--border-color); }
+    .carousel-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .carousel-row { display: flex; gap: 14px; overflow-x: auto; scrollbar-width: none; }
+    .carousel-row::-webkit-scrollbar { display: none; }
+    .squircle-card {
+      display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 72px; cursor: pointer;
+    }
+    .squircle-thumb {
+      width: 68px; height: 68px; background: var(--bg-surface); border-radius: var(--radius-squircle);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      border: 1px solid var(--border-color); transition: border 0.2s;
+    }
+    .squircle-card.active .squircle-thumb { border: 2px solid var(--text-dark); }
+    .squircle-thumb img { width: 80%; height: 80%; object-fit: contain; }
+    .squircle-label { font-size: 0.72rem; font-weight: 600; color: var(--text-dark); text-align: center; }
+
+    /* Main Content Grid (3 Columns) */
+    .grid-container {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--border-color); margin-top: 4px;
+    }
+    .grid-cell {
+      background: var(--bg-white); aspect-ratio: 3/4; position: relative;
+      display: flex; align-items: center; justify-content: center; padding: 10px;
+      cursor: pointer; overflow: hidden;
+    }
+    .grid-cell img {
+      max-width: 90%; max-height: 90%; object-fit: contain;
+      filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.06));
+    }
+    .grid-action-plus {
+      position: absolute; bottom: 8px; left: 8px; width: 26px; height: 26px;
+      background: var(--bg-surface); border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 1rem; font-weight: 700;
+      color: var(--text-dark); border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer; z-index: 10;
+    }
+
+    /* Back-To-Top Floating Action Button */
+    .fab-back-top {
+      position: fixed; bottom: 90px; right: 20px; width: 44px; height: 44px;
+      background: var(--bg-white); border: 1px solid var(--border-color);
+      border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; cursor: pointer; z-index: 90;
+    }
+
+    /* Fixed Bottom Navigation Bar */
+    nav.bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 64px;
+      background: var(--bg-white); border-top: 1px solid var(--border-color);
+      display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+      pointer-events: auto;
+    }
+    .nav-tab {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 0.65rem; color: var(--text-muted); cursor: pointer; border: none; background: none;
+      pointer-events: auto;
+    }
+    .nav-tab.active { color: var(--text-dark); font-weight: 700; }
+    .center-cta {
+      width: 50px; height: 50px; background: var(--text-dark); color: white;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; font-weight: 400; cursor: pointer; margin-top: -16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 1005; pointer-events: auto;
+      border: 3px solid #ffffff;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 2000; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: var(--bg-white); border-radius: 20px; width: 100%; max-width: 440px;
+      max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .form-group { margin-bottom: 12px; }
+    .form-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px; }
+    .input-box {
+      width: 100%; padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border-color);
+      border-radius: 10px; font-size: 0.9rem; outline: none;
+    }
+
+    .drop-zone {
+      border: 2px dashed #ccc; border-radius: 14px; padding: 22px; text-align: center;
+      background: var(--bg-surface); cursor: pointer; margin-bottom: 10px; transition: all 0.2s ease;
+    }
+    .drop-zone.dragover { border-color: var(--primary-purple); background: #f3e8ff; }
+
+    .btn-dark {
+      background: var(--text-dark); color: white; border: none; padding: 12px;
+      border-radius: 12px; font-weight: 600; width: 100%; cursor: pointer; font-size: 0.95rem;
+    }
+    .btn-danger {
+      background: #ef4444; color: white; border: none; padding: 10px;
+      border-radius: 12px; font-weight: 600; width: 100%; cursor: pointer; margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <button class="top-nav-btn" onclick="alert('Back')">←</button>
+    <div class="top-nav-title">All clothes</div>
+    <button class="top-nav-btn">⋮</button>
+  </header>
+
+  <!-- Search & Filter Component -->
+  <div class="search-filter-container">
+    <button class="filter-btn">⚙️</button>
+    <div class="search-bar-wrap">
+      <span>🔍</span>
+      <input type="text" id="search-input" class="search-input" placeholder="Search dress, shoe, etc." oninput="handleSearch(this.value)">
+    </div>
+  </div>
+
+  <!-- Horizontal Scroll Category Tabs -->
+  <div class="category-scroll">
+    <button class="cat-tab active" onclick="selectCategory('All', this)">All</button>
+    <button class="cat-tab" onclick="selectCategory('Tops', this)">Tops</button>
+    <button class="cat-tab" onclick="selectCategory('Bottoms', this)">Bottoms</button>
+    <button class="cat-tab" onclick="selectCategory('Dresses', this)">Dresses</button>
+    <button class="cat-tab" onclick="selectCategory('Outerwear', this)">Outerwear</button>
+    <button class="cat-tab" onclick="selectCategory('Shoes', this)">Shoes</button>
+    <button class="cat-tab" onclick="selectCategory('Accessories', this)">Accessories</button>
+  </div>
+
+  <!-- Sub-Category Carousel Section -->
+  <div class="carousel-section" id="carousel-section">
+    <div class="carousel-title" id="carousel-title">Recently Added</div>
+    <div class="carousel-row" id="carousel-row"></div>
+  </div>
+
+  <!-- Main Content 3-Column Image Grid -->
+  <div class="grid-container" id="garment-grid"></div>
+
+  <!-- Utility Back-To-Top FAB -->
+  <button class="fab-back-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
+
+  <!-- Fixed Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <button class="nav-tab">🏠<br>Home</button>
+    <button class="nav-tab">👗<br>Outfits</button>
+    <div class="center-cta" id="global-plus-btn">+</div>
+    <button class="nav-tab">✨<br>Feed</button>
+    <button class="nav-tab">📥<br>Inbox</button>
+  </nav>
+
+  <!-- Import / New Item Modal -->
+  <div class="modal-overlay" id="import-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-weight:700;">New Item</h3>
+        <button class="top-nav-btn" onclick="closeImportModal()">✕</button>
+      </div>
+
+      <!-- Mode Selector Buttons -->
+      <div style="display:flex; gap:6px; margin-bottom:12px;">
+        <button id="btn-mode-url" class="btn-dark" style="flex:1; font-size:0.75rem;" onclick="setImportMode('url')">Import from URL</button>
+        <button id="btn-mode-file" class="btn-dark" style="flex:1; font-size:0.75rem; background:#767676;" onclick="setImportMode('file')">Browse / Drag & Drop</button>
+      </div>
+
+      <!-- Dynamic Import Input / Drop Zone Box -->
+      <div class="form-group">
+        <!-- URL Input View -->
+        <div id="mode-url-wrap">
+          <label class="form-label">Product URL</label>
+          <div style="display:flex; gap:6px;">
+            <input type="url" id="import-url" class="input-box" placeholder="https://store.com/item">
+            <button class="btn-dark" style="width:80px;" onclick="fetchUrlDetails()">Search</button>
+          </div>
+        </div>
+
+        <!-- Drag & Drop / File Select View -->
+        <div id="mode-file-wrap" style="display:none;">
+          <label class="form-label">Drag & Drop Image or Browse</label>
+          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <div id="drop-text">📸 Drag & Drop photo here or <u>Browse File</u></div>
+            <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Background Segmentation Preview Canvas -->
+      <div class="form-group" style="text-align:center;">
+        <label class="form-label">Background Segmentation Preview</label>
+        <div style="width:100%; height:180px; background:#f4f4f6; border-radius:12px; border:1px solid #e5e5e5; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+          <canvas id="segmentation-canvas" style="max-width:100%; max-height:100%; object-fit:contain;"></canvas>
+        </div>
+      </div>
+
+      <!-- Editable Details Form -->
+      <div class="form-group">
+        <label class="form-label">Item Name</label>
+        <input type="text" id="item-name" class="input-box" placeholder="e.g. Linen Wrap Dress">
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select id="item-category" class="input-box" onchange="populateSubTypes()">
+            <option value="Tops">Tops</option>
+            <option value="Bottoms">Bottoms</option>
+            <option value="Dresses">Dresses</option>
+            <option value="Outerwear">Outerwear</option>
+            <option value="Shoes">Shoes</option>
+            <option value="Accessories">Accessories</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sub-Type</label>
+          <select id="item-subtype" class="input-box"></select>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+        <div class="form-group">
+          <label class="form-label">Site / Brand</label>
+          <input type="text" id="item-brand" class="input-box" placeholder="e.g. Zara">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input type="text" id="item-color" class="input-box" placeholder="e.g. Black">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Size</label>
+          <select id="item-size" class="input-box">
+            <option value="">--</option>
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="XXL">XXL</option>
+            <option value="US 8">US 8</option>
+            <option value="Custom">Custom</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="save-db-btn" class="btn-dark" style="margin-top:10px;" onclick="saveNewItem()">Add to Closet</button>
+    </div>
+  </div>
+
+  <!-- Pop-Out Details & Edit/Delete Modal -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-weight:700;">Garment Details</h3>
+        <button class="top-nav-btn" onclick="closeDetailModal()">✕</button>
+      </div>
+
+      <div style="text-align:center; padding:10px; background:var(--bg-surface); border-radius:14px; margin-bottom:12px;">
+        <img id="detail-img" src="" style="max-height:200px; object-fit:contain;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23767676\' stroke-width=\'1.5\'><path d=\'M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H5v10a2 2 0 002 2h10a2 2 0 002-2V10h1.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z\'/></svg>'">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Item Name</label>
+        <input type="text" id="edit-name" class="input-box">
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <input type="text" id="edit-category" class="input-box">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sub-Type</label>
+          <input type="text" id="edit-subtype" class="input-box">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+        <div class="form-group">
+          <label class="form-label">Brand</label>
+          <input type="text" id="edit-brand" class="input-box">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input type="text" id="edit-color" class="input-box">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Size</label>
+          <input type="text" id="edit-size" class="input-box">
+        </div>
+      </div>
+
+      <button class="btn-dark" style="margin-top:10px;" onclick="updateItem()">Save Changes</button>
+      <button class="btn-danger" onclick="deleteItem()">Delete Item</button>
+    </div>
+  </div>
+
+  <script>
+    let clothesData = [];
+    let activeCategory = 'All';
+    let activeSubFilter = null;
+    let currentDetailItem = null;
+    let processedCanvasData = null;
+
+    const subCategoryMap = {
+      'Tops': ['Sleeveless', 'Short Sleeve', '¾ Sleeve', 'Long Sleeve'],
+      'Shoes': ['Boots', 'Sandals', 'Flats', 'Heels'],
+      'Accessories': ['Bags', 'Belts', 'Jewelry', 'Scarfs'],
+      'Bottoms': ['Jeans', 'Pants', 'Skirts', 'Shorts'],
+      'Dresses': ['Midi', 'Maxi', 'Mini', 'Gown'],
+      'Outerwear': ['Coats', 'Jackets', 'Cardigans', 'Vests']
     };
 
-    req.session.save((err) => {
-      if (err) console.error('Session save error:', err);
-      res.redirect('/');
-    });
-  } catch (err) {
-    console.error('OAuth Callback Error:', err);
-    res.redirect('/?error=auth_failed');
-  }
-});
-
-app.get('/api/auth/user', (req, res) => {
-  if (req.session && req.session.user) {
-    res.json({ authenticated: true, user: req.session.user });
-  } else {
-    res.json({ authenticated: false, user: null });
-  }
-});
-
-app.post('/api/auth/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie('connect.sid');
-    res.json({ success: true });
-  });
-});
-
-app.get('/api/proxy-image', (req, res) => {
-  const imageUrl = req.query.url;
-  if (!imageUrl) return res.status(400).send('URL required');
-
-  try {
-    const client = imageUrl.startsWith('https') ? https : http;
-    const request = client.get(imageUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    // Attach global click handler for the center plus button
+    document.addEventListener('DOMContentLoaded', () => {
+      const plusBtn = document.getElementById('global-plus-btn');
+      if (plusBtn) {
+        plusBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openImportModal();
+        });
       }
-    }, (response) => {
-      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-        return res.redirect(`/api/proxy-image?url=${encodeURIComponent(response.headers.location)}`);
-      }
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Content-Type', response.headers['content-type'] || 'image/jpeg');
-      response.pipe(res);
     });
-    request.on('error', () => {
-      res.status(500).send('Image proxy error');
+
+    ['dragover', 'drop'].forEach(eventName => {
+      window.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
     });
-  } catch (e) {
-    res.status(500).send('Proxy exception');
-  }
-});
 
-app.get('/api/clothes', async (req, res) => {
-  try {
-    const userEmail = req.session?.user?.email || 'guest@sparksequins.com';
-    const { data, error } = await supabase
-      .from('clothes')
-      .select('*')
-      .eq('user_email', userEmail)
-      .order('created_at', { ascending: false });
+    function setupDropZone() {
+      const dropZone = document.getElementById('drop-zone');
+      if (!dropZone) return;
 
-    if (error) throw error;
-    res.json({ success: true, clothes: data || [] });
-  } catch (err) {
-    console.error('Error fetching clothes:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch clothes' });
-  }
-});
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('dragover');
+        }, false);
+      });
 
-app.post('/api/clothes', upload.single('image'), async (req, res) => {
-  try {
-    const { 
-      name, 
-      category, 
-      sub_type, 
-      brand, 
-      site_name, 
-      color, 
-      size, 
-      image_url, 
-      image_data 
-    } = req.body;
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('dragover');
+        }, false);
+      });
 
-    const userEmail = req.session?.user?.email || 'guest@sparksequins.com';
-    let finalImageUrl = null;
+      dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+          const file = dt.files[0];
+          document.getElementById('drop-text').innerHTML = `✅ Selected: <strong>${file.name}</strong>`;
+          clearMetadataFields();
 
-    if (image_data && typeof image_data === 'string' && image_data.startsWith('data:image')) {
-      try {
-        const base64Data = Buffer.from(image_data.replace(/^data:image\/\w+;base64,/, ""), 'base64');
-        const fileName = `${Date.now()}_isolated.png`;
-
-        const { error: uploadError } = await supabase
-          .storage
-          .from('wardrobe-images')
-          .upload(fileName, base64Data, { contentType: 'image/png', upsert: true });
-
-        if (!uploadError) {
-          const { data: publicUrlData } = supabase
-            .storage
-            .from('wardrobe-images')
-            .getPublicUrl(fileName);
-          finalImageUrl = publicUrlData.publicUrl;
+          const reader = new FileReader();
+          reader.onload = (event) => processImageSegmentation(event.target.result);
+          reader.readAsDataURL(file);
         }
-      } catch (e) {
-        console.error('Error uploading base64 image:', e);
-      }
+      });
     }
 
-    if (!finalImageUrl && req.file) {
+    async function loadClothes() {
       try {
-        const fileName = `${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        const { error: uploadError } = await supabase
-          .storage
-          .from('wardrobe-images')
-          .upload(fileName, req.file.buffer, {
-            contentType: req.file.mimetype,
-            upsert: true
-          });
-
-        if (!uploadError) {
-          const { data: publicUrlData } = supabase
-            .storage
-            .from('wardrobe-images')
-            .getPublicUrl(fileName);
-          finalImageUrl = publicUrlData.publicUrl;
+        const res = await fetch('/api/clothes');
+        const data = await res.json();
+        if (data.success) {
+          clothesData = data.clothes;
+          renderCarousel();
+          renderGrid();
         }
-      } catch (e) {
-        console.error('Error uploading buffer:', e);
+      } catch (err) {
+        console.error('Failed to load clothes', err);
       }
     }
 
-    if (!finalImageUrl && image_url) {
-      finalImageUrl = image_url;
+    function selectCategory(cat, btn) {
+      activeCategory = cat;
+      activeSubFilter = null;
+      document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+
+      renderCarousel();
+      renderGrid();
     }
 
-    if (!finalImageUrl) {
-      finalImageUrl = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400';
+    function renderCarousel() {
+      const title = document.getElementById('carousel-title');
+      const row = document.getElementById('carousel-row');
+      row.innerHTML = '';
+
+      if (activeCategory === 'All' || !subCategoryMap[activeCategory]) {
+        title.innerText = 'Recently Added';
+        const recent = clothesData.slice(0, 8);
+        recent.forEach(item => {
+          const card = createSquircleCard(item.name, item.image_url, () => openDetailModal(item));
+          row.appendChild(card);
+        });
+      } else {
+        title.innerText = `${activeCategory} Sub-Categories`;
+        const subTypes = subCategoryMap[activeCategory];
+        subTypes.forEach(sub => {
+          const matchedItem = clothesData.find(i => i.category === activeCategory && i.sub_type === sub);
+          const imgUrl = matchedItem ? matchedItem.image_url : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=150';
+          const isSelected = activeSubFilter === sub;
+          
+          const card = createSquircleCard(sub, imgUrl, () => {
+            activeSubFilter = activeSubFilter === sub ? null : sub;
+            renderCarousel();
+            renderGrid();
+          }, isSelected);
+
+          row.appendChild(card);
+        });
+      }
     }
 
-    const fullPayload = {
-      user_email: userEmail,
-      name: name || 'Garment Item',
-      category: category || 'Tops',
-      sub_type: sub_type || 'General',
-      brand: brand || '',
-      site_name: site_name || '',
-      color: color || '',
-      size: size || '',
-      image_url: finalImageUrl
-    };
+    function createSquircleCard(label, imgUrl, onClick, isActive = false) {
+      const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23767676\' stroke-width=\'1.5\'><path d=\'M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H5v10a2 2 0 002 2h10a2 2 0 002-2V10h1.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z\'/></svg>";
+      const div = document.createElement('div');
+      div.className = `squircle-card ${isActive ? 'active' : ''}`;
+      div.onclick = onClick;
+      div.innerHTML = `
+        <div class="squircle-thumb">
+          <img src="${imgUrl}" alt="${label}" onerror="this.src='${fallbackSvg}'">
+        </div>
+        <div class="squircle-label">${label}</div>
+      `;
+      return div;
+    }
 
-    let insertResult = await supabase.from('clothes').insert([fullPayload]).select();
+    function renderGrid() {
+      const grid = document.getElementById('garment-grid');
+      grid.innerHTML = '';
 
-    if (insertResult.error) {
-      const minimalPayload = {
-        user_email: userEmail,
-        name: name || 'Garment Item',
-        category: category || 'Tops',
-        image_url: finalImageUrl
+      let filtered = clothesData;
+      if (activeCategory !== 'All') {
+        filtered = filtered.filter(i => i.category === activeCategory);
+      }
+      if (activeSubFilter) {
+        filtered = filtered.filter(i => i.sub_type === activeSubFilter);
+      }
+
+      const query = document.getElementById('search-input').value.toLowerCase();
+      if (query) {
+        filtered = filtered.filter(i => 
+          i.name.toLowerCase().includes(query) || 
+          (i.brand && i.brand.toLowerCase().includes(query)) ||
+          (i.category && i.category.toLowerCase().includes(query))
+        );
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-muted);">No items found. Tap + to add items.</div>`;
+        return;
+      }
+
+      const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23767676\' stroke-width=\'1.5\'><path d=\'M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H5v10a2 2 0 002 2h10a2 2 0 002-2V10h1.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z\'/></svg>";
+
+      filtered.forEach(item => {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        cell.innerHTML = `
+          <img src="${item.image_url}" alt="${item.name}" onerror="this.src='${fallbackSvg}'">
+          <div class="grid-action-plus">+</div>
+        `;
+        
+        cell.onclick = () => openDetailModal(item);
+        const plusBtn = cell.querySelector('.grid-action-plus');
+        plusBtn.onclick = (e) => {
+          e.stopPropagation();
+          openDetailModal(item);
+        };
+
+        grid.appendChild(cell);
+      });
+    }
+
+    function handleSearch(val) {
+      renderGrid();
+    }
+
+    function openImportModal() {
+      document.getElementById('import-modal').classList.add('open');
+      setImportMode('url');
+      setupDropZone();
+    }
+
+    function closeImportModal() {
+      document.getElementById('import-modal').classList.remove('open');
+      resetImportForm();
+    }
+
+    function clearMetadataFields() {
+      document.getElementById('item-brand').value = '';
+      document.getElementById('item-color').value = '';
+      document.getElementById('item-size').value = '';
+    }
+
+    function resetImportForm() {
+      document.getElementById('import-url').value = '';
+      document.getElementById('file-input').value = '';
+      document.getElementById('drop-text').innerHTML = `📸 Drag & Drop photo here or <u>Browse File</u>`;
+      document.getElementById('item-name').value = '';
+      clearMetadataFields();
+
+      const canvas = document.getElementById('segmentation-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      processedCanvasData = null;
+    }
+
+    function setImportMode(mode) {
+      resetImportForm();
+
+      const btnUrl = document.getElementById('btn-mode-url');
+      const btnFile = document.getElementById('btn-mode-file');
+
+      if (mode === 'url') {
+        btnUrl.style.background = '#111111';
+        btnFile.style.background = '#767676';
+        document.getElementById('mode-url-wrap').style.display = 'block';
+        document.getElementById('mode-file-wrap').style.display = 'none';
+      } else {
+        btnFile.style.background = '#111111';
+        btnUrl.style.background = '#767676';
+        document.getElementById('mode-url-wrap').style.display = 'none';
+        document.getElementById('mode-file-wrap').style.display = 'block';
+      }
+      populateSubTypes();
+    }
+
+    function populateSubTypes() {
+      const cat = document.getElementById('item-category').value;
+      const subSelect = document.getElementById('item-subtype');
+      subSelect.innerHTML = '';
+      const list = subCategoryMap[cat] || ['General'];
+      list.forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub;
+        opt.innerText = sub;
+        subSelect.appendChild(opt);
+      });
+    }
+
+    async function fetchUrlDetails() {
+      const url = document.getElementById('import-url').value;
+      if (!url) return alert('Please enter a valid URL');
+
+      const res = await fetch('/api/parse-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('item-name').value = data.data.name;
+        document.getElementById('item-category').value = data.data.category;
+        populateSubTypes();
+        document.getElementById('item-subtype').value = data.data.sub_type;
+        document.getElementById('item-brand').value = data.data.brand;
+        document.getElementById('item-color').value = data.data.color || '';
+        document.getElementById('item-size').value = data.data.size || '';
+
+        processImageSegmentation(data.data.image_url);
+      }
+    }
+
+    function handleFileSelect(e) {
+      if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        document.getElementById('drop-text').innerHTML = `✅ Selected: <strong>${file.name}</strong>`;
+        clearMetadataFields();
+
+        const reader = new FileReader();
+        reader.onload = (event) => processImageSegmentation(event.target.result);
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function processImageSegmentation(src) {
+      const canvas = document.getElementById('segmentation-canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+
+      img.onload = () => {
+        canvas.width = img.width || 300;
+        canvas.height = img.height || 300;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+
+        try {
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imgData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) {
+              data[i+3] = 0;
+            }
+          }
+          ctx.putImageData(imgData, 0, 0);
+          processedCanvasData = canvas.toDataURL('image/png');
+        } catch (e) {
+          processedCanvasData = src;
+        }
       };
-      insertResult = await supabase.from('clothes').insert([minimalPayload]).select();
-    }
-
-    if (insertResult.error) throw insertResult.error;
-
-    res.json({ success: true, item: insertResult.data[0] });
-  } catch (err) {
-    console.error('Error saving item:', err);
-    res.status(500).json({ success: false, message: 'Failed to save item: ' + err.message });
-  }
-});
-
-app.put('/api/clothes/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, category, sub_type, brand, color, size } = req.body;
-
-    let updateResult = await supabase
-      .from('clothes')
-      .update({ name, category, sub_type, brand, color, size })
-      .eq('id', id)
-      .select();
-
-    if (updateResult.error) {
-      updateResult = await supabase
-        .from('clothes')
-        .update({ name, category })
-        .eq('id', id)
-        .select();
-    }
-
-    if (updateResult.error) throw updateResult.error;
-    res.json({ success: true, item: updateResult.data[0] });
-  } catch (err) {
-    console.error('Error editing item:', err);
-    res.status(500).json({ success: false, message: 'Failed to edit item' });
-  }
-});
-
-app.delete('/api/clothes/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { error } = await supabase.from('clothes').delete().eq('id', id);
-
-    if (error) throw error;
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Error deleting item:', err);
-    res.status(500).json({ success: false, message: 'Failed to delete item' });
-  }
-});
-
-// Advanced Intelligent URL Parser with Color & Brand Extraction
-app.post('/api/parse-url', async (req, res) => {
-  try {
-    const { url } = req.body;
-    if (!url) return res.status(400).json({ success: false, message: 'URL required' });
-
-    const lowerUrl = url.toLowerCase();
-
-    // Extract Brand
-    let brandName = 'ASOS Luxe';
-    if (lowerUrl.includes('asos')) {
-      if (lowerUrl.includes('asos-luxe') || lowerUrl.includes('luxe')) brandName = 'ASOS Luxe';
-      else brandName = 'ASOS';
-    } else {
-      try {
-        const parsedUrl = new URL(url);
-        const domain = parsedUrl.hostname.replace('www.', '');
-        const rawBrand = domain.split('.')[0];
-        brandName = rawBrand.charAt(0).toUpperCase() + rawBrand.slice(1);
-      } catch (e) {}
-    }
-
-    // Extract Color from URL slug (e.g., "-in-dark-green" or "-in-black")
-    let extractedColor = 'Dark Green';
-    const colorMatch = lowerUrl.match(/-in-([a-z-]+)(\/|\?|$)/);
-    if (colorMatch && colorMatch[1]) {
-      extractedColor = colorMatch[1].split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    } else {
-      const colors = ['Black', 'White', 'Green', 'Red', 'Blue', 'Pink', 'Dark Green', 'Navy', 'Brown', 'Beige', 'Silver', 'Gold'];
-      for (const c of colors) {
-        if (lowerUrl.includes(c.toLowerCase().replace(' ', '-'))) {
-          extractedColor = c;
-          break;
-        }
-      }
-    }
-
-    // Category & Sub-type detection
-    let category = 'Dresses';
-    let subType = 'Maxi';
-
-    if (lowerUrl.includes('dress') || lowerUrl.includes('gown') || lowerUrl.includes('maxi') || lowerUrl.includes('midi')) {
-      category = 'Dresses';
-      subType = lowerUrl.includes('maxi') ? 'Maxi' : lowerUrl.includes('mini') ? 'Mini' : lowerUrl.includes('midi') ? 'Midi' : 'Gown';
-    } else if (lowerUrl.includes('shoe') || lowerUrl.includes('boot') || lowerUrl.includes('sandal') || lowerUrl.includes('heel')) {
-      category = 'Shoes';
-      subType = 'Heels';
-    } else if (lowerUrl.includes('jean') || lowerUrl.includes('pant') || lowerUrl.includes('skirt')) {
-      category = 'Bottoms';
-      subType = 'Jeans';
-    } else if (lowerUrl.includes('top') || lowerUrl.includes('shirt') || lowerUrl.includes('blouse')) {
-      category = 'Tops';
-      subType = 'Short Sleeve';
-    }
-
-    const defaultFashionImg = 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500';
-
-    res.json({
-      success: true,
-      data: {
-        site_name: brandName,
-        brand: brandName,
-        name: `${brandName} Ruched Maxi Dress`,
-        category: category,
-        sub_type: subType,
-        color: extractedColor,
-        size: 'US 8',
-        image_url: defaultFashionImg
-      }
-    });
-  } catch (err) {
-    res.json({
-      success: true,
-      data: {
-        site_name: 'Web Import',
-        brand: 'ASOS Luxe',
-        name: 'Maxi Dress',
-        category: 'Dresses',
-        sub_type: 'Maxi',
-        color: 'Dark Green',
-        size: 'US 8',
-        image_url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500'
-      }
-    });
-  }
-});
-
-app.get('*', (req, res) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+      img.onerror = () => {
+        canvas.width = 300;
+        canvas.height = 300;
+        ctx.fillStyle = '#f4f4f6';
+        ctx.fillRect(0, 0, 300,
