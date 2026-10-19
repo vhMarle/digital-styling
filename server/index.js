@@ -1,10 +1,14 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const fs = require('fs');
 const { google } = require('googleapis');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Resolve absolute root directory of the project
+const ROOT_DIR = path.resolve(__dirname, '..');
 
 // Trust Render's reverse proxy for secure HTTPS cookies
 app.set('trust proxy', 1);
@@ -23,38 +27,22 @@ app.use(session({
 
 app.use(express.json());
 
-// Explicit file routes for favicons and manifest
+// Diagnostic endpoint to verify files exist on Render server
+app.get('/api/debug-files', (req, res) => {
+  fs.readdir(ROOT_DIR, (err, files) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ root_files: files, root_path: ROOT_DIR });
+  });
+});
+
+// Serve manifest explicitly
 app.get('/site.webmanifest', (req, res) => {
   res.header('Content-Type', 'application/manifest+json');
-  res.sendFile(path.join(__dirname, '../site.webmanifest'));
+  res.sendFile(path.join(ROOT_DIR, 'site.webmanifest'));
 });
 
-app.get('/favicon.ico', (req, res) => {
-  res.sendFile(path.join(__dirname, '../favicon.ico'));
-});
-
-app.get('/favicon-32x32.png', (req, res) => {
-  res.sendFile(path.join(__dirname, '../favicon-32x32.png'));
-});
-
-app.get('/favicon-16x16.png', (req, res) => {
-  res.sendFile(path.join(__dirname, '../favicon-16x16.png'));
-});
-
-app.get('/android-chrome-192x192.png', (req, res) => {
-  res.sendFile(path.join(__dirname, '../android-chrome-192x192.png'));
-});
-
-app.get('/android-chrome-512x512.png', (req, res) => {
-  res.sendFile(path.join(__dirname, '../android-chrome-512x512.png'));
-});
-
-app.get('/apple-touch-icon.png', (req, res) => {
-  res.sendFile(path.join(__dirname, '../apple-touch-icon.png'));
-});
-
-// Serve static assets from project root
-app.use(express.static(path.join(__dirname, '../')));
+// Serve all static files from root directory
+app.use(express.static(ROOT_DIR));
 
 // OAuth 2.0 Client Setup
 const oauth2Client = new google.auth.OAuth2(
@@ -113,7 +101,7 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../index.html'));
+  res.sendFile(path.join(ROOT_DIR, 'index.html'));
 });
 
 app.listen(PORT, () => {
