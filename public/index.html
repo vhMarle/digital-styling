@@ -279,4 +279,191 @@
       </section>
 
       <!-- Style Me Section -->
-      <section id="styleme-view" class="view
+      <section id="styleme-view" class="view-section">
+        <h2 class="page-title">Style Me ✦</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Tell us the vibe. Get your custom outfit look.</p>
+
+        <div class="style-card">
+          <h3>Select Your Mood</h3>
+          <div class="option-grid">
+            <div class="opt-btn active" onclick="toggleOption(this)">Confident</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Relaxed</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Energetic</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Elegant</div>
+          </div>
+        </div>
+
+        <div class="style-card">
+          <h3>What's the occasion?</h3>
+          <div class="option-grid">
+            <div class="opt-btn active" onclick="toggleOption(this)">Casual</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Work</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Date</div>
+            <div class="opt-btn" onclick="toggleOption(this)">Travel</div>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="alert('AI Look Generation coming soon!')">✦ Generate My Look</button>
+      </section>
+
+      <!-- Insights Section -->
+      <section id="insights-view" class="view-section">
+        <h2 class="page-title">Your Closet at a Glance</h2>
+        <div class="style-card" style="text-align: center; padding: 2rem;">
+          <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">68%</div>
+          <p style="color: var(--text-muted);">Casual Style Focus</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Add Clothing Modal -->
+  <div class="modal-overlay" id="add-modal">
+    <div class="modal">
+      <h2 style="margin-bottom: 1rem;">Add Clothing</h2>
+      <form onsubmit="handleAddItem(event)">
+        <div class="dropzone">
+          📸 <strong>Add Photos</strong><br>Tap to upload image
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; font-weight:600;">Item Name</label>
+          <input type="text" id="item-name" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); margin-top:4px;" required>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; font-weight:600;">Category</label>
+          <select id="item-category" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); margin-top:4px;">
+            <option value="Tops">Tops</option>
+            <option value="Bottoms">Bottoms</option>
+            <option value="Outerwear">Outerwear</option>
+            <option value="Shoes">Shoes</option>
+            <option value="Accessories">Accessories</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; font-weight:600;">Image URL</label>
+          <input type="url" id="item-image" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); margin-top:4px;" required>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:1.5rem;">
+          <button type="button" class="chip" style="flex:1;" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex:1;">Save Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Mobile Navigation Bar -->
+  <nav class="mobile-nav">
+    <div class="mobile-item active" onclick="switchTab('closet')">📁<br>Wardrobe</div>
+    <div class="mobile-item" onclick="switchTab('styleme')">✦<br>Style Me</div>
+    <div class="mobile-item" onclick="switchTab('insights')">📊<br>Insights</div>
+  </nav>
+
+  <script>
+    let wardrobeItems = [
+      { id: 1, name: 'White Linen Shirt', category: 'Tops', image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=300' },
+      { id: 2, name: 'Straight-Leg Denim', category: 'Bottoms', image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300' },
+      { id: 3, name: 'Open Duster Coat', category: 'Outerwear', image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300' },
+      { id: 4, name: 'White Adidas Sneakers', category: 'Shoes', image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300' }
+    ];
+
+    let currentCategory = 'All';
+
+    async function checkAuthSession() {
+      try {
+        const res = await fetch('/api/auth/user');
+        const data = await res.json();
+        const profileContainer = document.querySelector('.user-profile');
+
+        if (data.authenticated && data.user) {
+          profileContainer.innerHTML = `
+            <img src="${data.user.picture}" class="avatar" alt="${data.user.name}">
+            <span style="font-size:0.85rem; font-weight:600;">${data.user.name}</span>
+            <button class="chip" style="background:#fee2e2; color:#ef4444; border:none; margin-left:8px;" onclick="logout()">Logout</button>
+          `;
+        }
+      } catch (err) {
+        console.error('Session check failed', err);
+      }
+    }
+
+    async function loginWithGoogle() {
+      try {
+        const res = await fetch('/api/auth/login-url');
+        const data = await res.json();
+        if (data.url) window.location.href = data.url;
+      } catch (err) {
+        alert('Failed to connect to login server.');
+      }
+    }
+
+    async function logout() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.reload();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.getElementById(tab + '-view').classList.add('active');
+      
+      document.querySelectorAll('.nav-item, .mobile-item').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(tab));
+      });
+    }
+
+    function toggleOption(btn) {
+      btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('wardrobe-grid');
+      grid.innerHTML = '';
+      const filtered = currentCategory === 'All' 
+        ? wardrobeItems 
+        : wardrobeItems.filter(i => i.category === currentCategory);
+
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${item.image}" alt="${item.name}">
+          <div class="card-body">
+            <div class="card-title">${item.name}</div>
+            <div class="card-sub">${item.category}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.chip-group .chip').forEach(c => c.classList.toggle('active', c.innerText === cat));
+      renderGrid();
+    }
+
+    function openModal() { document.getElementById('add-modal').classList.add('open'); }
+    function closeModal() { document.getElementById('add-modal').classList.remove('open'); }
+
+    function handleAddItem(e) {
+      e.preventDefault();
+      const name = document.getElementById('item-name').value;
+      const category = document.getElementById('item-category').value;
+      const image = document.getElementById('item-image').value;
+
+      wardrobeItems.push({ id: Date.now(), name, category, image });
+      renderGrid();
+      closeModal();
+      e.target.reset();
+    }
+
+    checkAuthSession();
+    renderGrid();
+  </script>
+</body>
+</html>
