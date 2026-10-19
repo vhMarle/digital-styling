@@ -344,7 +344,11 @@ app.post('/api/parse-url', async (req, res) => {
       subType = 'Short Sleeve';
     }
 
-    const defaultFashionImg = 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500';
+    // Select matching dress image based on extracted color
+    let dressImage = 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500';
+    if (extractedColor.toLowerCase().includes('green')) {
+      dressImage = 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=500'; // Dark green / emerald dress representation
+    }
 
     res.json({
       success: true,
@@ -356,7 +360,7 @@ app.post('/api/parse-url', async (req, res) => {
         sub_type: subType,
         color: extractedColor,
         size: 'US 8',
-        image_url: defaultFashionImg
+        image_url: dressImage
       }
     });
   } catch (err) {
@@ -370,7 +374,7 @@ app.post('/api/parse-url', async (req, res) => {
         sub_type: 'Maxi',
         color: 'Dark Green',
         size: 'US 8',
-        image_url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500'
+        image_url: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=500'
       }
     });
   }
