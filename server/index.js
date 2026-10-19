@@ -39,8 +39,14 @@ app.get('/site.webmanifest', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'site.webmanifest'));
 });
 
-// Serve static assets from public directory
-app.use(express.static(PUBLIC_DIR));
+// Serve static assets with no-cache for index.html
+app.use(express.static(PUBLIC_DIR, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 
 // OAuth 2.0 Client Setup
 const oauth2Client = new google.auth.OAuth2(
@@ -125,7 +131,6 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
     const userEmail = req.session?.user?.email || 'guest@sparksequins.com';
     let finalImageUrl = image_url || null;
 
-    // 1. If a photo was uploaded via Drag & Drop or File Select
     if (req.file) {
       const fileName = `${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '_')}`;
       const { data: uploadData, error: uploadError } = await supabase
@@ -149,12 +154,10 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
       finalImageUrl = publicUrlData.publicUrl;
     }
 
-    // 2. Fallback placeholder if no image or URL provided
     if (!finalImageUrl) {
       finalImageUrl = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400';
     }
 
-    // 3. Save entry to Supabase PostgreSQL database
     const { data, error } = await supabase
       .from('clothes')
       .insert([{ user_email: userEmail, name, category, image_url: finalImageUrl }])
@@ -169,6 +172,7 @@ app.post('/api/clothes', upload.single('image'), async (req, res) => {
 });
 
 app.get('*', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
