@@ -10,9 +10,17 @@ const PORT = process.env.PORT || 3000;
 
 const PUBLIC_DIR = path.join(__dirname, '../public');
 
-// Initialize Supabase Client
-const supabaseUrl = process.env.SUPABASE_URL || 'https://jzyagdnkhctawxhoimrx.supabase.co';
-const supabaseKey = process.env.SUPABASE_KEY || 'sb_publishable_AOEbD5g2qOmzo2qYfmqutg_9u1USfRV';
+// Helper to extract clean URL if Markdown or extra spaces were pasted
+function sanitizeUrl(rawUrl) {
+  if (!rawUrl) return 'https://jzyagdnkhctawxhoimrx.supabase.co';
+  const match = rawUrl.match(/https?:\/\/[^\s\]\)]+/);
+  return match ? match[0] : rawUrl.trim();
+}
+
+// Sanitize and initialize Supabase Client
+const supabaseUrl = sanitizeUrl(process.env.SUPABASE_URL);
+const supabaseKey = (process.env.SUPABASE_KEY || 'sb_publishable_AOEbD5g2qOmzo2qYfmqutg_9u1USfRV').trim();
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Multer memory storage for direct buffer upload to Supabase Storage
