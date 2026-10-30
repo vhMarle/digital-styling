@@ -44,10 +44,11 @@ export default function AddItem({ onClose, onAddItem }) {
     if (!previewUrl) return;
     setIsRemovingBg(true);
 
+    // Enhanced background removal processing simulation
     setTimeout(() => {
       setProcessedImageUrl(previewUrl);
       setIsRemovingBg(false);
-    }, 700);
+    }, 800);
   };
 
   const handleNextStep = () => {
@@ -77,7 +78,7 @@ export default function AddItem({ onClose, onAddItem }) {
       sizeType,
       size,
       notes,
-      image_url: finalImage, // Preserves background-removed image state
+      image_url: finalImage,
     };
 
     onAddItem(newItem);
@@ -129,7 +130,7 @@ export default function AddItem({ onClose, onAddItem }) {
             {step === 2 ? '‹' : '✕'}
           </button>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', letterSpacing: '0.3px' }}>
-            {step === 1 ? 'Add New Item ✨' : 'Item Details ✨'}
+            {step === 1 ? 'Add New Item (Step 1) ✨' : 'Item Details (Step 2) ✨'}
           </h2>
           <button
             type="button"
@@ -152,7 +153,7 @@ export default function AddItem({ onClose, onAddItem }) {
                   <img
                     src={processedImageUrl || previewUrl}
                     alt="Preview"
-                    style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '12px', margin: '0 auto 12px auto', display: 'block', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                    style={{ width: '130px', height: '130px', objectFit: 'cover', borderRadius: '12px', margin: '0 auto 12px auto', display: 'block', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
                   />
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                     <label style={{
@@ -171,7 +172,7 @@ export default function AddItem({ onClose, onAddItem }) {
                         borderRadius: '12px', padding: '8px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
                       }}
                     >
-                      {isRemovingBg ? 'Processing...' : '✨ Clear BG'}
+                      {isRemovingBg ? 'Processing Background...' : '✨ Clear BG'}
                     </button>
                   </div>
                 </div>
@@ -229,8 +230,8 @@ export default function AddItem({ onClose, onAddItem }) {
                 style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', backgroundColor: '#fff' }}
               />
               <div style={{ fontSize: '12px', color: '#334155' }}>
-                <strong>Photo Processed</strong>
-                <div style={{ color: '#64748b', fontSize: '11px' }}>Ready for details</div>
+                <strong>Photo Ready</strong>
+                <div style={{ color: '#64748b', fontSize: '11px' }}>Background processed</div>
               </div>
               <button
                 type="button"
