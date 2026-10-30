@@ -1,30 +1,31 @@
 @echo off
 echo ========================================
-echo Building Sparks & Sequins App...
+echo 1. Staging and Committing Changes...
 echo ========================================
-call npm run build
+git add .
+git commit -m "Update App.jsx styles and components"
+
+echo.
+echo ========================================
+echo 2. Pushing Code to GitHub...
+echo ========================================
+git push origin main
 if %errorlevel% neq 0 (
     echo.
-    echo [ERROR] Build failed! Aborting deployment.
+    echo [ERROR] Git push failed! Please check your branch or git status.
     pause
     exit /b %errorlevel%
 )
 
 echo.
 echo ========================================
-echo Committing Changes to Git...
+echo 3. Triggering Render Deployment...
 echo ========================================
-git add .
-git commit -m "Update app features: dropdowns, sizing/move logic, and custom undo icon"
+powershell -Command "Invoke-RestMethod -Method Post -Uri 'https://api.render.com/deploy/srv-dbakj1gm7kps7397jlng?key=f9reLz0NPDE'"
 
 echo.
 echo ========================================
-echo Pushing to Repository...
-echo ========================================
-git push origin main
-
-echo.
-echo ========================================
-echo Deployment completed successfully!
+echo All steps completed successfully! 
+echo Your live site will update shortly.
 echo ========================================
 pause

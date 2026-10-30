@@ -1,27 +1,23 @@
 import React, { useState } from 'react';
 
-// Sub-categories for details dropdowns
+// Dropdown options for category and color
 const DETAIL_OPTIONS = {
   category: ['Tops & Blouses', 'Bottoms & Denim', 'Outerwear & Dusters', 'Dresses & Jumpsuits', 'Footwear'],
-  color: ['Cool Neutrals', 'Navy Blue', 'Forest Green', 'Rich Burgundy', 'Sage / Olive Green', 'Rose Pink', 'Chocolate Brown', 'Metallic Silver/Gold'],
-  season: ['Spring', 'Summer', 'Fall', 'Winter', 'All-Season'],
-  occasion: ['Casual Everyday', 'Resort & Vacation', 'Work & Professional', 'Evening & Social', 'Outdoor Hiking & Camping']
+  color: ['Cool Neutrals', 'Navy Blue', 'Forest Green', 'Rich Burgundy', 'Sage / Olive Green', 'Rose Pink', 'Chocolate Brown', 'Metallic Silver/Gold']
 };
 
 export default function App() {
-  const [currentStep, setCurrentStep] = useState('source'); // 'source', 'details', 'wardrobe'
+  const [currentStep, setCurrentStep] = useState('home'); // 'home', 'source', 'details', 'wardrobe'
   const [selectedSource, setSelectedSource] = useState(null);
   
-  // Form state for item details with dropdown selections
+  // Form state for item details (no Season or Occasion)
   const [details, setDetails] = useState({
     category: '',
     color: '',
-    season: '',
-    occasion: '',
     notes: ''
   });
 
-  const handleSourceSelect = (sourceType) => {
+  const handleGoToSource = (sourceType) => {
     setSelectedSource(sourceType);
     setCurrentStep('details');
   };
@@ -30,8 +26,8 @@ export default function App() {
     setDetails(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleUndoToSource = () => {
-    setCurrentStep('source');
+  const handleUndoToHome = () => {
+    setCurrentStep('home');
     setSelectedSource(null);
   };
 
@@ -63,17 +59,80 @@ export default function App() {
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
       }}>
         
-        {/* Step 1: Select Source */}
-        {currentStep === 'source' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ textAlign: 'center' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fbcfe8', margin: '0 0 0.25rem 0' }}>Catalog New Item</h2>
-              <p style={{ fontSize: '0.875rem', color: '#a3a3a3', margin: 0 }}>Choose how you'd like to add your piece</p>
+        {/* Step 1: Homepage / Main Dashboard */}
+        {currentStep === 'home' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'center' }}>
+            <div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fbcfe8', margin: '0 0 0.25rem 0' }}>Sparks & Sequins</h2>
+              <p style={{ fontSize: '0.875rem', color: '#a3a3a3', margin: 0 }}>Digital Wardrobe & Outfit Curation</p>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', paddingTop: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingTop: '0.5rem' }}>
               <button
-                onClick={() => handleSourceSelect('camera')}
+                onClick={() => setCurrentStep('source')}
+                style={{
+                  padding: '0.875rem',
+                  backgroundColor: 'rgba(136, 19, 55, 0.7)',
+                  border: '1px solid rgba(244, 63, 94, 0.4)',
+                  borderRadius: '0.75rem',
+                  fontWeight: '500',
+                  color: '#ffe4e6',
+                  cursor: 'pointer'
+                }}
+              >
+                + Catalog New Item
+              </button>
+              <button
+                onClick={() => setCurrentStep('wardrobe')}
+                style={{
+                  padding: '0.875rem',
+                  backgroundColor: 'rgba(64, 64, 64, 0.4)',
+                  border: '1px solid rgba(115, 115, 115, 0.4)',
+                  borderRadius: '0.75rem',
+                  fontWeight: '500',
+                  color: '#e5e5e5',
+                  cursor: 'pointer'
+                }}
+              >
+                View Wardrobe
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Source Selection (Take Photo / Upload Image) */}
+        {currentStep === 'source' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={handleUndoToHome}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  padding: '0.375rem'
+                }}
+              >
+                <img 
+                  src="/undo-arrow-icon.png" 
+                  alt="Back" 
+                  style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }}
+                />
+                <span style={{ fontSize: '0.75rem', fontWeight: '500', color: '#fbcfe8' }}>Home</span>
+              </button>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#fbcfe8', margin: 0 }}>Catalog New Item</h3>
+              <div style={{ width: '2rem' }}></div>
+            </div>
+
+            <p style={{ fontSize: '0.875rem', color: '#a3a3a3', textAlign: 'center', margin: 0 }}>Choose how you'd like to add your piece</p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <button
+                onClick={() => handleGoToSource('camera')}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -84,29 +143,15 @@ export default function App() {
                   border: '1px solid rgba(115, 115, 115, 0.4)',
                   borderRadius: '0.75rem',
                   cursor: 'pointer',
-                  color: '#e5e5e5',
-                  transition: 'all 0.2s'
+                  color: '#e5e5e5'
                 }}
               >
-                <div style={{
-                  width: '3rem',
-                  height: '3rem',
-                  marginBottom: '0.75rem',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(136, 19, 55, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '1px solid rgba(244, 63, 94, 0.3)',
-                  fontSize: '1.25rem'
-                }}>
-                  📷
-                </div>
+                <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📷</div>
                 <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Take Photo</span>
               </button>
 
               <button
-                onClick={() => handleSourceSelect('upload')}
+                onClick={() => handleGoToSource('upload')}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -117,66 +162,46 @@ export default function App() {
                   border: '1px solid rgba(115, 115, 115, 0.4)',
                   borderRadius: '0.75rem',
                   cursor: 'pointer',
-                  color: '#e5e5e5',
-                  transition: 'all 0.2s'
+                  color: '#e5e5e5'
                 }}
               >
-                <div style={{
-                  width: '3rem',
-                  height: '3rem',
-                  marginBottom: '0.75rem',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(136, 19, 55, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '1px solid rgba(244, 63, 94, 0.3)',
-                  fontSize: '1.25rem'
-                }}>
-                  📂
-                </div>
+                <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📂</div>
                 <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Upload Image</span>
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 2: Details Form with Sub-categories & Sizing/Move built in implicitly */}
+        {/* Step 3: Streamlined Details Form (Category, Color, Notes) */}
         {currentStep === 'details' && (
           <form onSubmit={handleSaveItem} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                {/* Replaced Change Source button with undo-arrow-icon.png */}
-                <button
-                  type="button"
-                  onClick={handleUndoToSource}
-                  title="Reselect Source"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    padding: '0.375rem',
-                    borderRadius: '0.5rem'
-                  }}
-                >
-                  <img 
-                    src="/undo-arrow-icon.png" 
-                    alt="Back to Source" 
-                    style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }}
-                  />
-                  <span style={{ fontSize: '0.75rem', fontWeight: '500', color: '#fbcfe8' }}>Back</span>
-                </button>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#fbcfe8', margin: 0 }}>Item Details</h3>
-              </div>
-              <span style={{ fontSize: '0.75rem', color: '#a3a3a3', textTransform: 'capitalize', backgroundColor: 'rgba(64, 64, 64, 0.6)', padding: '0.25rem 0.625rem', borderRadius: '9999px', border: '1px solid #525252' }}>
-                Source: {selectedSource}
+              <button
+                type="button"
+                onClick={() => setCurrentStep('source')}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  padding: '0.375rem'
+                }}
+              >
+                <img 
+                  src="/undo-arrow-icon.png" 
+                  alt="Back" 
+                  style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }}
+                />
+                <span style={{ fontSize: '0.75rem', fontWeight: '500', color: '#fbcfe8' }}>Back</span>
+              </button>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#fbcfe8', margin: 0 }}>Item Details</h3>
+              <span style={{ fontSize: '0.75rem', color: '#a3a3a3', textTransform: 'capitalize' }}>
+                {selectedSource}
               </span>
             </div>
 
-            {/* Dropdowns with Sub-categories */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {Object.keys(DETAIL_OPTIONS).map((field) => (
                 <div key={field} style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
@@ -242,8 +267,7 @@ export default function App() {
                 borderRadius: '0.75rem',
                 fontWeight: '500',
                 color: '#ffe4e6',
-                cursor: 'pointer',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
+                cursor: 'pointer'
               }}
             >
               Save to Wardrobe
@@ -251,7 +275,7 @@ export default function App() {
           </form>
         )}
 
-        {/* Step 3: Confirmation / Wardrobe View */}
+        {/* Step 4: Wardrobe / Success View */}
         {currentStep === 'wardrobe' && (
           <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem 0' }}>
             <div style={{
@@ -270,9 +294,9 @@ export default function App() {
               ✓
             </div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#f5f5f5', margin: 0 }}>Item Added Successfully!</h3>
-            <p style={{ fontSize: '0.875rem', color: '#a3a3a3', margin: 0 }}>Your item has been cataloged with your custom specifications.</p>
+            <p style={{ fontSize: '0.875rem', color: '#a3a3a3', margin: 0 }}>Your item has been cataloged.</p>
             <button
-              onClick={handleUndoToSource}
+              onClick={handleUndoToHome}
               style={{
                 marginTop: '1rem',
                 padding: '0.625rem 1.5rem',
@@ -285,7 +309,7 @@ export default function App() {
                 cursor: 'pointer'
               }}
             >
-              Add Another Item
+              Back to Home
             </button>
           </div>
         )}
