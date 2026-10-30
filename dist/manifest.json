@@ -1,0 +1,23 @@
+{
+  "short_name": "Sparks",
+  "name": "Sparks & Sequins",
+  "icons": [
+    {
+      "src": "/app-icon.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#7a1c4b",
+  "theme_color": "#7a1c4b",
+  "display": "standalone",
+  "orientation": "portrait"
+}
