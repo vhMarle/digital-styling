@@ -11,7 +11,7 @@ const SUBCATEGORIES = {
 };
 
 export default function AddItem({ onClose, onAddItem }) {
-  // Step management: 1 = Source Upload & Background Removal, 2 = Item Details Form
+  // Step management: 1 = Source Selection & Background Removal, 2 = Item Details Form
   const [step, setStep] = useState(1);
 
   const [file, setFile] = useState(null);
@@ -19,7 +19,7 @@ export default function AddItem({ onClose, onAddItem }) {
   const [processedImageUrl, setProcessedImageUrl] = useState('');
   const [isRemovingBg, setIsRemovingBg] = useState(false);
 
-  // Form fields (initialized empty so you only fill in what you know)
+  // Form fields (initialized empty)
   const [category, setCategory] = useState('Tops');
   const [subcategory, setSubcategory] = useState('Sweaters');
   const [color, setColor] = useState('');
@@ -122,7 +122,7 @@ export default function AddItem({ onClose, onAddItem }) {
             {step === 2 ? '‹' : '✕'}
           </button>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', letterSpacing: '0.3px' }}>
-            {step === 1 ? 'Select Source & Edit ✨' : 'Add New Item Details ✨'}
+            Add New Item
           </h2>
           <button
             type="button"
@@ -133,74 +133,113 @@ export default function AddItem({ onClose, onAddItem }) {
           </button>
         </div>
 
-        {/* STEP 1: Source Selection & Background Removal */}
+        {/* STEP 1: Source Selection Icons & Background Removal */}
         {step === 1 && (
           <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'center' }}>
-            <div>
-              <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', color: '#0f172a' }}>Upload Item Photo</h3>
-              <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>Select your photo, adjust, and clear the background before adding details.</p>
+            
+            {/* Source Selection Icons Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              
+              {/* Camera */}
+              <button
+                type="button"
+                onClick={() => {
+                  const input = document.getElementById('camera-input');
+                  if (input) input.click();
+                }}
+                style={{
+                  backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
+                  padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                <span style={{ fontSize: '24px' }}>📸</span>
+                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>Camera</span>
+                <input id="camera-input" type="file" accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
+              </button>
+
+              {/* Google Photos */}
+              <button
+                type="button"
+                onClick={() => alert('Google Photos integration selected.')}
+                style={{
+                  backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
+                  padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                <span style={{ fontSize: '24px' }}>🖼️</span>
+                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>Google Photos</span>
+              </button>
+
+              {/* Browse */}
+              <label
+                style={{
+                  backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
+                  padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                <span style={{ fontSize: '24px' }}>📁</span>
+                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>Browse</span>
+                <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+              </label>
+
+              {/* URL */}
+              <button
+                type="button"
+                onClick={() => {
+                  const url = prompt('Enter image URL:');
+                  if (url) {
+                    setPreviewUrl(url);
+                    setProcessedImageUrl('');
+                  }
+                }}
+                style={{
+                  backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
+                  padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                <span style={{ fontSize: '24px' }}>🔗</span>
+                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>URL</span>
+              </button>
             </div>
 
-            <div style={{
-              border: '2px dashed #d97706', backgroundColor: '#fffbeb', borderRadius: '16px',
-              padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px'
-            }}>
-              {previewUrl ? (
-                <div>
-                  <img
-                    src={processedImageUrl || previewUrl}
-                    alt="Upload Preview"
-                    style={{ width: '140px', height: '140px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', marginBottom: '12px' }}
-                  />
-                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                    <label style={{
-                      backgroundColor: '#1b2a4a', color: '#ffffff', borderRadius: '12px',
-                      padding: '8px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
-                    }}>
-                      Change Photo
-                      <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={handleRemoveBackground}
-                      disabled={isRemovingBg}
-                      style={{
-                        backgroundColor: '#7a1c4b', color: '#ffffff', border: 'none',
-                        borderRadius: '12px', padding: '8px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
-                      }}
-                    >
-                      {isRemovingBg ? 'Processing...' : '✨ Clear BG'}
-                    </button>
-                  </div>
+            {/* Preview & Background Removal Action */}
+            {previewUrl && (
+              <div style={{ marginTop: '4px' }}>
+                <img
+                  src={processedImageUrl || previewUrl}
+                  alt="Upload Preview"
+                  style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', margin: '0 auto 12px auto', display: 'block' }}
+                />
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '14px' }}>
+                  <button
+                    type="button"
+                    onClick={handleRemoveBackground}
+                    disabled={isRemovingBg}
+                    style={{
+                      backgroundColor: '#7a1c4b', color: '#ffffff', border: 'none',
+                      borderRadius: '12px', padding: '8px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
+                    }}
+                  >
+                    {isRemovingBg ? 'Processing...' : '✨ Clear BG'}
+                  </button>
                 </div>
-              ) : (
-                <div>
-                  <div style={{ width: '100px', height: '100px', backgroundColor: '#e2e8f0', borderRadius: '12px', margin: '0 auto 12px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '13px' }}>
-                    No Photo Selected
-                  </div>
-                  <label style={{
-                    backgroundColor: '#1b2a4a', color: '#ffffff', borderRadius: '12px',
-                    padding: '10px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-block'
-                  }}>
-                    Choose Photo
-                    <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-                  </label>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleProceedToDetails}
-              disabled={!previewUrl}
-              style={{
-                backgroundColor: previewUrl ? '#7a1c4b' : '#cbd5e1', color: '#ffffff', border: 'none',
-                borderRadius: '24px', padding: '14px', fontSize: '14px', fontWeight: 'bold',
-                cursor: previewUrl ? 'pointer' : 'not-allowed', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-              }}
-            >
-              Next: Enter Details →
-            </button>
+                <button
+                  type="button"
+                  onClick={handleProceedToDetails}
+                  style={{
+                    backgroundColor: '#7a1c4b', color: '#ffffff', border: 'none',
+                    borderRadius: '24px', padding: '14px', fontSize: '14px', fontWeight: 'bold',
+                    cursor: 'pointer', width: '100%', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  Next: Enter Details →
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -258,7 +297,7 @@ export default function AddItem({ onClose, onAddItem }) {
               </div>
             </div>
 
-            {/* Color (Empty by default) */}
+            {/* Color */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#0f172a', marginBottom: '4px' }}>Color</label>
               <input
