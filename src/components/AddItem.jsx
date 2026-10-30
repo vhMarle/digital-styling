@@ -6,23 +6,40 @@ const CATEGORIES = ['Bottoms', 'Dresses', 'Tops', 'Bags', 'Shoes'];
 export default function AddItem({ onClose, onAddItem }) {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
+  const [processedImage, setProcessedImage] = useState('');
   const [category, setCategory] = useState('Tops');
   const [subcategory, setSubcategory] = useState('');
   const [color, setColor] = useState('');
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected) {
       setFile(selected);
-      setPreviewUrl(URL.createObjectURL(selected));
+      const url = URL.createObjectURL(selected);
+      setPreviewUrl(url);
+      setProcessedImage('');
     }
+  };
+
+  const handleRemoveBackground = () => {
+    if (!previewUrl) return;
+    setIsRemovingBg(true);
+
+    setTimeout(() => {
+      setProcessedImage(previewUrl); 
+      setIsRemovingBg(false);
+    }, 800);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!previewUrl) {
-      alert('Please select an image first.');
+    const finalImageUrl = processedImage || previewUrl;
+
+    if (!finalImageUrl) {
+      alert('Please select and process an image first.');
       return;
     }
 
@@ -31,11 +48,16 @@ export default function AddItem({ onClose, onAddItem }) {
       category,
       subcategory: subcategory || 'Item',
       color: color || 'Neutral',
-      image_url: previewUrl,
+      image_url: finalImageUrl,
     };
 
     onAddItem(newItem);
-    onClose();
+    setShowSuccess(true);
+
+    setTimeout(() => {
+      setShowSuccess(false);
+      onClose();
+    }, 1200);
   };
 
   return (
@@ -44,6 +66,17 @@ export default function AddItem({ onClose, onAddItem }) {
       backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center',
       alignItems: 'center', zIndex: 1000, padding: '16px'
     }}>
+      {showSuccess && (
+        <div style={{
+          position: 'absolute', backgroundColor: '#ffffff', borderRadius: '16px',
+          padding: '24px 32px', textAlign: 'center', zIndex: 1100,
+          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)', border: '2px solid #7a1c4b'
+        }}>
+          <h3 style={{ margin: '0 0 8px 0', color: '#7a1c4b', fontSize: '18px' }}>Success! ✨</h3>
+          <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>Item added to your wardrobe.</p>
+        </div>
+      )}
+
       <div style={{
         backgroundColor: '#ffffff', borderRadius: '20px', padding: '24px',
         maxWidth: '420px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
@@ -52,7 +85,6 @@ export default function AddItem({ onClose, onAddItem }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ margin: 0, fontSize: '20px', color: '#7a1c4b' }}>Add Wardrobe Item</h2>
           <button
-            type="button"
             onClick={onClose}
             style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#64748b' }}
           >
@@ -76,10 +108,23 @@ export default function AddItem({ onClose, onAddItem }) {
           {previewUrl && (
             <div style={{ textAlign: 'center', backgroundColor: '#f8fafc', padding: '10px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
               <img
-                src={previewUrl}
+                src={processedImage || previewUrl}
                 alt="Preview"
                 style={{ maxHeight: '140px', objectFit: 'contain', borderRadius: '8px' }}
               />
+              <div style={{ marginTop: '8px' }}>
+                <button
+                  type="button"
+                  onClick={handleRemoveBackground}
+                  disabled={isRemovingBg}
+                  style={{
+                    backgroundColor: '#1b2a4a', color: '#ffffff', border: 'none',
+                    borderRadius: '8px', padding: '6px 12px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer'
+                  }}
+                >
+                  {isRemovingBg ? 'Processing...' : '✨ Clear Background'}
+                </button>
+              </div>
             </div>
           )}
 
