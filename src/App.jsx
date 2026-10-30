@@ -12,15 +12,22 @@ const MATRIX_CATEGORY_MAP = {
   'Outerwear': ['Coats', 'Jackets', 'Blazers']
 };
 
+const SIZE_TYPES = ['General', 'US', 'UK', 'EU'];
+const LOCALIZED_SIZES = {
+  'General': ['XS', 'S', 'M', 'L', 'XL'],
+  'US': ['0–2', '4–6', '8–10', '12–14', '16–18'],
+  'UK': ['4–6', '8–10', '12–14', '16–18', '20–22'],
+  'EU': ['32–34', '36–38', '40–42', '44–46', '48–50']
+};
+
 const RESTRICTED_COLORS = ['Red', 'Orange/Amber', 'Yellow/Gold', 'Green', 'Blue', 'Purple/Violet', 'Brown', 'Gray', 'Black', 'White'];
-const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
 
 export default function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home', 'source', 'details'
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [wardrobeItems, setWardrobeItems] = useState([
-    { id: 1, category: 'Tops', sub_category: 'Shirts', size: 'M', color: 'White', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false },
-    { id: 2, category: 'Bottoms', sub_category: 'Pants', size: 'S', color: 'Blue', notes: 'Straight-leg denim', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false }
+    { id: 1, category: 'Tops', sub_category: 'Shirts', size_type: 'General', size: 'M', color: 'White', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false },
+    { id: 2, category: 'Bottoms', sub_category: 'Pants', size_type: 'General', size: 'S', color: 'Blue', notes: 'Straight-leg denim', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false }
   ]);
   
   // Image & Interactive Editing State
@@ -36,6 +43,7 @@ export default function App() {
   // Details Form State
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
+  const [selectedSizeType, setSelectedSizeType] = useState('General');
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [notes, setNotes] = useState('');
@@ -121,6 +129,7 @@ export default function App() {
     const newItem = {
       category: selectedCategory,
       sub_category: selectedSubCategory,
+      size_type: selectedSizeType,
       size: selectedSize,
       color: selectedColor,
       notes: notes,
@@ -146,6 +155,7 @@ export default function App() {
     setImageSource(null);
     setSelectedCategory('');
     setSelectedSubCategory('');
+    setSelectedSizeType('General');
     setSelectedSize('');
     setSelectedColor('');
     setNotes('');
@@ -156,7 +166,6 @@ export default function App() {
     ? wardrobeItems 
     : wardrobeItems.filter(item => item.category === selectedFilter);
 
-  // Brushstroke text header style matching organic burgundy/mauve palette
   const brushHeaderStyle = {
     fontSize: '1.75rem',
     fontWeight: '700',
@@ -272,6 +281,13 @@ export default function App() {
                   {item.notes && <span style={{ fontSize: '0.7rem', color: '#737373', fontStyle: 'italic' }}>{item.notes}</span>}
                 </div>
               ))}
+            </div>
+
+            {/* Footer Text "Sparks & Sequins" at the bottom of the home screen */}
+            <div style={{ textAlign: 'center', padding: '1.5rem 0 0.5rem 0', borderTop: '1px solid #333', marginTop: 'auto' }}>
+              <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'sans-serif', letterSpacing: '0.05em' }}>
+                Sparks & Sequins
+              </span>
             </div>
 
             {/* Deletion Confirmation Popup */}
@@ -493,7 +509,24 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Size * */}
+              {/* Size Type Dropdown */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size Type *</label>
+                <select
+                  value={selectedSizeType}
+                  onChange={(e) => {
+                    setSelectedSizeType(e.target.value);
+                    setSelectedSize('');
+                  }}
+                  style={{ width: '100%', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: '#e5e5e5', outline: 'none' }}
+                >
+                  {SIZE_TYPES.map(st => (
+                    <option key={st} value={st} style={{ backgroundColor: '#262626', color: '#e5e5e5' }}>{st}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Localized Size Dropdown */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
                 <select
@@ -502,7 +535,7 @@ export default function App() {
                   style={{ width: '100%', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: '#e5e5e5', outline: 'none' }}
                 >
                   <option value="" disabled>Select size...</option>
-                  {SIZES.map(sz => (
+                  {(LOCALIZED_SIZES[selectedSizeType] || LOCALIZED_SIZES['General']).map(sz => (
                     <option key={sz} value={sz} style={{ backgroundColor: '#262626', color: '#e5e5e5' }}>{sz}</option>
                   ))}
                 </select>
@@ -536,7 +569,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar: "Edit Item" Button on the left of Checkmark / Save icon */}
+            {/* Bottom Bar: "Edit Item" Button on the left, "Add to Wardrobe" button on the right */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem' }}>
               <button
                 onClick={() => setCurrentView('source')}
@@ -554,13 +587,20 @@ export default function App() {
                 disabled={!selectedCategory || !selectedSize || !selectedColor}
                 title="Add to Wardrobe"
                 style={{
-                  background: 'transparent', border: 'none',
+                  background: 'transparent',
+                  border: '1px solid rgba(251, 207, 232, 0.4)',
+                  borderRadius: '0.5rem',
+                  padding: '0.5rem 1rem',
                   cursor: (selectedCategory && selectedSize && selectedColor) ? 'pointer' : 'not-allowed',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                  opacity: (selectedCategory && selectedSize && selectedColor) ? 1 : 0.3
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: (selectedCategory && selectedSize && selectedColor) ? 1 : 0.4
                 }}
               >
-                <img src="/AddWardrobe-icon.png" alt="Add to Wardrobe" style={{ width: '2rem', height: '2rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='💾'; e.target.parentElement.style.color='#ffe4e6'; e.target.parentElement.style.fontSize='1.5rem';}} />
+                <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'sans-serif' }}>
+                  Add to Wardrobe
+                </span>
               </button>
             </div>
           </div>
