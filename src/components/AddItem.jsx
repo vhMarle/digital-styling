@@ -20,7 +20,7 @@ export default function AddItem({ onClose, onAddItem }) {
   const [urlInput, setUrlInput] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
 
-  // Form fields (initialized empty)
+  // Form fields
   const [category, setCategory] = useState('Tops');
   const [subcategory, setSubcategory] = useState('Sweaters');
   const [color, setColor] = useState('');
@@ -133,7 +133,7 @@ export default function AddItem({ onClose, onAddItem }) {
             {step === 2 ? '‹' : '✕'}
           </button>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', letterSpacing: '0.3px' }}>
-            Add New Item
+            {step === 1 ? 'Add New Item' : 'Add New Item'}
           </h2>
           <button
             type="button"
@@ -144,12 +144,12 @@ export default function AddItem({ onClose, onAddItem }) {
           </button>
         </div>
 
-        {/* STEP 1: Source Selection Icons & Background Removal */}
+        {/* STEP 1: Source Selection or Image Adjustment View */}
         {step === 1 && (
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'center' }}>
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             
-            {/* Source Selection Icons Row/Grid */}
-            {!previewUrl && (
+            {!previewUrl ? (
+              /* Initial Source Selection Icons */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                   
@@ -233,52 +233,81 @@ export default function AddItem({ onClose, onAddItem }) {
                   )}
                 </div>
               </div>
-            )}
-
-            {/* Preview & Background Removal Action */}
-            {previewUrl && (
-              <div style={{ marginTop: '4px' }}>
+            ) : (
+              /* Image Selected: Image at top, options below, next-icon on bottom right */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+                
+                {/* Image at Top */}
                 <img
                   src={processedImageUrl || previewUrl}
-                  alt="Upload Preview"
-                  style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', margin: '0 auto 12px auto', display: 'block' }}
+                  alt="Imported Preview"
+                  style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
                 />
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '14px' }}>
+
+                {/* Options Below (Resize, Background Removal, Change Source) */}
+                <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     onClick={handleRemoveBackground}
                     disabled={isRemovingBg}
                     style={{
                       backgroundColor: '#7a1c4b', color: '#ffffff', border: 'none',
-                      borderRadius: '12px', padding: '8px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
+                      borderRadius: '12px', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
                     }}
                   >
                     {isRemovingBg ? 'Processing...' : '✨ Clear BG'}
                   </button>
                   <button
                     type="button"
+                    onClick={() => alert('Resize / Move controls active.')}
+                    style={{
+                      backgroundColor: '#1b2a4a', color: '#ffffff', border: 'none',
+                      borderRadius: '12px', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
+                    }}
+                  >
+                    📐 Sizing & Move
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => { setPreviewUrl(''); setProcessedImageUrl(''); }}
                     style={{
                       backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1',
-                      borderRadius: '12px', padding: '8px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
+                      borderRadius: '12px', padding: '8px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
                     }}
                   >
                     Change Source
                   </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleProceedToDetails}
-                  style={{
-                    backgroundColor: '#7a1c4b', color: '#ffffff', border: 'none',
-                    borderRadius: '24px', padding: '14px', fontSize: '14px', fontWeight: 'bold',
-                    cursor: 'pointer', width: '100%', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-                  }}
-                >
-                  Next: Enter Details →
-                </button>
+
+                {/* Next Icon Button at Bottom Right */}
+                <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', marginTop: '12px' }}>
+                  <button
+                    type="button"
+                    onClick={handleProceedToDetails}
+                    style={{
+                      backgroundColor: '#7a1c4b', border: 'none', borderRadius: '50%',
+                      width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                    }}
+                    title="Next"
+                  >
+                    <img
+                      src="next-icon.png"
+                      alt="Next"
+                      style={{ width: '22px', height: '22px', objectFit: 'contain' }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentNode.innerText = '→';
+                        e.target.parentNode.style.color = '#fff';
+                        e.target.parentNode.style.fontSize = '20px';
+                      }}
+                    />
+                  </button>
+                </div>
+
               </div>
             )}
+
           </div>
         )}
 
