@@ -47,7 +47,7 @@ export default function App() {
   // Details Form State
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
-  const [selectedSizeType, setSelectedSizeType] = useState('General');
+  const [selectedSizeType, setSelectedSizeType] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [notes, setNotes] = useState('');
@@ -113,7 +113,7 @@ export default function App() {
     setIsDragging(false);
   };
 
-  // Scroll wheel resizing (Replacing the slider)
+  // Scroll wheel resizing
   const handleWheel = (e) => {
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
@@ -135,7 +135,6 @@ export default function App() {
       
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i], g = data[i + 1], b = data[i + 2];
-        // Target near-white and light grey pixels to ensure complete background removal
         if (r > 200 && g > 200 && b > 200) {
           data[i + 3] = 0;
         }
@@ -188,7 +187,7 @@ export default function App() {
     setImageSource(null);
     setSelectedCategory('');
     setSelectedSubCategory('');
-    setSelectedSizeType('General');
+    setSelectedSizeType('');
     setSelectedSize('');
     setSelectedColor('');
     setNotes('');
@@ -199,9 +198,9 @@ export default function App() {
     ? wardrobeItems 
     : wardrobeItems.filter(item => item.category === selectedFilter);
 
-  // Writing Icon Style header typography mapping
+  // Exact Writing Icon Style Header Typography Format
   const brushHeaderStyle = {
-    fontSize: '1.75rem',
+    fontSize: '1.85rem',
     fontWeight: '800',
     fontFamily: 'Georgia, serif',
     color: '#831843',
@@ -226,6 +225,7 @@ export default function App() {
       fontFamily: 'sans-serif',
       userSelect: 'none'
     }}>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
       <div style={{ width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         
         {/* ================= VIEW 1: HOME DASHBOARD ================= */}
@@ -234,7 +234,7 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #333' }}>
               <div>
                 <h2 style={brushHeaderStyle}>Sparks & Sequins</h2>
-                <p style={{ fontSize: '0.75rem', color: '#a3a3a3', margin: 0 }}>Digital Wardrobe Curation</p>
+                <p style={{ fontSize: '0.75rem', color: '#a3a3a3', margin: 0, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Digital Wardrobe Curation</p>
               </div>
               <button
                 onClick={() => { resetEditor(); setImageSource(null); setCurrentView('source'); }}
@@ -320,7 +320,7 @@ export default function App() {
 
             {/* Footer Text */}
             <div style={{ textAlign: 'center', padding: '1.5rem 0 0.5rem 0', borderTop: '1px solid #333', marginTop: 'auto' }}>
-              <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'sans-serif', letterSpacing: '0.05em' }}>
+              <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'Georgia, serif', fontStyle: 'italic', letterSpacing: '0.05em' }}>
                 Sparks & Sequins
               </span>
             </div>
@@ -374,56 +374,54 @@ export default function App() {
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
-            {/* Sourcing Icons (Much Larger, Stacked Vertically on Mobile) */}
+            {/* Sourcing Icons Only (No text next to icons, tooltip on hover) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '0.5rem 0' }}>
-                <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
-                  <img src="/camera-icon.jpg" alt="Take a Picture" style={{ width: '4rem', height: '4rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
-                  <span style={{ fontSize: '0.9rem', color: '#fbcfe8', fontWeight: '600' }}>Take a Picture</span>
+              <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '1.5rem', padding: '0.5rem 0' }}>
+                <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
+                  <img src="/camera-icon.jpg" alt="Take a Picture" style={{ width: '3.5rem', height: '3.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
-                <label title="Google Photos" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
-                  <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '4rem', height: '4rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
-                  <span style={{ fontSize: '0.9rem', color: '#fbcfe8', fontWeight: '600' }}>Google Photos</span>
+                <label title="Google Photos" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
+                  <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '3.5rem', height: '3.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
-                <label title="Browse Files" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
-                  <img src="/folder-icon.png" alt="Browse Files" style={{ width: '4rem', height: '4rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
-                  <span style={{ fontSize: '0.9rem', color: '#fbcfe8', fontWeight: '600' }}>Browse Files</span>
+                <label title="Browse Files" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
+                  <img src="/folder-icon.png" alt="Browse Files" style={{ width: '3.5rem', height: '3.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
               </div>
 
-              {/* Paste Web Link URL Box positioned all the way down */}
+              {/* Paste Web Link Box with responsive flex to keep import button inside box */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbcfe8', fontSize: '0.8rem', fontWeight: '600' }}>
                   <span>🌐</span> Paste Web Link
                 </div>
-                <form onSubmit={handleUrlImport} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <form onSubmit={handleUrlImport} style={{ display: 'flex', gap: '0.375rem', alignItems: 'center', width: '100%' }}>
                   <input
                     type="url"
-                    placeholder="Paste any product URL here..."
+                    placeholder="Paste URL..."
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     style={{
-                      flex: 1, backgroundColor: 'rgba(23, 23, 23, 0.9)', border: '1px solid #525252',
-                      borderRadius: '0.5rem', padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#e5e5e5', outline: 'none'
+                      flex: 1, minWidth: 0, backgroundColor: 'rgba(23, 23, 23, 0.9)', border: '1px solid #525252',
+                      borderRadius: '0.5rem', padding: '0.5rem 0.625rem', fontSize: '0.75rem', color: '#e5e5e5', outline: 'none'
                     }}
                   />
                   <button 
                     type="submit" 
                     disabled={!urlInput.trim()}
                     style={{ 
-                      padding: '0.5rem 1rem', 
+                      padding: '0.5rem 0.75rem', 
                       backgroundColor: urlInput.trim() ? 'rgba(131, 24, 67, 0.9)' : 'rgba(64, 64, 64, 0.4)', 
                       border: '1px solid rgba(244, 63, 94, 0.4)', 
                       borderRadius: '0.5rem', 
                       color: urlInput.trim() ? '#ffe4e6' : '#737373', 
-                      fontSize: '0.8rem', 
+                      fontSize: '0.75rem', 
                       fontWeight: '500', 
-                      cursor: urlInput.trim() ? 'pointer' : 'not-allowed' 
+                      cursor: urlInput.trim() ? 'pointer' : 'not-allowed',
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     Import
@@ -434,7 +432,6 @@ export default function App() {
 
             {imageSource && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid #404040', paddingTop: '1rem' }}>
-                {/* Scroll-wheel & Drag Viewer */}
                 <div 
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
@@ -463,7 +460,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation: Remove BG on left, Unified Hyperlink "Proceed to details" on right */}
+            {/* Bottom Sourcing Navigation: Remove BG on left, tight unified hyperlink on right */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem' }}>
               <button
                 onClick={removeWhiteBackground}
@@ -489,17 +486,17 @@ export default function App() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
+                  gap: '0.25rem',
                   cursor: imageSource ? 'pointer' : 'not-allowed',
                   opacity: imageSource ? 1 : 0.4,
-                  padding: '0.375rem 0.75rem',
+                  padding: '0.375rem 0.625rem',
                   borderRadius: '0.5rem',
                   backgroundColor: 'rgba(38, 38, 38, 0.9)',
                   border: '1px solid rgba(244, 63, 94, 0.4)'
                 }}
               >
                 <span style={{
-                  fontSize: '0.9rem',
+                  fontSize: '0.85rem',
                   fontWeight: '700',
                   fontFamily: 'Georgia, serif',
                   color: '#fbcfe8',
@@ -508,7 +505,7 @@ export default function App() {
                 }}>
                   Proceed to details
                 </span>
-                <img src="/next-icon.png" alt="Next" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                <img src="/next-icon.png" alt="Next" style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
               </div>
             </div>
           </div>
@@ -576,36 +573,36 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Size Type Dropdown */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size Type *</label>
-                <select
-                  value={selectedSizeType}
-                  onChange={(e) => {
-                    setSelectedSizeType(e.target.value);
-                    setSelectedSize('');
-                  }}
-                  style={{ width: '100%', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: '#e5e5e5', outline: 'none' }}
-                >
-                  {SIZE_TYPES.map(st => (
-                    <option key={st} value={st} style={{ backgroundColor: '#262626', color: '#e5e5e5' }}>{st}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Localized Size Dropdown */}
+              {/* Sizing Section: Size Type on Left (narrow), Size Dropdown on Right (disabled until size type selected) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
-                <select
-                  value={selectedSize}
-                  onChange={(e) => setSelectedSize(e.target.value)}
-                  style={{ width: '100%', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: '#e5e5e5', outline: 'none' }}
-                >
-                  <option value="" disabled>Select size...</option>
-                  {(LOCALIZED_SIZES[selectedSizeType] || LOCALIZED_SIZES['General']).map(sz => (
-                    <option key={sz} value={sz} style={{ backgroundColor: '#262626', color: '#e5e5e5' }}>{sz}</option>
-                  ))}
-                </select>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <select
+                    value={selectedSizeType}
+                    onChange={(e) => {
+                      setSelectedSizeType(e.target.value);
+                      setSelectedSize('');
+                    }}
+                    style={{ width: '110px', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.5rem', fontSize: '0.875rem', color: '#e5e5e5', outline: 'none' }}
+                  >
+                    <option value="" disabled>Standard...</option>
+                    {SIZE_TYPES.map(st => (
+                      <option key={st} value={st} style={{ backgroundColor: '#262626', color: '#e5e5e5' }}>{st}</option>
+                    ))}
+                  </select>
+
+                  <select
+                    disabled={!selectedSizeType}
+                    value={selectedSize}
+                    onChange={(e) => setSelectedSize(e.target.value)}
+                    style={{ flex: 1, backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: selectedSizeType ? '#e5e5e5' : '#737373', outline: 'none', opacity: selectedSizeType ? 1 : 0.5 }}
+                  >
+                    <option value="" disabled>{selectedSizeType ? 'Select size...' : 'Select standard first'}</option>
+                    {selectedSizeType && (LOCALIZED_SIZES[selectedSizeType] || []).map(sz => (
+                      <option key={sz} value={sz} style={{ backgroundColor: '#262626', color: '#e5e5e5' }}>{sz}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Color * */}
