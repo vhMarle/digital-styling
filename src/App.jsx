@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase Client (Ensure your env variables or keys are set)
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || 'https://your-supabase-url.supabase.co';
 const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY || 'your-supabase-anon-key';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Hierarchical Categories & Sub-categories
 const CATEGORY_MAP = {
   'Tops & Blouses': ['Blouses', 'T-Shirts & Tanks', 'Sweaters & Cardigans', 'Shirts'],
   'Bottoms & Denim': ['Straight-Leg Denim', 'Bootcut Jeans', 'Trousers', 'Skirts', 'Shorts'],
@@ -18,12 +16,15 @@ const CATEGORY_MAP = {
 const COLORS = ['Cool Neutrals', 'Navy Blue', 'Forest Green', 'Rich Burgundy', 'Sage / Olive Green', 'Rose Pink', 'Chocolate Brown', 'Metallic Silver/Gold'];
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('home'); // 'home', 'source', 'details'
+  const [currentView, setCurrentView] = useState('home'); // 'home', 'add'
   const [selectedFilter, setSelectedFilter] = useState('All');
-  const [wardrobeItems, setWardrobeItems] = useState([]);
+  const [wardrobeItems, setWardrobeItems] = useState([
+    { id: 1, category: 'Tops & Blouses', sub_category: 'Shirts', color: 'Cool Neutrals', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, is_transparent: false },
+    { id: 2, category: 'Bottoms & Denim', sub_category: 'Straight-Leg Denim', color: 'Navy Blue', notes: 'Straight-leg denim', image_url: 'https://via.placeholder.com/150', zoom_level: 1, is_transparent: false }
+  ]);
   
   // Image & Editing State
-  const [imageSource, setImageSource] = useState(null); // URL or File preview
+  const [imageSource, setImageSource] = useState(null);
   const [zoom, setZoom] = useState(1);
   const [isTransparent, setIsTransparent] = useState(false);
   const [urlInput, setUrlInput] = useState('');
@@ -34,7 +35,6 @@ export default function App() {
   const [selectedColor, setSelectedColor] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Fetch items from Supabase on mount
   useEffect(() => {
     fetchWardrobe();
   }, []);
@@ -42,18 +42,16 @@ export default function App() {
   const fetchWardrobe = async () => {
     try {
       const { data, error } = await supabase.from('wardrobe_items').select('*').order('created_at', { ascending: false });
-      if (data) setWardrobeItems(data);
-      if (error) console.error('Error fetching from Supabase:', error.message);
+      if (data && data.length > 0) setWardrobeItems(data);
     } catch (err) {
-      console.error('Supabase connection error:', err);
+      console.error('Supabase fetch error:', err);
     }
   };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setImageSource(imageUrl);
+      setImageSource(URL.createObjectURL(file));
     }
   };
 
@@ -76,17 +74,18 @@ export default function App() {
       zoom_level: zoom
     };
 
-    const { data, error } = await supabase.from('wardrobe_items').insert([newItem]).select();
-    
-    if (error) {
-      console.error('Error inserting into Supabase:', error.message);
-      // Fallback local addition if offline/testing
+    try {
+      const { data, error } = await supabase.from('wardrobe_items').insert([newItem]).select();
+      if (data) {
+        setWardrobeItems(prev => [data[0], ...prev]);
+      } else {
+        setWardrobeItems(prev => [{ id: Date.now(), ...newItem }, ...prev]);
+      }
+    } catch (err) {
       setWardrobeItems(prev => [{ id: Date.now(), ...newItem }, ...prev]);
-    } else if (data) {
-      setWardrobeItems(prev => [data[0], ...prev]);
     }
 
-    // Reset and return to home
+    // Reset & Return to Home
     setCurrentView('home');
     setImageSource(null);
     setSelectedCategory('');
@@ -109,10 +108,7 @@ export default function App() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      paddingTop: '2rem',
-      paddingBottom: '2rem',
-      paddingLeft: '1rem',
-      paddingRight: '1rem',
+      padding: '2rem 1rem',
       fontFamily: 'sans-serif'
     }}>
       <div style={{ width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -126,7 +122,7 @@ export default function App() {
                 <p style={{ fontSize: '0.75rem', color: '#a3a3a3', margin: 0 }}>Digital Wardrobe Curation</p>
               </div>
               <button
-                onClick={() => setCurrentView('source')}
+                onClick={() => setCurrentView('add')}
                 title="Add New Item"
                 style={{
                   width: '2.75rem',
@@ -134,16 +130,14 @@ export default function App() {
                   borderRadius: '50%',
                   backgroundColor: 'rgba(136, 19, 55, 0.8)',
                   border: '1px solid rgba(244, 63, 94, 0.5)',
-                  color: '#ffe4e6',
-                  fontSize: '1.5rem',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
+                  padding: 0
                 }}
               >
-                +
+                <img src="/plus-icon.png" alt="Add" style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#ffe4e6'; e.target.parentElement.style.fontSize='1.5rem';}} />
               </button>
             </div>
 
@@ -173,7 +167,7 @@ export default function App() {
             {/* Wardrobe Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', paddingTop: '0.5rem' }}>
               {filteredItems.map(item => (
-                <div key={item.id || item.created_at} style={{
+                <div key={item.id || Math.random()} style={{
                   backgroundColor: 'rgba(38, 38, 38, 0.85)',
                   border: '1px solid rgba(82, 82, 82, 0.4)',
                   borderRadius: '0.75rem',
@@ -211,8 +205,8 @@ export default function App() {
           </>
         )}
 
-        {/* ================= VIEW 2: ADD ITEM & EDITING SOURCE ================= */}
-        {currentView === 'source' && (
+        {/* ================= VIEW 2: ADD NEW ITEM & DETAILS ================= */}
+        {currentView === 'add' && (
           <div style={{
             backgroundColor: 'rgba(38, 38, 38, 0.85)',
             border: '1px solid rgba(82, 82, 82, 0.4)',
@@ -222,66 +216,82 @@ export default function App() {
             flexDirection: 'column',
             gap: '1.5rem'
           }}>
+            {/* Top Bar with Back Icon */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
               <button
                 type="button"
                 onClick={() => { setCurrentView('home'); setImageSource(null); }}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: 0 }}
               >
-                <img src="/undo-arrow-icon.png" alt="Home" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} />
-                <span style={{ fontSize: '0.75rem', fontWeight: '500', color: '#fbcfe8' }}>Home</span>
+                <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='← Back'; e.target.parentElement.style.color='#fbcfe8';}} />
               </button>
               <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#fbcfe8', margin: 0 }}>Add New Item</h3>
               <div style={{ width: '2rem' }}></div>
             </div>
 
-            {/* Source Selection Icons */}
+            {/* Upload Options Row */}
             {!imageSource ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  {/* Camera Icon Button */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+                  {/* Camera Icon */}
                   <label style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    padding: '1.5rem 1rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
-                    borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5'
+                    padding: '1rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
+                    borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
                   }}>
-                    <img src="/camera-icon.png" alt="Take Photo" style={{ width: '2rem', height: '2rem', marginBottom: '0.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
-                    <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Take Photo</span>
+                    <img src="/camera-icon.jpg" alt="Camera" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                    <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Camera</span>
                     <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
                   </label>
 
-                  {/* Folder Icon Button */}
+                  {/* Google Photos Icon */}
                   <label style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    padding: '1.5rem 1rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
-                    borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5'
+                    padding: '1rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
+                    borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
                   }}>
-                    <img src="/folder-icon.png" alt="Browse Files" style={{ width: '2rem', height: '2rem', marginBottom: '0.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
-                    <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Upload File</span>
+                    <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                    <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Google Photos</span>
+                    <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                  </label>
+
+                  {/* Folder Icon */}
+                  <label style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    padding: '1rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
+                    borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
+                  }}>
+                    <img src="/folder-icon.png" alt="Folder" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                    <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Browse</span>
                     <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                   </label>
                 </div>
 
-                {/* URL Input Field */}
-                <form onSubmit={handleUrlSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input
-                    type="url"
-                    placeholder="Or paste image URL here..."
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    style={{
-                      flex: 1, backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252',
-                      borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: '#e5e5e5', outline: 'none'
-                    }}
-                  />
-                  <button type="submit" style={{ padding: '0.625rem 1rem', backgroundColor: '#525252', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer' }}>Load</button>
-                </form>
+                {/* Paste Web Link URL Box */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbcfe8', fontSize: '0.8rem', fontWeight: '600' }}>
+                    <span>🌐</span> Paste Web Link
+                  </div>
+                  <form onSubmit={handleUrlSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="url"
+                      placeholder="Paste any product URL here..."
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      style={{
+                        flex: 1, backgroundColor: 'rgba(23, 23, 23, 0.9)', border: '1px solid #525252',
+                        borderRadius: '0.5rem', padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#e5e5e5', outline: 'none'
+                      }}
+                    />
+                    <button type="submit" style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(136, 19, 55, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>Import</button>
+                  </form>
+                </div>
               </div>
             ) : (
-              /* Image Editing & Background Removal Tools */
+              /* Image Loaded & Editing Tools */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
                 <div style={{
-                  width: '100%', height: '180px', backgroundColor: isTransparent ? 'transparent' : 'rgba(23, 23, 23, 0.8)',
+                  width: '100%', height: '160px', backgroundColor: isTransparent ? 'transparent' : 'rgba(23, 23, 23, 0.8)',
                   borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
                 }}>
                   <img src={imageSource} alt="Preview" style={{ maxHeight: '100%', maxWidth: '100%', transform: `scale(${zoom})`, filter: isTransparent ? 'contrast(120%) brightness(110%)' : 'none' }} />
@@ -302,50 +312,11 @@ export default function App() {
                     {isTransparent ? 'Background Removed' : 'Remove BG'}
                   </button>
                 </div>
-
-                {/* Complete Icon Button to Proceed to Details */}
-                <button
-                  onClick={() => setCurrentView('details')}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                    width: '100%', marginTop: '0.5rem', padding: '0.75rem',
-                    backgroundColor: 'rgba(136, 19, 55, 0.7)', border: '1px solid rgba(244, 63, 94, 0.4)',
-                    borderRadius: '0.75rem', fontWeight: '500', color: '#ffe4e6', cursor: 'pointer'
-                  }}
-                >
-                  <img src="/complete-icon.png" alt="Complete" style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
-                  <span>Proceed to Details</span>
-                </button>
               </div>
             )}
-          </div>
-        )}
 
-        {/* ================= VIEW 3: ITEM DETAILS & DATABASE SAVE ================= */}
-        {currentView === 'details' && (
-          <div style={{
-            backgroundColor: 'rgba(38, 38, 38, 0.85)',
-            border: '1px solid rgba(82, 82, 82, 0.4)',
-            borderRadius: '1rem',
-            padding: '1.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1.25rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
-              <button
-                type="button"
-                onClick={() => setCurrentView('source')}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-              >
-                <img src="/undo-arrow-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} />
-                <span style={{ fontSize: '0.75rem', fontWeight: '500', color: '#fbcfe8' }}>Back</span>
-              </button>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#fbcfe8', margin: 0 }}>Item Details</h3>
-              <div style={{ width: '2rem' }}></div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Details Form Section */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid #404040', paddingTop: '1rem' }}>
               {/* Category Dropdown */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Category</label>
@@ -405,22 +376,29 @@ export default function App() {
               </div>
             </div>
 
-            {/* Save to Database Button with add-wardrobe-icon.png */}
-            <button
-              onClick={handleSaveToDatabase}
-              disabled={!selectedCategory || !selectedSubCategory || !selectedColor}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                width: '100%', marginTop: '0.5rem', padding: '0.75rem',
-                backgroundColor: selectedCategory && selectedSubCategory && selectedColor ? 'rgba(136, 19, 55, 0.7)' : 'rgba(64, 64, 64, 0.4)',
-                border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.75rem', fontWeight: '500',
-                color: selectedCategory && selectedSubCategory && selectedColor ? '#ffe4e6' : '#737373',
-                cursor: selectedCategory && selectedSubCategory && selectedColor ? 'pointer' : 'not-allowed'
-              }}
-            >
-              <img src="/add-wardrobe-icon.png" alt="Save" style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
-              <span>Save to Database</span>
-            </button>
+            {/* Bottom Right Check-Mark Save Button */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
+              <button
+                onClick={handleSaveToDatabase}
+                disabled={!selectedCategory || !selectedSubCategory || !selectedColor}
+                title="Save Item"
+                style={{
+                  width: '3.25rem',
+                  height: '3.25rem',
+                  borderRadius: '50%',
+                  backgroundColor: selectedCategory && selectedSubCategory && selectedColor ? 'rgba(6, 95, 70, 0.8)' : 'rgba(64, 64, 64, 0.4)',
+                  border: '1px solid rgba(52, 211, 153, 0.5)',
+                  cursor: selectedCategory && selectedSubCategory && selectedColor ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
+                }}
+              >
+                <img src="/check-mark-icon.png" alt="Save" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#34d399'; e.target.parentElement.style.fontSize='1.5rem';}} />
+              </button>
+            </div>
           </div>
         )}
 
