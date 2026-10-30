@@ -23,7 +23,7 @@ const LOCALIZED_SIZES = {
 const RESTRICTED_COLORS = ['Red', 'Orange/Amber', 'Yellow/Gold', 'Green', 'Blue', 'Purple/Violet', 'Brown', 'Gray', 'Black', 'White'];
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('home'); // 'home', 'source', 'details'
+  const [currentView, setCurrentView] = useState('home'); // 'home', 'source', 'editImage', 'details'
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [wardrobeItems, setWardrobeItems] = useState([
     { id: 1, category: 'Tops', sub_category: 'Shirts', size_type: 'General', size: 'M', color: 'White', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false },
@@ -48,7 +48,7 @@ export default function App() {
   // Delete Confirmation Popup State
   const [itemToDelete, setItemToDelete] = useState(null);
 
-  // Details Form State
+  // Details Form State (Reset on entry)
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [selectedSizeType, setSelectedSizeType] = useState('');
@@ -59,7 +59,6 @@ export default function App() {
   useEffect(() => {
     fetchWardrobe();
 
-    // Prevent Supabase from going to sleep during active sessions
     const keepAliveInterval = setInterval(async () => {
       try {
         await supabase.from('wardrobe_items').select('id').limit(1);
@@ -89,6 +88,7 @@ export default function App() {
       reader.onload = (uploadEvent) => {
         resetEditor();
         setImageSource(uploadEvent.target.result);
+        setCurrentView('editImage'); // Move to image editing stage once selected
       };
       reader.readAsDataURL(file);
     }
@@ -100,6 +100,7 @@ export default function App() {
       resetEditor();
       setImageSource(urlInput.trim());
       setUrlInput('');
+      setCurrentView('editImage'); // Move to image editing stage once imported
     }
   };
 
@@ -108,6 +109,15 @@ export default function App() {
     setPan({ x: 0, y: 0 });
     setIsTransparent(false);
     setIsCroppingActive(false);
+  };
+
+  const resetDetailsForm = () => {
+    setSelectedCategory('');
+    setSelectedSubCategory('');
+    setSelectedSizeType('');
+    setSelectedSize('');
+    setSelectedColor('');
+    setNotes('');
   };
 
   const handleMouseDown = (e) => {
@@ -141,16 +151,22 @@ export default function App() {
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = cropBox.width;
-      canvas.height = cropBox.height;
-      const ctx = canvas.getContext('2d');
       const scaleX = img.naturalWidth / 300;
       const scaleY = img.naturalHeight / 170;
 
+      const srcX = cropBox.x * scaleX;
+      const srcY = cropBox.y * scaleY;
+      const srcW = cropBox.width * scaleX;
+      const srcH = cropBox.height * scaleY;
+
+      canvas.width = srcW;
+      canvas.height = srcH;
+      const ctx = canvas.getContext('2d');
+
       ctx.drawImage(
         img, 
-        cropBox.x * scaleX, cropBox.y * scaleY, cropBox.width * scaleX, cropBox.height * scaleY,
-        0, 0, cropBox.width, cropBox.height
+        srcX, srcY, srcW, srcH,
+        0, 0, srcW, srcH
       );
 
       setImageSource(canvas.toDataURL('image/png'));
@@ -225,12 +241,7 @@ export default function App() {
 
     setCurrentView('home');
     setImageSource(null);
-    setSelectedCategory('');
-    setSelectedSubCategory('');
-    setSelectedSizeType('');
-    setSelectedSize('');
-    setSelectedColor('');
-    setNotes('');
+    resetDetailsForm();
     resetEditor();
   };
 
@@ -282,7 +293,7 @@ export default function App() {
                 <p style={{ fontSize: '0.75rem', color: '#a3a3a3', margin: 0, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Digital Wardrobe Curation</p>
               </div>
               <button
-                onClick={() => { resetEditor(); setImageSource(null); setCurrentView('source'); }}
+                onClick={() => { resetEditor(); resetDetailsForm(); setImageSource(null); setCurrentView('source'); }}
                 title="Add New Item"
                 style={{
                   background: 'transparent', border: 'none', cursor: 'pointer',
@@ -388,7 +399,7 @@ export default function App() {
           </>
         )}
 
-        {/* ================= VIEW 2: SOURCING & IMAGE EDITING ================= */}
+        {/* ================= VIEW 2: SOURCING STAGE ("From...") ================= */}
         {currentView === 'source' && (
           <div style={{
             backgroundColor: 'rgba(38, 38, 38, 0.85)',
@@ -408,7 +419,7 @@ export default function App() {
               >
                 <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
               </button>
-              <BrushHeader text="Source New Item" />
+              <BrushHeader text="From..." />
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
@@ -467,9 +478,35 @@ export default function App() {
                 </form>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ================= VIEW 3: IMAGE EDITING STAGE ================= */}
+        {currentView === 'editImage' && (
+          <div style={{
+            backgroundColor: 'rgba(38, 38, 38, 0.85)',
+            border: '1px solid rgba(82, 82, 82, 0.4)',
+            borderRadius: '1rem',
+            padding: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.25rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => { setCurrentView('source'); setImageSource(null); resetEditor(); }}
+                title="Back"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+              >
+                <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
+              </button>
+              <BrushHeader text="Edit Item Image" />
+              <div style={{ width: '1.5rem' }}></div>
+            </div>
 
             {imageSource && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid #404040', paddingTop: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Image Editor</span>
                   <button
@@ -562,7 +599,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation */}
+            {/* Bottom Sourcing Navigation: Remove BG on left, Proceed to details on right */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem' }}>
               <button
                 onClick={removeWhiteBackground}
@@ -613,7 +650,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= VIEW 3: ITEM DETAILS & FINAL SAVE ================= */}
+        {/* ================= VIEW 4: ITEM DETAILS & FINAL SAVE ================= */}
         {currentView === 'details' && (
           <div style={{
             backgroundColor: 'rgba(38, 38, 38, 0.85)',
@@ -735,17 +772,25 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar */}
+            {/* Bottom Bar: "Edit Item" on left, "Add to Wardrobe" on right */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem' }}>
               <button
-                onClick={() => setCurrentView('source')}
+                onClick={() => { resetDetailsForm(); setCurrentView('source'); }}
                 title="Edit Item"
                 style={{
-                  background: 'transparent', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem',
-                  padding: '0.5rem 0.875rem', color: '#fbcfe8', fontSize: '0.75rem', fontWeight: '500', cursor: 'pointer'
+                  background: 'transparent',
+                  border: '1px solid rgba(251, 207, 232, 0.4)',
+                  borderRadius: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
-                Edit Item
+                <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'sans-serif' }}>
+                  Edit Item
+                </span>
               </button>
 
               <button
