@@ -1,0 +1,12 @@
+GO TO CORRECT DIRECTORY
+cd C:\Users\vhmar\digital-styling
+
+CLEAR CASH & RUN BUILD
+Remove-Item -Recurse -Force node_modules\.vite, dist, build -ErrorAction SilentlyContinue
+npm run build
+
+TO START DEV SERVER
+cd C:\Users\vhmar\digital-styling
+npm run dev
+
+Vite development server has stopped running or has bound to a different port number

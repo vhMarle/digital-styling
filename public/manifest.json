@@ -1,15 +1,23 @@
 {
-  "short_name": "Digital Styling",
-  "name": "Digital Styling - Smart Wardrobe Planner",
+  "short_name": "Sparks",
+  "name": "Sparks & Sequins",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/app-icon.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/",
-  "background_color": "#FAF8FC",
-  "theme_color": "#8B5CF6",
-  "display": "standalone"
+  "background_color": "#7a1c4b",
+  "theme_color": "#7a1c4b",
+  "display": "standalone",
+  "orientation": "portrait"
 }

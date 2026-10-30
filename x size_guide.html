@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Women's Standard Clothing Size Guide Lookup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-xl w-full bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-6">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-white mb-1">Women’s Standard Clothing Size Guide</h1>
+            <p class="text-sm text-slate-400">Select a size type and specific value to view matching measurements and regional size equivalents.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+            <!-- First Dropdown: Size Type -->
+            <div class="space-y-2">
+                <label for="categorySelect" class="block text-sm font-medium text-slate-300">Size</label>
+                <select id="categorySelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <option value="" disabled selected>-- Choose size type --</option>
+                    <option value="General">General</option>
+                    <option value="US">US</option>
+                    <option value="UK">UK</option>
+                    <option value="EU">EU</option>
+                </select>
+            </div>
+
+            <!-- Second Dropdown: Specific Value -->
+            <div class="space-y-2">
+                <select id="valueSelect" disabled class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <option value="" disabled selected>-- Select a size first --</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Result Display Card -->
+        <div id="resultCard" class="hidden bg-slate-900/80 border border-indigo-500/30 rounded-xl p-5 space-y-4">
+            <h2 class="text-xs font-semibold tracking-wider text-indigo-400 uppercase">Matching Size Details</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
+                    <span class="block text-xs text-slate-400">General Size</span>
+                    <span id="resGeneral" class="font-semibold text-white text-base">--</span>
+                </div>
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
+                    <span class="block text-xs text-slate-400">US Size</span>
+                    <span id="resUS" class="font-semibold text-white text-base">--</span>
+                </div>
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
+                    <span class="block text-xs text-slate-400">UK / AU Size</span>
+                    <span id="resUK" class="font-semibold text-white text-base">--</span>
+                </div>
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
+                    <span class="block text-xs text-slate-400">EU Size</span>
+                    <span id="resEU" class="font-semibold text-white text-base">--</span>
+                </div>
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
+                    <span class="block text-xs text-slate-400">Bust (Inches)</span>
+                    <span id="resBust" class="font-semibold text-white text-base">--</span>
+                </div>
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50">
+                    <span class="block text-xs text-slate-400">Waist (Inches)</span>
+                    <span id="resWaist" class="font-semibold text-white text-base">--</span>
+                </div>
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50 col-span-2 sm:col-span-3">
+                    <span class="block text-xs text-slate-400">Hips (Inches)</span>
+                    <span id="resHips" class="font-semibold text-white text-base">--</span>
+                </div>
+            </div>
+
+            <!-- Brand Input & Confirmation Section -->
+            <div class="pt-3 border-t border-slate-700/60 space-y-3">
+                <div class="flex flex-col sm:flex-row gap-3 items-center">
+                    <input type="text" id="brandInput" placeholder="Enter specific item / brand name (e.g. Zara Animal Dress - S)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button id="saveBrandBtn" class="w-full sm:w-auto px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-lg transition whitespace-nowrap">
+                        Confirm Brand
+                    </button>
+                </div>
+                <p id="brandStatus" class="text-xs text-slate-400 italic hidden"></p>
+
+                <!-- Confirm Button to Use Selected Sizing -->
+                <button id="confirmBtn" class="w-full mt-2 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg transition duration-200">
+                    Confirm Selected Sizing for Item
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sizeData = [
+            { general: "XS", us: "0–2", uk: "4–6", eu: "32–34", bust: "31–32.5", waist: "23–24.5", hips: "33.5–35" },
+            { general: "S", us: "4–6", uk: "8–10", eu: "36–38", bust: "33.5–35", waist: "25.5–27", hips: "36–37.5" },
+            { general: "M", us: "8–10", uk: "12–14", eu: "40–42", bust: "36.5–38", waist: "28.5–30", hips: "39–40.5" },
+            { general: "L", us: "12–14", uk: "16–18", eu: "44–46", bust: "39.5–41", waist: "31.5–33", hips: "42–44" },
+            { general: "XL", us: "16–18", uk: "20–22", eu: "48–50", bust: "43–45", waist: "35–37", hips: "46–48" }
+        ];
+
+        const categorySelect = document.getElementById('categorySelect');
+        const valueSelect = document.getElementById('valueSelect');
+        const resultCard = document.getElementById('resultCard');
+
+        const resGeneral = document.getElementById('resGeneral');
+        const resUS = document.getElementById('resUS');
+        const resUK = document.getElementById('resUK');
+        const resEU = document.getElementById('resEU');
+        const resBust = document.getElementById('resBust');
+        const resWaist = document.getElementById('resWaist');
+        const resHips = document.getElementById('resHips');
+
+        const brandInput = document.getElementById('brandInput');
+        const saveBrandBtn = document.getElementById('saveBrandBtn');
+        const brandStatus = document.getElementById('brandStatus');
+        const confirmBtn = document.getElementById('confirmBtn');
+
+        let savedBrands = JSON.parse(localStorage.getItem('savedSizingBrands') || '{}');
+
+        categorySelect.addEventListener('change', function() {
+            const selectedCategory = this.value;
+            
+            valueSelect.innerHTML = '<option value="" disabled selected>-- Select a value --</option>';
+            valueSelect.disabled = false;
+            resultCard.classList.add('hidden');
+            brandInput.value = '';
+            brandStatus.classList.add('hidden');
+
+            sizeData.forEach((row, index) => {
+                let optionText = "";
+                if (selectedCategory === "General") optionText = row.general;
+                else if (selectedCategory === "US") optionText = row.us;
+                else if (selectedCategory === "UK") optionText = row.uk;
+                else if (selectedCategory === "EU") optionText = row.eu;
+
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = optionText;
+                valueSelect.appendChild(opt);
+            });
+        });
+
+        valueSelect.addEventListener('change', function() {
+            const rowIndex = this.value;
+            if (rowIndex === "") return;
+
+            const row = sizeData[rowIndex];
+
+            resGeneral.textContent = row.general;
+            resUS.textContent = row.us;
+            resUK.textContent = row.uk;
+            resEU.textContent = row.eu;
+            resBust.textContent = row.bust;
+            resWaist.textContent = row.waist;
+            resHips.textContent = row.ips || row.hips;
+
+            brandInput.value = '';
+            brandStatus.classList.add('hidden');
+            resultCard.classList.remove('hidden');
+        });
+
+        saveBrandBtn.addEventListener('click', function() {
+            const brandName = brandInput.value.trim();
+            const rowIndex = valueSelect.value;
+            if (!brandName || rowIndex === "") {
+                alert("Please enter a specific item/brand name and select a size first.");
+                return;
+            }
+
+            if (savedBrands[brandName]) {
+                if (!confirm(`Item/Brand "${brandName}" already exists with saved sizing. Do you want to overwrite it?`)) {
+                    return;
+                }
+            }
+
+            savedBrands[brandName] = sizeData[rowIndex];
+            localStorage.setItem('savedSizingBrands', JSON.stringify(savedBrands));
+
+            brandStatus.textContent = `Item "${brandName}" successfully confirmed and saved!`;
+            brandStatus.classList.remove('hidden');
+            brandStatus.className = "text-xs text-emerald-400 font-medium";
+        });
+
+        confirmBtn.addEventListener('click', function() {
+            const rowIndex = valueSelect.value;
+            if (rowIndex === "") {
+                alert("Please select a size before confirming.");
+                return;
+            }
+            const selectedRow = sizeData[rowIndex];
+            const brandName = brandInput.value.trim() ? ` for "${brandInput.value.trim()}"` : "";
+            alert(`Successfully confirmed sizing selection${brandName}!\nGeneral: ${selectedRow.general} | US: ${selectedRow.us} | UK: ${selectedRow.uk}`);
+        });
+    </script>
+</body>
+</html>

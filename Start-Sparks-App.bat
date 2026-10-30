@@ -1,0 +1,1 @@
+Set-Content -Path "$HOME\Desktop\Start-Sparks-App.bat" -Value "@echo off`ncd /d C:\Users\vhmar\digital-styling`nnpm run dev -- --host`npause"
