@@ -16,7 +16,7 @@ const CATEGORY_MAP = {
 const COLORS = ['Cool Neutrals', 'Navy Blue', 'Forest Green', 'Rich Burgundy', 'Sage / Olive Green', 'Rose Pink', 'Chocolate Brown', 'Metallic Silver/Gold'];
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('home'); // 'home', 'add'
+  const [currentView, setCurrentView] = useState('home'); // 'home', 'source', 'details'
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [wardrobeItems, setWardrobeItems] = useState([
     { id: 1, category: 'Tops & Blouses', sub_category: 'Shirts', color: 'Cool Neutrals', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, is_transparent: false },
@@ -121,23 +121,21 @@ export default function App() {
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fbcfe8', margin: 0 }}>Sparks & Sequins</h2>
                 <p style={{ fontSize: '0.75rem', color: '#a3a3a3', margin: 0 }}>Digital Wardrobe Curation</p>
               </div>
+              {/* Plus Icon with Glass Effect / No Container Circle */}
               <button
-                onClick={() => setCurrentView('add')}
+                onClick={() => setCurrentView('source')}
                 title="Add New Item"
                 style={{
-                  width: '2.75rem',
-                  height: '2.75rem',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(136, 19, 55, 0.8)',
-                  border: '1px solid rgba(244, 63, 94, 0.5)',
+                  background: 'transparent',
+                  border: 'none',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: 0
+                  padding: '0.25rem'
                 }}
               >
-                <img src="/plus-icon.png" alt="Add" style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#ffe4e6'; e.target.parentElement.style.fontSize='1.5rem';}} />
+                <img src="/plus-icon.png" alt="Add" style={{ width: '2rem', height: '2rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2rem';}} />
               </button>
             </div>
 
@@ -205,8 +203,8 @@ export default function App() {
           </>
         )}
 
-        {/* ================= VIEW 2: ADD NEW ITEM & DETAILS ================= */}
-        {currentView === 'add' && (
+        {/* ================= VIEW 2: SOURCE SELECTION & EDITING ================= */}
+        {currentView === 'source' && (
           <div style={{
             backgroundColor: 'rgba(38, 38, 38, 0.85)',
             border: '1px solid rgba(82, 82, 82, 0.4)',
@@ -221,7 +219,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => { setCurrentView('home'); setImageSource(null); }}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: 0 }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}
               >
                 <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='← Back'; e.target.parentElement.style.color='#fbcfe8';}} />
               </button>
@@ -229,67 +227,67 @@ export default function App() {
               <div style={{ width: '2rem' }}></div>
             </div>
 
-            {/* Upload Options Row */}
-            {!imageSource ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-                  {/* Camera Icon */}
-                  <label style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    padding: '1rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
-                    borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
-                  }}>
-                    <img src="/camera-icon.jpg" alt="Camera" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
-                    <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Camera</span>
-                    <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
-                  </label>
+            {/* Upload Source Options Row */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+                {/* Camera Icon */}
+                <label style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  padding: '1rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
+                  borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
+                }}>
+                  <img src="/camera-icon.jpg" alt="Camera" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                  <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Camera</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
+                </label>
 
-                  {/* Google Photos Icon */}
-                  <label style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    padding: '1rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
-                    borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
-                  }}>
-                    <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
-                    <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Google Photos</span>
-                    <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
-                  </label>
+                {/* Google Photos Icon */}
+                <label style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  padding: '1rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
+                  borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
+                }}>
+                  <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                  <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Google Photos</span>
+                  <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                </label>
 
-                  {/* Folder Icon */}
-                  <label style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    padding: '1rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
-                    borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
-                  }}>
-                    <img src="/folder-icon.png" alt="Folder" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
-                    <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Browse</span>
-                    <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
-                  </label>
-                </div>
-
-                {/* Paste Web Link URL Box */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbcfe8', fontSize: '0.8rem', fontWeight: '600' }}>
-                    <span>🌐</span> Paste Web Link
-                  </div>
-                  <form onSubmit={handleUrlSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input
-                      type="url"
-                      placeholder="Paste any product URL here..."
-                      value={urlInput}
-                      onChange={(e) => setUrlInput(e.target.value)}
-                      style={{
-                        flex: 1, backgroundColor: 'rgba(23, 23, 23, 0.9)', border: '1px solid #525252',
-                        borderRadius: '0.5rem', padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#e5e5e5', outline: 'none'
-                      }}
-                    />
-                    <button type="submit" style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(136, 19, 55, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>Import</button>
-                  </form>
-                </div>
+                {/* Folder Icon */}
+                <label style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  padding: '1rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
+                  borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
+                }}>
+                  <img src="/folder-icon.png" alt="Folder" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                  <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Browse</span>
+                  <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                </label>
               </div>
-            ) : (
-              /* Image Loaded & Editing Tools */
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+
+              {/* Paste Web Link URL Box */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbcfe8', fontSize: '0.8rem', fontWeight: '600' }}>
+                  <span>🌐</span> Paste Web Link
+                </div>
+                <form onSubmit={handleUrlSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="url"
+                    placeholder="Paste any product URL here..."
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    style={{
+                      flex: 1, backgroundColor: 'rgba(23, 23, 23, 0.9)', border: '1px solid #525252',
+                      borderRadius: '0.5rem', padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#e5e5e5', outline: 'none'
+                    }}
+                  />
+                  <button type="submit" style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(136, 19, 55, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>Import</button>
+                </form>
+              </div>
+            </div>
+
+            {/* Image Preview & Editing Tools (if image loaded) */}
+            {imageSource && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', borderTop: '1px solid #404040', paddingTop: '1rem' }}>
                 <div style={{
                   width: '100%', height: '160px', backgroundColor: isTransparent ? 'transparent' : 'rgba(23, 23, 23, 0.8)',
                   borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
@@ -315,8 +313,68 @@ export default function App() {
               </div>
             )}
 
-            {/* Details Form Section */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid #404040', paddingTop: '1rem' }}>
+            {/* Proceed to Details Check-Mark Icon Button */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
+              <button
+                onClick={() => setCurrentView('details')}
+                disabled={!imageSource}
+                title="Proceed to Details"
+                style={{
+                  width: '3.25rem',
+                  height: '3.25rem',
+                  borderRadius: '50%',
+                  backgroundColor: imageSource ? 'rgba(6, 95, 70, 0.8)' : 'rgba(64, 64, 64, 0.4)',
+                  border: '1px solid rgba(52, 211, 153, 0.5)',
+                  cursor: imageSource ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
+                }}
+              >
+                <img src="/check-mark-icon.png" alt="Confirm" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#34d399'; e.target.parentElement.style.fontSize='1.5rem';}} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ================= VIEW 3: ITEM DETAILS & FINAL SAVE ================= */}
+        {currentView === 'details' && (
+          <div style={{
+            backgroundColor: 'rgba(38, 38, 38, 0.85)',
+            border: '1px solid rgba(82, 82, 82, 0.4)',
+            borderRadius: '1rem',
+            padding: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.25rem'
+          }}>
+            {/* Top Bar with Back Icon */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setCurrentView('source')}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}
+              >
+                <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='← Back'; e.target.parentElement.style.color='#fbcfe8';}} />
+              </button>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#fbcfe8', margin: 0 }}>Item Details</h3>
+              <div style={{ width: '2rem' }}></div>
+            </div>
+
+            {/* Display Item Image on Top */}
+            {imageSource && (
+              <div style={{
+                width: '100%', height: '130px', backgroundColor: isTransparent ? 'transparent' : 'rgba(23, 23, 23, 0.6)',
+                borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
+              }}>
+                <img src={imageSource} alt="Item Preview" style={{ maxHeight: '100%', maxWidth: '100%', transform: `scale(${zoom})`, filter: isTransparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none' }} />
+              </div>
+            )}
+
+            {/* Details Form Fields Below */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {/* Category Dropdown */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Category</label>
@@ -376,18 +434,18 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Right Check-Mark Save Button */}
+            {/* Bottom Right AddWardrobe-icon.png Save Button */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
               <button
                 onClick={handleSaveToDatabase}
                 disabled={!selectedCategory || !selectedSubCategory || !selectedColor}
-                title="Save Item"
+                title="Save to Wardrobe"
                 style={{
                   width: '3.25rem',
                   height: '3.25rem',
                   borderRadius: '50%',
-                  backgroundColor: selectedCategory && selectedSubCategory && selectedColor ? 'rgba(6, 95, 70, 0.8)' : 'rgba(64, 64, 64, 0.4)',
-                  border: '1px solid rgba(52, 211, 153, 0.5)',
+                  backgroundColor: selectedCategory && selectedSubCategory && selectedColor ? 'rgba(136, 19, 55, 0.8)' : 'rgba(64, 64, 64, 0.4)',
+                  border: '1px solid rgba(244, 63, 94, 0.5)',
                   cursor: selectedCategory && selectedSubCategory && selectedColor ? 'pointer' : 'not-allowed',
                   display: 'flex',
                   alignItems: 'center',
@@ -396,7 +454,7 @@ export default function App() {
                   boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
                 }}
               >
-                <img src="/check-mark-icon.png" alt="Save" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#34d399'; e.target.parentElement.style.fontSize='1.5rem';}} />
+                <img src="/AddWardrobe-icon.png" alt="Save to Wardrobe" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='💾'; e.target.parentElement.style.color='#ffe4e6'; e.target.parentElement.style.fontSize='1.5rem';}} />
               </button>
             </div>
           </div>
