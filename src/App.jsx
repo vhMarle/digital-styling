@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || 'https://your-supabase-url.supabase.co';
@@ -13,14 +13,15 @@ const CATEGORY_MAP = {
   'Footwear': ['Adidas Sneakers', 'Leopard Sandals', 'Boots', 'Heels', 'Flats']
 };
 
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'UK 8', 'UK 10', 'UK 12', 'UK 14', 'US 2', 'US 4', 'US 6', 'US 8', 'US 10'];
 const COLORS = ['Cool Neutrals', 'Navy Blue', 'Forest Green', 'Rich Burgundy', 'Sage / Olive Green', 'Rose Pink', 'Chocolate Brown', 'Yellow', 'Metallic Silver/Gold'];
 
 export default function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home', 'source', 'details'
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [wardrobeItems, setWardrobeItems] = useState([
-    { id: 1, category: 'Tops & Blouses', sub_category: 'Shirts', color: 'Cool Neutrals', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false },
-    { id: 2, category: 'Bottoms & Denim', sub_category: 'Straight-Leg Denim', color: 'Navy Blue', notes: 'Straight-leg denim', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false }
+    { id: 1, category: 'Tops & Blouses', sub_category: 'Shirts', size: 'M', color: 'Cool Neutrals', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false },
+    { id: 2, category: 'Bottoms & Denim', sub_category: 'Straight-Leg Denim', size: 'S', color: 'Navy Blue', notes: 'Straight-leg denim', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false }
   ]);
   
   // Image & Interactive Editing State
@@ -38,6 +39,7 @@ export default function App() {
   // Details Form State
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -57,8 +59,12 @@ export default function App() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      resetEditor();
-      setImageSource(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        resetEditor();
+        setImageSource(uploadEvent.target.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -106,6 +112,7 @@ export default function App() {
     const newItem = {
       category: selectedCategory,
       sub_category: selectedSubCategory,
+      size: selectedSize,
       color: selectedColor,
       notes: notes,
       image_url: imageSource || 'https://via.placeholder.com/150',
@@ -131,6 +138,7 @@ export default function App() {
     setImageSource(null);
     setSelectedCategory('');
     setSelectedSubCategory('');
+    setSelectedSize('');
     setSelectedColor('');
     setNotes('');
     resetEditor();
@@ -162,25 +170,23 @@ export default function App() {
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fbcfe8', margin: 0 }}>Sparks & Sequins</h2>
                 <p style={{ fontSize: '0.75rem', color: '#a3a3a3', margin: 0 }}>Digital Wardrobe Curation</p>
               </div>
-              {/* Plus Icon with Translucent Background & No Border */}
+              {/* Much Larger Plus Icon with ZERO Background or Border */}
               <button
                 onClick={() => { resetEditor(); setImageSource(null); setCurrentView('source'); }}
                 title="Add New Item"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  backdropFilter: 'blur(8px)',
+                  background: 'transparent',
                   border: 'none',
-                  borderRadius: '50%',
                   cursor: 'pointer',
-                  width: '2.5rem',
-                  height: '2.5rem',
+                  width: '3.5rem',
+                  height: '3.5rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: 0
                 }}
               >
-                <img src="/plus-icon.png" alt="Add" style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.5rem';}} />
+                <img src="/plus-icon.png" alt="Add" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2.5rem';}} />
               </button>
             </div>
 
@@ -207,7 +213,7 @@ export default function App() {
               ))}
             </div>
 
-            {/* Wardrobe Grid with Minus-Icon Delete Button */}
+            {/* Wardrobe Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', paddingTop: '0.5rem' }}>
               {filteredItems.map(item => (
                 <div key={item.id || Math.random()} style={{
@@ -220,26 +226,14 @@ export default function App() {
                   gap: '0.5rem',
                   position: 'relative'
                 }}>
-                  {/* Delete Minus Icon at Bottom Right */}
                   <button
                     onClick={() => setItemToDelete(item)}
                     title="Remove item"
                     style={{
-                      position: 'absolute',
-                      bottom: '0.75rem',
-                      right: '0.75rem',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(6px)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: '1.75rem',
-                      height: '1.75rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: 0,
-                      zIndex: 2
+                      position: 'absolute', bottom: '0.75rem', right: '0.75rem',
+                      background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(6px)',
+                      border: 'none', borderRadius: '50%', width: '1.75rem', height: '1.75rem',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, zIndex: 2
                     }}
                   >
                     <img src="/minus-icon.png" alt="Remove" style={{ width: '0.875rem', height: '0.875rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='-'; e.target.parentElement.style.color='#fca5a5'; e.target.parentElement.style.fontSize='1rem';}} />
@@ -248,31 +242,26 @@ export default function App() {
                   <div style={{
                     height: '110px',
                     backgroundColor: item.is_transparent ? 'transparent' : 'rgba(23, 23, 23, 0.6)',
-                    borderRadius: '0.5rem',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    borderRadius: '0.5rem', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}>
                     <img 
                       src={item.image_url} 
                       alt={item.category} 
                       style={{ 
-                        maxHeight: '100%', 
-                        maxWidth: '100%', 
+                        maxHeight: '100%', maxWidth: '100%', 
                         transform: `scale(${item.zoom_level || 1}) translate(${item.pan_x || 0}px, ${item.pan_y || 0}px)`,
                         filter: item.is_transparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none'
                       }} 
                     />
                   </div>
                   <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#fbcfe8' }}>{item.sub_category || item.category}</span>
-                  <span style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>{item.color}</span>
+                  <span style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>{item.color} {item.size ? `• ${item.size}` : ''}</span>
                   {item.notes && <span style={{ fontSize: '0.7rem', color: '#737373', fontStyle: 'italic' }}>{item.notes}</span>}
                 </div>
               ))}
             </div>
 
-            {/* Cute Deletion Confirmation Popup */}
+            {/* Deletion Confirmation Popup */}
             {itemToDelete && (
               <div style={{
                 position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
@@ -288,24 +277,8 @@ export default function App() {
                   <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fbcfe8', margin: 0 }}>Remove Item?</h3>
                   <p style={{ fontSize: '0.85rem', color: '#a3a3a3', margin: 0 }}>Are you sure you want to remove this piece from your digital wardrobe?</p>
                   <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
-                    <button
-                      onClick={() => setItemToDelete(null)}
-                      style={{
-                        flex: 1, padding: '0.625rem', backgroundColor: 'rgba(64,64,64,0.6)',
-                        border: '1px solid #525252', borderRadius: '0.5rem', color: '#e5e5e5', cursor: 'pointer', fontWeight: '500'
-                      }}
-                    >
-                      Keep
-                    </button>
-                    <button
-                      onClick={confirmAndDeleteItem}
-                      style={{
-                        flex: 1, padding: '0.625rem', backgroundColor: 'rgba(136, 19, 55, 0.8)',
-                        border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', cursor: 'pointer', fontWeight: '500'
-                      }}
-                    >
-                      Remove
-                    </button>
+                    <button onClick={() => setItemToDelete(null)} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(64,64,64,0.6)', border: '1px solid #525252', borderRadius: '0.5rem', color: '#e5e5e5', cursor: 'pointer', fontWeight: '500' }}>Keep</button>
+                    <button onClick={confirmAndDeleteItem} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(136, 19, 55, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', cursor: 'pointer', fontWeight: '500' }}>Remove</button>
                   </div>
                 </div>
               </div>
@@ -324,65 +297,38 @@ export default function App() {
             flexDirection: 'column',
             gap: '1.25rem'
           }}>
-            {/* Top Bar with Translucent Undo-Arrow Icon */}
+            {/* Top Bar with Clear/Borderless Back Icon */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
               <button
                 type="button"
                 onClick={() => { setCurrentView('home'); setImageSource(null); resetEditor(); }}
                 title="Back to Home"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  backdropFilter: 'blur(6px)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '2.25rem',
-                  height: '2.25rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 0
-                }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
               >
-                <img src="/undo-arrow-icon.png" alt="Back" style={{ width: '1.125rem', height: '1.125rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
+                <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
               </button>
               <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#fbcfe8', margin: 0 }}>Source New Item</h3>
-              <div style={{ width: '2.25rem' }}></div>
+              <div style={{ width: '1.5rem' }}></div>
             </div>
 
-            {/* Sourcing Options Row */}
+            {/* Sourcing Options: Camera & Google Photos without square boxes or text labels below */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', alignItems: 'center', padding: '0.5rem 0' }}>
                 {/* Camera Icon */}
-                <label style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  padding: '0.875rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
-                  borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
-                }}>
-                  <img src="/camera-icon.jpg" alt="Camera" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
-                  <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Camera</span>
+                <label style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <img src="/camera-icon.jpg" alt="Camera" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
                 {/* Google Photos Icon */}
-                <label style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  padding: '0.875rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
-                  borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
-                }}>
-                  <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
-                  <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>G. Photos</span>
+                <label style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
-                {/* Folder Icon */}
-                <label style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  padding: '0.875rem 0.5rem', backgroundColor: 'rgba(64, 64, 64, 0.4)', border: '1px solid rgba(115, 115, 115, 0.4)',
-                  borderRadius: '0.75rem', cursor: 'pointer', color: '#e5e5e5', textAlign: 'center'
-                }}>
-                  <img src="/folder-icon.png" alt="Folder" style={{ width: '1.75rem', height: '1.75rem', marginBottom: '0.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
-                  <span style={{ fontSize: '0.7rem', fontWeight: '500' }}>Browse</span>
+                {/* Browse Folder Icon */}
+                <label style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <img src="/folder-icon.png" alt="Browse" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
               </div>
@@ -411,6 +357,21 @@ export default function App() {
             {/* Image Preview & Editing Tools (Displayed BELOW the uploaded item picture) */}
             {imageSource && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid #404040', paddingTop: '1rem' }}>
+                
+                {/* Much Smaller Remove BG Button right below item imported */}
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <button
+                    onClick={() => setIsTransparent(!isTransparent)}
+                    style={{
+                      padding: '0.25rem 0.5rem', fontSize: '0.65rem', fontWeight: '500',
+                      backgroundColor: isTransparent ? 'rgba(52, 211, 153, 0.3)' : 'rgba(64, 64, 64, 0.6)',
+                      color: isTransparent ? '#34d399' : '#d4d4d4', border: '1px solid #525252', borderRadius: '0.25rem', cursor: 'pointer'
+                    }}
+                  >
+                    {isTransparent ? 'BG Removed' : 'Remove BG'}
+                  </button>
+                </div>
+
                 {/* Interactive Pannable/Zoomable Image Viewer */}
                 <div 
                   onMouseDown={handleMouseDown}
@@ -427,8 +388,7 @@ export default function App() {
                     src={imageSource} 
                     alt="Preview Sourced" 
                     style={{ 
-                      maxHeight: '100%', 
-                      maxWidth: '100%', 
+                      maxHeight: '100%', maxWidth: '100%', 
                       transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
                       filter: isTransparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none',
                       transition: isDragging ? 'none' : 'transform 0.1s ease-out'
@@ -437,47 +397,39 @@ export default function App() {
                   <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '0.65rem', color: '#737373', pointerEvents: 'none' }}>Drag to move</span>
                 </div>
 
-                {/* User Friendly Editing Controls & BG Remove Button */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Zoom & Pan:</span>
-                    <button onClick={() => setZoom(prev => Math.max(0.5, prev - 0.15))} style={{ padding: '0.25rem 0.75rem', background: '#333', color: '#fff', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>-</button>
-                    <button onClick={() => setZoom(prev => Math.min(2.5, prev + 0.15))} style={{ padding: '0.25rem 0.75rem', background: '#333', color: '#fff', border: 'none', borderRadius: '0.25rem', cursor: 'pointer' }}>+</button>
-                    <button onClick={resetEditor} style={{ padding: '0.25rem 0.5rem', background: '#333', color: '#bbb', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', fontSize: '0.7rem' }}>Reset</button>
-                  </div>
-
-                  <button
-                    onClick={() => setIsTransparent(!isTransparent)}
-                    style={{
-                      width: '100%', padding: '0.5rem', fontSize: '0.75rem', fontWeight: '500',
-                      backgroundColor: isTransparent ? 'rgba(52, 211, 153, 0.3)' : 'rgba(64, 64, 64, 0.6)',
-                      color: isTransparent ? '#34d399' : '#d4d4d4', border: '1px solid #525252', borderRadius: '0.375rem', cursor: 'pointer'
-                    }}
+                {/* Microsoft Word Style Slider Resizing & Undo Clear-Background Reset Icon */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'rgba(23,23,23,0.5)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #404040' }}>
+                  <span style={{ fontSize: '0.7rem', color: '#a3a3a3', whiteSpace: 'nowrap' }}>Resize:</span>
+                  <input 
+                    type="range" 
+                    min="0.5" 
+                    max="2.5" 
+                    step="0.05" 
+                    value={zoom} 
+                    onChange={(e) => setZoom(parseFloat(e.target.value))}
+                    style={{ flex: 1, accentColor: '#881337', cursor: 'pointer' }} 
+                  />
+                  <button 
+                    onClick={resetEditor}
+                    title="Reset / Undo Edits"
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
-                    {isTransparent ? 'Background Removed' : 'Remove BG'}
+                    <img src="/undo-arrow-icon.png" alt="Reset" style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='↺'; e.target.parentElement.style.color='#fbcfe8';}} />
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Proceed Button to Details */}
+            {/* Proceed Button */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.25rem' }}>
               <button
                 onClick={() => setCurrentView('details')}
                 disabled={!imageSource}
                 title="Proceed to Details"
                 style={{
-                  background: imageSource ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.03)',
-                  backdropFilter: 'blur(6px)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '2.75rem',
-                  height: '2.75rem',
-                  cursor: imageSource ? 'pointer' : 'not-allowed',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 0
+                  background: imageSource ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                  border: 'none', borderRadius: '50%', width: '2.75rem', height: '2.75rem',
+                  cursor: imageSource ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                 }}
               >
                 <img src="/check-mark-icon.png" alt="Confirm" style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#34d399'; e.target.parentElement.style.fontSize='1.25rem';}} />
@@ -497,30 +449,18 @@ export default function App() {
             flexDirection: 'column',
             gap: '1.25rem'
           }}>
-            {/* Top Bar with Translucent Undo-Arrow Icon */}
+            {/* Top Bar with Clear Undo-Arrow Icon */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
               <button
                 type="button"
                 onClick={() => setCurrentView('source')}
                 title="Back to Sourcing"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  backdropFilter: 'blur(6px)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '2.25rem',
-                  height: '2.25rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 0
-                }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
               >
-                <img src="/undo-arrow-icon.png" alt="Back" style={{ width: '1.125rem', height: '1.125rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
+                <img src="/undo-arrow-icon.png" alt="Back" style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8';}} />
               </button>
               <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#fbcfe8', margin: 0 }}>Item Details</h3>
-              <div style={{ width: '2.25rem' }}></div>
+              <div style={{ width: '1.25rem' }}></div>
             </div>
 
             {/* Item Image Displayed at the Top */}
@@ -533,9 +473,9 @@ export default function App() {
               </div>
             )}
 
-            {/* Details Form Fields Below */}
+            {/* Details Form Fields */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Category Dropdown */}
+              {/* Category */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Category *</label>
                 <select
@@ -550,9 +490,9 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Sub-Category Dropdown (Active only after Category is selected) */}
+              {/* Sub-Category (Active only after Category is selected) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: selectedCategory ? '#d4d4d4' : '#737373' }}>Sub-Category *</label>
+                <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: selectedCategory ? '#d4d4d4' : '#737373' }}>Sub-Category</label>
                 <select
                   disabled={!selectedCategory}
                   value={selectedSubCategory}
@@ -566,7 +506,22 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Color Dropdown */}
+              {/* Size * (Mandatory) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
+                <select
+                  value={selectedSize}
+                  onChange={(e) => setSelectedSize(e.target.value)}
+                  style={{ width: '100%', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: '#e5e5e5', outline: 'none' }}
+                >
+                  <option value="" disabled>Select size...</option>
+                  {SIZES.map(sz => (
+                    <option key={sz} value={sz} style={{ backgroundColor: '#262626', color: '#e5e5e5' }}>{sz}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Color * (Mandatory) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Color *</label>
                 <select
@@ -594,29 +549,28 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Right Translucent AddWardrobe-icon Save Button (Active ONLY when Category, Sub-Category, and Color are selected) */}
+            {/* Bottom Right Save Button with Google-style Hover Tooltip "Add to Wardrobe" (Active ONLY when Category, Size, and Color are selected) */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
               <button
                 onClick={handleSaveToDatabase}
-                disabled={!selectedCategory || !selectedSubCategory || !selectedColor}
-                title="Save to Wardrobe"
+                disabled={!selectedCategory || !selectedSize || !selectedColor}
+                title="Add to Wardrobe"
                 style={{
-                  background: (selectedCategory && selectedSubCategory && selectedColor) ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.03)',
-                  backdropFilter: 'blur(6px)',
+                  background: (selectedCategory && selectedSize && selectedColor) ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
                   border: 'none',
                   borderRadius: '50%',
                   width: '3rem',
                   height: '3rem',
-                  cursor: (selectedCategory && selectedSubCategory && selectedColor) ? 'pointer' : 'not-allowed',
+                  cursor: (selectedCategory && selectedSize && selectedColor) ? 'pointer' : 'not-allowed',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: 0,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                  opacity: (selectedCategory && selectedSubCategory && selectedColor) ? 1 : 0.4
+                  boxShadow: (selectedCategory && selectedSize && selectedColor) ? '0 4px 12px rgba(0,0,0,0.3)' : 'none',
+                  opacity: (selectedCategory && selectedSize && selectedColor) ? 1 : 0.3
                 }}
               >
-                <img src="/AddWardrobe-icon.png" alt="Save to Wardrobe" style={{ width: '1.375rem', height: '1.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='💾'; e.target.parentElement.style.color='#ffe4e6'; e.target.parentElement.style.fontSize='1.25rem';}} />
+                <img src="/AddWardrobe-icon.png" alt="Add to Wardrobe" style={{ width: '1.375rem', height: '1.375rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='💾'; e.target.parentElement.style.color='#ffe4e6'; e.target.parentElement.style.fontSize='1.25rem';}} />
               </button>
             </div>
           </div>
