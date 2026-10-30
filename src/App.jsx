@@ -44,7 +44,7 @@ export default function App() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   // Corner Resizing State
-  const [isResizing, setIsResizing] = useState(null); // 'tl', 'tr', 'bl', 'br'
+  const [isResizing, setIsResizing] = useState(null); // 'tl', 'tr', 'bl', 'br', 'tm', 'bm', 'ml', 'mr'
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, w: 100, h: 100 });
 
   // Delete Confirmation Popup State
@@ -150,6 +150,14 @@ export default function App() {
       } else if (isResizing === 'tl') {
         setWidthScale(Math.max(30, Math.min(250, resizeStart.w - dx)));
         setHeightScale(Math.max(30, Math.min(250, resizeStart.h - dy)));
+      } else if (isResizing === 'bm') {
+        setHeightScale(Math.max(30, Math.min(250, resizeStart.h + dy)));
+      } else if (isResizing === 'tm') {
+        setHeightScale(Math.max(30, Math.min(250, resizeStart.h - dy)));
+      } else if (isResizing === 'mr') {
+        setWidthScale(Math.max(30, Math.min(250, resizeStart.w + dx)));
+      } else if (isResizing === 'ml') {
+        setWidthScale(Math.max(30, Math.min(250, resizeStart.w - dx)));
       }
       return;
     }
@@ -228,11 +236,9 @@ export default function App() {
 
     try {
       if (activeItemId) {
-        // Update existing item
         await supabase.from('wardrobe_items').update(newItem).eq('id', activeItemId);
         setWardrobeItems(prev => prev.map(item => item.id === activeItemId ? { ...item, ...newItem } : item));
       } else {
-        // Insert new item
         const { data } = await supabase.from('wardrobe_items').insert([newItem]).select();
         if (data && data.length > 0) {
           setWardrobeItems(prev => [data[0], ...prev]);
@@ -268,7 +274,7 @@ export default function App() {
     setSelectedSize(item.size || '');
     setSelectedColor(item.color || '');
     setNotes(item.notes || '');
-    setIsDetailsEditable(false); // Default to greyed out (read-only)
+    setIsDetailsEditable(false);
     setCurrentView('details');
   };
 
@@ -304,35 +310,37 @@ export default function App() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      padding: '2rem 1rem',
+      padding: '1rem 0.5rem',
       fontFamily: 'sans-serif',
-      userSelect: 'none'
+      userSelect: 'none',
+      boxSizing: 'border-box',
+      overflowX: 'hidden',
+      width: '100vw'
     }}>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
-      <div style={{ width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div style={{ width: '100%', maxWidth: '480px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '0 0.5rem' }}>
         
         {/* ================= VIEW 1: HOME DASHBOARD ================= */}
         {currentView === 'home' && (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #333' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #333', width: '100%', boxSizing: 'border-box' }}>
               <div>
-                {/* Image logo instead of written title */}
-                <img src="/Sparks & Sequince.png" alt="Sparks & Sequins" style={{ height: '3.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                <img src="/Sparks & Sequince.png" alt="Sparks & Sequins" style={{ height: '3.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
               </div>
               <button
                 onClick={() => { resetEditor(); resetDetailsForm(); setImageSource(null); setCurrentView('source'); }}
                 title="Add New Item"
                 style={{
                   background: 'transparent', border: 'none', cursor: 'pointer',
-                  width: '5rem', height: '5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                  width: '4rem', height: '4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                 }}
               >
-                <img src="/plus-icon.png" alt="Add" style={{ width: '4rem', height: '4rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='3.5rem';}} />
+                <img src="/plus-icon.png" alt="Add" style={{ width: '3.25rem', height: '3.25rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='3rem';}} />
               </button>
             </div>
 
             {/* Filter Buttons */}
-            <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none', width: '100%', boxSizing: 'border-box' }}>
               {['All', ...Object.keys(MATRIX_CATEGORY_MAP)].map(cat => (
                 <button
                   key={cat}
@@ -354,8 +362,8 @@ export default function App() {
               ))}
             </div>
 
-            {/* Wardrobe Grid - Clicking item opens details in read-only mode */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', paddingTop: '0.5rem' }}>
+            {/* Wardrobe Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               {filteredItems.map(item => (
                 <div 
                   key={item.id || Math.random()} 
@@ -369,7 +377,8 @@ export default function App() {
                     flexDirection: 'column',
                     gap: '0.5rem',
                     position: 'relative',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    boxSizing: 'border-box'
                   }}
                 >
                   <button
@@ -434,7 +443,7 @@ export default function App() {
           </>
         )}
 
-        {/* ================= VIEW 2: SOURCING STAGE ("From...") ================= */}
+        {/* ================= VIEW 2: SOURCING STAGE ("Import from...") ================= */}
         {currentView === 'source' && (
           <div style={{
             backgroundColor: 'rgba(38, 38, 38, 0.85)',
@@ -443,7 +452,9 @@ export default function App() {
             padding: '1.5rem',
             display: 'flex',
             flexDirection: 'column',
-            gap: '1.25rem'
+            gap: '1.25rem',
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
               <button
@@ -454,35 +465,35 @@ export default function App() {
               >
                 <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
               </button>
-              <BrushHeader text="From..." />
+              <BrushHeader text="Import from..." />
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
             {/* Sourcing Icons Stacked Vertically */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '0.5rem 0' }}>
-                <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', boxSizing: 'border-box' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '0.5rem 0', width: '100%', boxSizing: 'border-box' }}>
+                <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
                   <img src="/camera-icon.jpg" alt="Take a Picture" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
-                <label title="Google Photos" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%' }}>
+                <label title="Google Photos" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
                   <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
-                <label title="Browse Files" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%' }}>
+                <label title="Browse Files" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
                   <img src="/folder-icon.png" alt="Browse Files" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
               </div>
 
-              {/* Paste Web Link Box */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbcfe8', fontSize: '0.8rem', fontWeight: '600' }}>
-                  <span>🌐</span> Paste Web Link
+              {/* Paste Web Link Box (Matching exact width and padding of the 3 boxes above) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbcfe8', fontSize: '0.9rem', fontWeight: '600' }}>
+                  <span>🌐</span> Paste web link
                 </div>
-                <form onSubmit={handleUrlImport} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                <form onSubmit={handleUrlImport} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
                   <input
                     type="url"
                     placeholder="Paste URL..."
@@ -490,19 +501,19 @@ export default function App() {
                     onChange={(e) => setUrlInput(e.target.value)}
                     style={{
                       width: '100%', boxSizing: 'border-box', backgroundColor: 'rgba(23, 23, 23, 0.9)', border: '1px solid #525252',
-                      borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.8rem', color: '#e5e5e5', outline: 'none'
+                      borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.85rem', color: '#e5e5e5', outline: 'none'
                     }}
                   />
                   {urlInput.trim() && (
                     <button 
                       type="submit" 
                       style={{ 
-                        width: '100%', padding: '0.625rem', 
+                        width: '100%', boxSizing: 'border-box', padding: '0.625rem', 
                         backgroundColor: 'rgba(131, 24, 67, 0.9)', 
                         border: '1px solid rgba(244, 63, 94, 0.4)', 
                         borderRadius: '0.5rem', 
                         color: '#ffe4e6', 
-                        fontSize: '0.8rem', 
+                        fontSize: '0.85rem', 
                         fontWeight: '600', 
                         cursor: 'pointer' 
                       }}
@@ -516,7 +527,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= VIEW 3: IMAGE EDITING STAGE ================= */}
+        {/* ================= VIEW 3: IMAGE EDITING STAGE ("Edit item") ================= */}
         {currentView === 'editImage' && (
           <div style={{
             backgroundColor: 'rgba(38, 38, 38, 0.85)',
@@ -525,7 +536,9 @@ export default function App() {
             padding: '1.5rem',
             display: 'flex',
             flexDirection: 'column',
-            gap: '1.25rem'
+            gap: '1.25rem',
+            width: '100%',
+            boxSizing: 'border-box'
           }}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -539,33 +552,33 @@ export default function App() {
               >
                 <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
               </button>
-              <BrushHeader text="Edit Item Image" />
+              <BrushHeader text="Edit item" />
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
             {imageSource && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Drag corners to stretch/resize image</span>
                 </div>
 
-                {/* Interactive Frame with Corner Resize Handles */}
+                {/* Interactive Bounding Frame with Pink Corner & Edge Anchors */}
                 <div 
                   onMouseDown={handleMouseDown}
                   onWheel={handleWheel}
                   style={{
-                    width: '100%', height: '190px', backgroundColor: isTransparent ? 'transparent' : 'rgba(23, 23, 23, 0.9)',
+                    width: '100%', height: '190px', backgroundColor: '#171717',
                     borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    overflow: 'visible', cursor: isDragging ? 'grabbing' : 'grab', position: 'relative'
+                    overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab', position: 'relative', boxSizing: 'border-box'
                   }}
                 >
-                  <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', maxWidth: '100%', maxHeight: '100%' }}>
                     <img 
                       src={imageSource} 
                       alt="Preview Sourced" 
                       draggable={false}
                       style={{ 
-                        maxHeight: '150px', maxWidth: '280px', 
+                        maxHeight: '150px', maxWidth: '260px', 
                         width: `${widthScale}%`,
                         height: `${heightScale}%`,
                         objectFit: 'contain',
@@ -574,49 +587,39 @@ export default function App() {
                       }} 
                     />
 
-                    {/* Corner Handles for Stretching */}
-                    <div 
-                      onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tl'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }}
-                      style={{ position: 'absolute', top: -6, left: -6, width: 12, height: 12, backgroundColor: '#fbcfe8', border: '1px solid #831843', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }}
-                      title="Resize Top-Left"
-                    />
-                    <div 
-                      onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tr'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }}
-                      style={{ position: 'absolute', top: -6, right: -6, width: 12, height: 12, backgroundColor: '#fbcfe8', border: '1px solid #831843', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }}
-                      title="Resize Top-Right"
-                    />
-                    <div 
-                      onMouseDown={(e) => { e.stopPropagation(); setIsResizing('bl'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }}
-                      style={{ position: 'absolute', bottom: -6, left: -6, width: 12, height: 12, backgroundColor: '#fbcfe8', border: '1px solid #831843', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }}
-                      title="Resize Bottom-Left"
-                    />
-                    <div 
-                      onMouseDown={(e) => { e.stopPropagation(); setIsResizing('br'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }}
-                      style={{ position: 'absolute', bottom: -6, right: -6, width: 12, height: 12, backgroundColor: '#fbcfe8', border: '1px solid #831843', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }}
-                      title="Resize Bottom-Right"
-                    />
+                    {/* Pink Anchor Handles on all 4 corners and 4 edge midpoints */}
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tl'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -6, left: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tm'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -6, left: 'calc(50% - 6px)', width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tr'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -6, right: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('ml'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: 'calc(50% - 6px)', left: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'ew-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('mr'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: 'calc(50% - 6px)', right: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'ew-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('bl'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -6, left: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('bm'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -6, left: 'calc(50% - 6px)', width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('br'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -6, right: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
                   </div>
 
                   <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '0.65rem', color: '#737373', pointerEvents: 'none' }}>
-                    Drag corners to stretch • Scroll to zoom
+                    Drag anchors • Scroll to zoom
                   </span>
                 </div>
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation: "BG Removed" matches button style next to it, greyed out when clicked */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem' }}>
+            {/* Bottom Sourcing Navigation: Buttons on "Edit item" match style, font, size, and format of Details page */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={removeWhiteBackground}
                 disabled={!imageSource || isTransparent}
                 style={{
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  backgroundColor: isTransparent ? 'rgba(64, 64, 64, 0.4)' : 'transparent',
-                  color: isTransparent ? '#737373' : '#fbcfe8',
-                  border: isTransparent ? '1px solid #525252' : '1px solid rgba(251, 207, 232, 0.4)',
+                  background: 'transparent',
+                  border: '1px solid rgba(251, 207, 232, 0.4)',
                   borderRadius: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  color: isTransparent ? '#737373' : '#fbcfe8',
+                  backgroundColor: isTransparent ? 'rgba(64, 64, 64, 0.4)' : 'transparent',
+                  borderColor: isTransparent ? '#525252' : 'rgba(251, 207, 232, 0.4)',
                   cursor: (imageSource && !isTransparent) ? 'pointer' : 'default',
                   opacity: imageSource ? 1 : 0.4
                 }}
@@ -625,7 +628,7 @@ export default function App() {
               </button>
 
               <button
-                onClick={() => { if (imageSource) { resetDetailsForm(); setCurrentView('details'); } }}
+                onClick={() => { if (imageSource) { setCurrentView('details'); } }}
                 disabled={!imageSource}
                 style={{
                   background: 'transparent',
@@ -647,7 +650,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= VIEW 4: ITEM DETAILS & FINAL SAVE ================= */}
+        {/* ================= VIEW 4: ITEM DETAILS & FINAL SAVE ("Details") ================= */}
         {currentView === 'details' && (
           <div style={{
             backgroundColor: 'rgba(38, 38, 38, 0.85)',
@@ -656,18 +659,27 @@ export default function App() {
             padding: '1.5rem',
             display: 'flex',
             flexDirection: 'column',
-            gap: '1.25rem'
+            gap: '1.25rem',
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
-              <div style={{ width: '1.5rem' }}></div>
-              <BrushHeader text="Item Details" />
+              <button
+                type="button"
+                onClick={() => { setCurrentView('editImage'); }}
+                title="Back"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+              >
+                <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
+              </button>
+              <BrushHeader text="Details" />
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
             {imageSource && (
               <div style={{
                 width: '100%', height: '130px', backgroundColor: isTransparent ? 'transparent' : 'rgba(23, 23, 23, 0.6)',
-                borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
+                borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxSizing: 'border-box'
               }}>
                 <img 
                   src={imageSource} 
@@ -682,9 +694,9 @@ export default function App() {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', boxSizing: 'border-box' }}>
               {/* Category */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Category *</label>
                 <select
                   disabled={!isDetailsEditable}
@@ -694,7 +706,7 @@ export default function App() {
                     setSelectedCategory(cat);
                     setSelectedSubCategory('');
                   }}
-                  style={{ width: '100%', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: isDetailsEditable ? 1 : 0.7 }}
+                  style={{ width: '100%', boxSizing: 'border-box', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: isDetailsEditable ? 1 : 0.7 }}
                 >
                   <option value="" disabled>Select Category...</option>
                   {Object.keys(MATRIX_CATEGORY_MAP).map(cat => (
@@ -704,13 +716,13 @@ export default function App() {
               </div>
 
               {/* Sub-Category */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: selectedCategory ? '#d4d4d4' : '#737373' }}>Sub-Category</label>
                 <select
                   disabled={!isDetailsEditable || !selectedCategory}
                   value={selectedSubCategory}
                   onChange={(e) => setSelectedSubCategory(e.target.value)}
-                  style={{ width: '100%', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: (isDetailsEditable && selectedCategory) ? 1 : 0.5 }}
+                  style={{ width: '100%', boxSizing: 'border-box', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: (isDetailsEditable && selectedCategory) ? 1 : 0.5 }}
                 >
                   <option value="" disabled>{selectedCategory ? 'Select Sub-Category...' : 'Select Category first'}</option>
                   {selectedCategory && MATRIX_CATEGORY_MAP[selectedCategory].map(sub => (
@@ -720,9 +732,9 @@ export default function App() {
               </div>
 
               {/* Sizing Section (Size dropdown blank by default) */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
                   <select
                     disabled={!isDetailsEditable}
                     value={selectedSizeType}
@@ -730,7 +742,7 @@ export default function App() {
                       setSelectedSizeType(e.target.value);
                       setSelectedSize('');
                     }}
-                    style={{ width: '110px', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.5rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: isDetailsEditable ? 1 : 0.7 }}
+                    style={{ width: '110px', boxSizing: 'border-box', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.5rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: isDetailsEditable ? 1 : 0.7 }}
                   >
                     <option value="" disabled>Standard...</option>
                     {SIZE_TYPES.map(st => (
@@ -742,7 +754,7 @@ export default function App() {
                     disabled={!isDetailsEditable || !selectedSizeType}
                     value={selectedSize}
                     onChange={(e) => setSelectedSize(e.target.value)}
-                    style={{ flex: 1, backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: (isDetailsEditable && selectedSizeType) ? 1 : 0.5 }}
+                    style={{ flex: 1, boxSizing: 'border-box', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: (isDetailsEditable && selectedSizeType) ? 1 : 0.5 }}
                   >
                     <option value="" disabled>{selectedSizeType ? 'Select size...' : 'Select standard first'}</option>
                     {selectedSizeType && (LOCALIZED_SIZES[selectedSizeType] || []).map(sz => (
@@ -753,13 +765,13 @@ export default function App() {
               </div>
 
               {/* Color * */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Color *</label>
                 <select
                   disabled={!isDetailsEditable}
                   value={selectedColor}
                   onChange={(e) => setSelectedColor(e.target.value)}
-                  style={{ width: '100%', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: isDetailsEditable ? 1 : 0.7 }}
+                  style={{ width: '100%', boxSizing: 'border-box', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: isDetailsEditable ? 1 : 0.7 }}
                 >
                   <option value="" disabled>Select color...</option>
                   {RESTRICTED_COLORS.map(col => (
@@ -768,24 +780,30 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Notes */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Notes / Styling Cues</label>
+              {/* Notes (renamed from Notes / Styling Cues) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Notes</label>
                 <input
                   type="text"
                   disabled={!isDetailsEditable}
                   placeholder="e.g., pairs well with straight-leg denim"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  style={{ width: '100%', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: isDetailsEditable ? 1 : 0.7 }}
+                  style={{ width: '100%', boxSizing: 'border-box', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: isDetailsEditable ? '#e5e5e5' : '#a3a3a3', outline: 'none', opacity: isDetailsEditable ? 1 : 0.7 }}
                 />
               </div>
             </div>
 
-            {/* Bottom Bar: "Edit Item" on left, "Add to Wardrobe" (or check-mark-icon.png) on right */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem' }}>
+            {/* Bottom Bar: "Edit Item" always works, takes user to Import from... when uncompleted or editing */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
-                onClick={() => setIsDetailsEditable(true)}
+                onClick={() => {
+                  if (!isDetailsEditable) {
+                    setIsDetailsEditable(true);
+                  } else {
+                    setCurrentView('source');
+                  }
+                }}
                 title="Edit Item"
                 style={{
                   background: 'transparent',
