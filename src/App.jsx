@@ -37,6 +37,10 @@ export default function App() {
   const [isTransparent, setIsTransparent] = useState(false);
   const [urlInput, setUrlInput] = useState('');
 
+  // Crop / Selection Box State
+  const [cropBox, setCropBox] = useState({ x: 20, y: 20, width: 200, height: 200 });
+  const [isCroppingActive, setIsCroppingActive] = useState(false);
+
   // Drag-to-Pan Mouse States
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -54,6 +58,17 @@ export default function App() {
 
   useEffect(() => {
     fetchWardrobe();
+
+    // Prevent Supabase from going to sleep during active sessions
+    const keepAliveInterval = setInterval(async () => {
+      try {
+        await supabase.from('wardrobe_items').select('id').limit(1);
+      } catch (err) {
+        // Ignore background ping errors
+      }
+    }, 15 * 60 * 1000);
+
+    return () => clearInterval(keepAliveInterval);
   }, []);
 
   const fetchWardrobe = async () => {
@@ -92,17 +107,18 @@ export default function App() {
     setZoom(1);
     setPan({ x: 0, y: 0 });
     setIsTransparent(false);
+    setIsCroppingActive(false);
   };
 
-  // Modern Grab & Drag Handlers
   const handleMouseDown = (e) => {
+    if (isCroppingActive) return;
     setIsDragging(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     e.preventDefault();
   };
 
   const handleMouseMove = (e) => {
-    if (!isDragging) return;
+    if (!isDragging || isCroppingActive) return;
     setPan({
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y
@@ -113,11 +129,35 @@ export default function App() {
     setIsDragging(false);
   };
 
-  // Scroll wheel resizing
   const handleWheel = (e) => {
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
     setZoom(prev => Math.min(Math.max(prev * zoomFactor, 0.5), 3.5));
+  };
+
+  const applyCrop = () => {
+    if (!imageSource) return;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = cropBox.width;
+      canvas.height = cropBox.height;
+      const ctx = canvas.getContext('2d');
+      const scaleX = img.naturalWidth / 300;
+      const scaleY = img.naturalHeight / 170;
+
+      ctx.drawImage(
+        img, 
+        cropBox.x * scaleX, cropBox.y * scaleY, cropBox.width * scaleX, cropBox.height * scaleY,
+        0, 0, cropBox.width, cropBox.height
+      );
+
+      setImageSource(canvas.toDataURL('image/png'));
+      setIsCroppingActive(false);
+      resetEditor();
+    };
+    img.src = imageSource;
   };
 
   const removeWhiteBackground = () => {
@@ -198,7 +238,6 @@ export default function App() {
     ? wardrobeItems 
     : wardrobeItems.filter(item => item.category === selectedFilter);
 
-  // Exact Writing Icon Style Header Typography Format
   const brushHeaderStyle = {
     fontSize: '1.85rem',
     fontWeight: '800',
@@ -212,6 +251,12 @@ export default function App() {
     letterSpacing: '0.04em',
     fontStyle: 'italic'
   };
+
+  const BrushHeader = ({ text }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+      <h2 style={brushHeaderStyle}>{text}</h2>
+    </div>
+  );
 
   return (
     <div style={{
@@ -233,7 +278,7 @@ export default function App() {
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #333' }}>
               <div>
-                <h2 style={brushHeaderStyle}>Sparks & Sequins</h2>
+                <BrushHeader text="Sparks & Sequins" />
                 <p style={{ fontSize: '0.75rem', color: '#a3a3a3', margin: 0, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>Digital Wardrobe Curation</p>
               </div>
               <button
@@ -289,11 +334,11 @@ export default function App() {
                     title="Remove item"
                     style={{
                       position: 'absolute', bottom: '0.75rem', right: '0.75rem',
-                      background: 'transparent', border: 'none', width: '1.75rem', height: '1.75rem',
+                      background: 'transparent', border: 'none', width: '2.5rem', height: '2.5rem',
                       cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, zIndex: 2
                     }}
                   >
-                    <img src="/minus-icon.png" alt="Remove" style={{ width: '1rem', height: '1rem', objectFit: 'contain', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='-'; e.target.parentElement.style.color='#fca5a5'; e.target.parentElement.style.fontSize='1rem';}} />
+                    <img src="/minus-icon.png" alt="Remove" style={{ width: '1.75rem', height: '1.75rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='-'; e.target.parentElement.style.color='#fca5a5'; e.target.parentElement.style.fontSize='1.75rem';}} />
                   </button>
 
                   <div style={{
@@ -316,13 +361,6 @@ export default function App() {
                   {item.notes && <span style={{ fontSize: '0.7rem', color: '#737373', fontStyle: 'italic' }}>{item.notes}</span>}
                 </div>
               ))}
-            </div>
-
-            {/* Footer Text */}
-            <div style={{ textAlign: 'center', padding: '1.5rem 0 0.5rem 0', borderTop: '1px solid #333', marginTop: 'auto' }}>
-              <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'Georgia, serif', fontStyle: 'italic', letterSpacing: '0.05em' }}>
-                Sparks & Sequins
-              </span>
             </div>
 
             {/* Deletion Confirmation Popup */}
@@ -370,68 +408,82 @@ export default function App() {
               >
                 <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
               </button>
-              <h3 style={brushHeaderStyle}>Source New Item</h3>
+              <BrushHeader text="Source New Item" />
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
-            {/* Sourcing Icons Only (No text next to icons, tooltip on hover) */}
+            {/* Sourcing Icons Stacked Vertically, Much Bigger (4.5rem), Only Icons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '1.5rem', padding: '0.5rem 0' }}>
-                <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
-                  <img src="/camera-icon.jpg" alt="Take a Picture" style={{ width: '3.5rem', height: '3.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '0.5rem 0' }}>
+                <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%' }}>
+                  <img src="/camera-icon.jpg" alt="Take a Picture" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
-                <label title="Google Photos" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
-                  <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '3.5rem', height: '3.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
+                <label title="Google Photos" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%' }}>
+                  <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
-                <label title="Browse Files" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
-                  <img src="/folder-icon.png" alt="Browse Files" style={{ width: '3.5rem', height: '3.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
+                <label title="Browse Files" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%' }}>
+                  <img src="/folder-icon.png" alt="Browse Files" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
               </div>
 
-              {/* Paste Web Link Box with responsive flex to keep import button inside box */}
+              {/* Paste Web Link Box with Conditional Import Button */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbcfe8', fontSize: '0.8rem', fontWeight: '600' }}>
                   <span>🌐</span> Paste Web Link
                 </div>
-                <form onSubmit={handleUrlImport} style={{ display: 'flex', gap: '0.375rem', alignItems: 'center', width: '100%' }}>
+                <form onSubmit={handleUrlImport} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
                   <input
                     type="url"
                     placeholder="Paste URL..."
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     style={{
-                      flex: 1, minWidth: 0, backgroundColor: 'rgba(23, 23, 23, 0.9)', border: '1px solid #525252',
-                      borderRadius: '0.5rem', padding: '0.5rem 0.625rem', fontSize: '0.75rem', color: '#e5e5e5', outline: 'none'
+                      width: '100%', boxSizing: 'border-box', backgroundColor: 'rgba(23, 23, 23, 0.9)', border: '1px solid #525252',
+                      borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.8rem', color: '#e5e5e5', outline: 'none'
                     }}
                   />
-                  <button 
-                    type="submit" 
-                    disabled={!urlInput.trim()}
-                    style={{ 
-                      padding: '0.5rem 0.75rem', 
-                      backgroundColor: urlInput.trim() ? 'rgba(131, 24, 67, 0.9)' : 'rgba(64, 64, 64, 0.4)', 
-                      border: '1px solid rgba(244, 63, 94, 0.4)', 
-                      borderRadius: '0.5rem', 
-                      color: urlInput.trim() ? '#ffe4e6' : '#737373', 
-                      fontSize: '0.75rem', 
-                      fontWeight: '500', 
-                      cursor: urlInput.trim() ? 'pointer' : 'not-allowed',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    Import
-                  </button>
+                  {urlInput.trim() && (
+                    <button 
+                      type="submit" 
+                      style={{ 
+                        width: '100%', padding: '0.625rem', 
+                        backgroundColor: 'rgba(131, 24, 67, 0.9)', 
+                        border: '1px solid rgba(244, 63, 94, 0.4)', 
+                        borderRadius: '0.5rem', 
+                        color: '#ffe4e6', 
+                        fontSize: '0.8rem', 
+                        fontWeight: '600', 
+                        cursor: 'pointer' 
+                      }}
+                    >
+                      Import
+                    </button>
+                  )}
                 </form>
               </div>
             </div>
 
             {imageSource && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid #404040', paddingTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Image Editor</span>
+                  <button
+                    onClick={() => setIsCroppingActive(!isCroppingActive)}
+                    style={{
+                      padding: '0.25rem 0.5rem', fontSize: '0.7rem', fontWeight: '600',
+                      backgroundColor: isCroppingActive ? 'rgba(131, 24, 67, 0.9)' : 'rgba(64, 64, 64, 0.6)',
+                      color: '#ffe4e6', border: '1px solid #525252', borderRadius: '0.25rem', cursor: 'pointer'
+                    }}
+                  >
+                    {isCroppingActive ? 'Done Cropping' : 'Crop / Isolate Item'}
+                  </button>
+                </div>
+
                 <div 
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
@@ -441,7 +493,7 @@ export default function App() {
                   style={{
                     width: '100%', height: '170px', backgroundColor: isTransparent ? 'transparent' : 'rgba(23, 23, 23, 0.9)',
                     borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab', position: 'relative'
+                    overflow: 'hidden', cursor: isCroppingActive ? 'crosshair' : (isDragging ? 'grabbing' : 'grab'), position: 'relative'
                   }}
                 >
                   <img 
@@ -455,12 +507,62 @@ export default function App() {
                       transition: isDragging ? 'none' : 'transform 0.05s ease-out'
                     }} 
                   />
-                  <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '0.65rem', color: '#737373', pointerEvents: 'none' }}>Scroll to zoom • Click & drag to pan</span>
+
+                  {isCroppingActive && (
+                    <div 
+                      style={{
+                        position: 'absolute',
+                        left: `${cropBox.x}px`, top: `${cropBox.y}px`,
+                        width: `${cropBox.width}px`, height: `${cropBox.height}px`,
+                        border: '2px dashed #fbcfe8',
+                        backgroundColor: 'rgba(131, 24, 67, 0.2)',
+                        cursor: 'move',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        const startX = e.clientX - cropBox.x;
+                        const startY = e.clientY - cropBox.y;
+                        const onMove = (mvEvent) => {
+                          setCropBox(prev => ({
+                            ...prev,
+                            x: mvEvent.clientX - startX,
+                            y: mvEvent.clientY - startY
+                          }));
+                        };
+                        const onUp = () => {
+                          window.removeEventListener('mousemove', onMove);
+                          window.removeEventListener('mouseup', onUp);
+                        };
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                      }}
+                    >
+                      <span style={{ fontSize: '0.65rem', color: '#ffe4e6', backgroundColor: 'rgba(0,0,0,0.6)', padding: '2px 4px', borderRadius: '3px' }}>Drag Crop Area</span>
+                    </div>
+                  )}
+
+                  <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '0.65rem', color: '#737373', pointerEvents: 'none' }}>
+                    {isCroppingActive ? 'Drag crop box over item' : 'Scroll to zoom • Click & drag to pan'}
+                  </span>
                 </div>
+
+                {isCroppingActive && (
+                  <button
+                    onClick={applyCrop}
+                    style={{
+                      width: '100%', padding: '0.5rem', backgroundColor: 'rgba(131, 24, 67, 0.9)',
+                      border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem',
+                      color: '#ffe4e6', fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer'
+                    }}
+                  >
+                    Confirm Crop Selection
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation: Remove BG on left, tight unified hyperlink on right */}
+            {/* Bottom Sourcing Navigation */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem' }}>
               <button
                 onClick={removeWhiteBackground}
@@ -469,9 +571,9 @@ export default function App() {
                   padding: '0.5rem 1rem',
                   fontSize: '0.75rem',
                   fontWeight: '600',
-                  backgroundColor: isTransparent ? 'rgba(52, 211, 153, 0.3)' : 'rgba(131, 24, 67, 0.8)',
+                  backgroundColor: isTransparent ? 'transparent' : 'rgba(131, 24, 67, 0.8)',
                   color: isTransparent ? '#34d399' : '#ffe4e6',
-                  border: '1px solid rgba(244, 63, 94, 0.4)',
+                  border: isTransparent ? '1px solid rgba(52, 211, 153, 0.5)' : '1px solid rgba(244, 63, 94, 0.4)',
                   borderRadius: '0.5rem',
                   cursor: imageSource ? 'pointer' : 'not-allowed',
                   opacity: imageSource ? 1 : 0.4
@@ -524,7 +626,7 @@ export default function App() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
               <div style={{ width: '1.5rem' }}></div>
-              <h3 style={brushHeaderStyle}>Item Details</h3>
+              <BrushHeader text="Item Details" />
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
@@ -546,7 +648,7 @@ export default function App() {
                   onChange={(e) => {
                     const cat = e.target.value;
                     setSelectedCategory(cat);
-                    setSelectedSubCategory(MATRIX_CATEGORY_MAP[cat] ? MATRIX_CATEGORY_MAP[cat][0] : '');
+                    setSelectedSubCategory('');
                   }}
                   style={{ width: '100%', backgroundColor: 'rgba(23, 23, 23, 0.8)', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', color: '#e5e5e5', outline: 'none' }}
                 >
@@ -573,7 +675,7 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Sizing Section: Size Type on Left (narrow), Size Dropdown on Right (disabled until size type selected) */}
+              {/* Sizing Section */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -633,7 +735,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar: "Edit Item" on left, "Add to Wardrobe" on right */}
+            {/* Bottom Bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem' }}>
               <button
                 onClick={() => setCurrentView('source')}
