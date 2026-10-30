@@ -37,6 +37,10 @@ export default function App() {
   const [isTransparent, setIsTransparent] = useState(false);
   const [urlInput, setUrlInput] = useState('');
 
+  // Drag-to-Pan Mouse States
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
   // Delete Confirmation Popup State
   const [itemToDelete, setItemToDelete] = useState(null);
 
@@ -86,6 +90,25 @@ export default function App() {
     setZoom(1);
     setPan({ x: 0, y: 0 });
     setIsTransparent(false);
+  };
+
+  // Modern Grab & Drag Handlers
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    e.preventDefault();
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setPan({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
   };
 
   const removeWhiteBackground = () => {
@@ -283,7 +306,7 @@ export default function App() {
               ))}
             </div>
 
-            {/* Footer Text "Sparks & Sequins" at the bottom of the home screen */}
+            {/* Footer Text */}
             <div style={{ textAlign: 'center', padding: '1.5rem 0 0.5rem 0', borderTop: '1px solid #333', marginTop: 'auto' }}>
               <span style={{ fontSize: '1rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'sans-serif', letterSpacing: '0.05em' }}>
                 Sparks & Sequins
@@ -394,26 +417,30 @@ export default function App() {
                   </button>
                 </div>
 
-                <div style={{
-                  width: '100%', height: '170px', backgroundColor: isTransparent ? 'transparent' : 'rgba(23, 23, 23, 0.9)',
-                  borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  overflow: 'hidden', position: 'relative'
-                }}>
+                {/* Modern Direct-Manipulation Grab & Drag Viewer */}
+                <div 
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  style={{
+                    width: '100%', height: '170px', backgroundColor: isTransparent ? 'transparent' : 'rgba(23, 23, 23, 0.9)',
+                    borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab', position: 'relative'
+                  }}
+                >
                   <img 
                     src={imageSource} 
                     alt="Preview Sourced" 
+                    draggable={false}
                     style={{ 
                       maxHeight: '100%', maxWidth: '100%', 
                       transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
-                      filter: isTransparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none'
+                      filter: isTransparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none',
+                      transition: isDragging ? 'none' : 'transform 0.05s ease-out'
                     }} 
                   />
-                  <div style={{ position: 'absolute', bottom: '4px', right: '4px', display: 'flex', gap: '2px' }}>
-                    <button onClick={() => setPan(p => ({ ...p, y: p.y - 10 }))} style={{ background: '#222', color: '#fff', border: '1px solid #444', fontSize: '0.6rem', padding: '1px 4px', cursor: 'pointer' }}>⬆️</button>
-                    <button onClick={() => setPan(p => ({ ...p, y: p.y + 10 }))} style={{ background: '#222', color: '#fff', border: '1px solid #444', fontSize: '0.6rem', padding: '1px 4px', cursor: 'pointer' }}>⬇️</button>
-                    <button onClick={() => setPan(p => ({ ...p, x: p.x - 10 }))} style={{ background: '#222', color: '#fff', border: '1px solid #444', fontSize: '0.6rem', padding: '1px 4px', cursor: 'pointer' }}>⬅️</button>
-                    <button onClick={() => setPan(p => ({ ...p, x: p.x + 10 }))} style={{ background: '#222', color: '#fff', border: '1px solid #444', fontSize: '0.6rem', padding: '1px 4px', cursor: 'pointer' }}>➡️</button>
-                  </div>
+                  <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '0.65rem', color: '#737373', pointerEvents: 'none' }}>Click & drag to pan</span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'rgba(23,23,23,0.5)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #404040' }}>
@@ -526,7 +553,7 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Localized Size Dropdown */}
+              {/* Localized Size Dropdown matching Matrix */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
                 <select
@@ -569,7 +596,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar: "Edit Item" Button on the left, "Add to Wardrobe" button on the right */}
+            {/* Bottom Bar: "Edit Item" on left, "Add to Wardrobe" on right */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem' }}>
               <button
                 onClick={() => setCurrentView('source')}
