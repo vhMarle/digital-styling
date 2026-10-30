@@ -25,7 +25,10 @@ const RESTRICTED_COLORS = ['Red', 'Orange/Amber', 'Yellow/Gold', 'Green', 'Blue'
 export default function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home', 'source', 'details'
   const [selectedFilter, setSelectedFilter] = useState('All');
-  const [wardrobeItems, setWardrobeItems] = useState([]);
+  const [wardrobeItems, setWardrobeItems] = useState([
+    { id: 1, category: 'Tops', sub_category: 'Shirts', size_type: 'General', size: 'M', color: 'White', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false },
+    { id: 2, category: 'Bottoms', sub_category: 'Pants', size_type: 'General', size: 'S', color: 'Blue', notes: 'Straight-leg denim', image_url: 'https://via.placeholder.com/150', zoom_level: 1, pan_x: 0, pan_y: 0, is_transparent: false }
+  ]);
   
   // Image & Interactive Editing State
   const [imageSource, setImageSource] = useState(null);
@@ -110,6 +113,13 @@ export default function App() {
     setIsDragging(false);
   };
 
+  // Scroll wheel resizing (Replacing the slider)
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    setZoom(prev => Math.min(Math.max(prev * zoomFactor, 0.5), 3.5));
+  };
+
   const removeWhiteBackground = () => {
     if (!imageSource) return;
     const img = new Image();
@@ -125,7 +135,8 @@ export default function App() {
       
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i], g = data[i + 1], b = data[i + 2];
-        if (r > 230 && g > 230 && b > 230) {
+        // Target near-white and light grey pixels to ensure complete background removal
+        if (r > 200 && g > 200 && b > 200) {
           data[i + 3] = 0;
         }
       }
@@ -363,26 +374,29 @@ export default function App() {
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
-            {/* Sourcing Icons (Much Larger) */}
+            {/* Sourcing Icons (Much Larger, Stacked Vertically on Mobile) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '2.5rem', alignItems: 'center', padding: '0.75rem 0' }}>
-                <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '0.5rem 0' }}>
+                <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
                   <img src="/camera-icon.jpg" alt="Take a Picture" style={{ width: '4rem', height: '4rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
+                  <span style={{ fontSize: '0.9rem', color: '#fbcfe8', fontWeight: '600' }}>Take a Picture</span>
                   <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
-                <label title="Google Photos" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <label title="Google Photos" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
                   <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '4rem', height: '4rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
+                  <span style={{ fontSize: '0.9rem', color: '#fbcfe8', fontWeight: '600' }}>Google Photos</span>
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
 
-                <label title="Browse Files" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <label title="Browse Files" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
                   <img src="/folder-icon.png" alt="Browse Files" style={{ width: '4rem', height: '4rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
+                  <span style={{ fontSize: '0.9rem', color: '#fbcfe8', fontWeight: '600' }}>Browse Files</span>
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 </label>
               </div>
 
-              {/* Paste Web Link URL Box with Import Button INSIDE */}
+              {/* Paste Web Link URL Box positioned all the way down */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.75rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbcfe8', fontSize: '0.8rem', fontWeight: '600' }}>
                   <span>🌐</span> Paste Web Link
@@ -420,12 +434,13 @@ export default function App() {
 
             {imageSource && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '1px solid #404040', paddingTop: '1rem' }}>
-                {/* Modern Direct-Manipulation Grab & Drag Viewer */}
+                {/* Scroll-wheel & Drag Viewer */}
                 <div 
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
+                  onWheel={handleWheel}
                   style={{
                     width: '100%', height: '170px', backgroundColor: isTransparent ? 'transparent' : 'rgba(23, 23, 23, 0.9)',
                     borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -443,25 +458,12 @@ export default function App() {
                       transition: isDragging ? 'none' : 'transform 0.05s ease-out'
                     }} 
                   />
-                  <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '0.65rem', color: '#737373', pointerEvents: 'none' }}>Click & drag to pan</span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'rgba(23,23,23,0.5)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #404040' }}>
-                  <span style={{ fontSize: '0.7rem', color: '#a3a3a3', whiteSpace: 'nowrap' }}>Resize:</span>
-                  <input 
-                    type="range" 
-                    min="0.5" 
-                    max="2.5" 
-                    step="0.05" 
-                    value={zoom} 
-                    onChange={(e) => setZoom(parseFloat(e.target.value))}
-                    style={{ flex: 1, accentColor: '#831843', cursor: 'pointer' }} 
-                  />
+                  <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '0.65rem', color: '#737373', pointerEvents: 'none' }}>Scroll to zoom • Click & drag to pan</span>
                 </div>
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation: Remove BG button on left, Next Icon button on right */}
+            {/* Bottom Sourcing Navigation: Remove BG on left, Unified Hyperlink "Proceed to details" on right */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem' }}>
               <button
                 onClick={removeWhiteBackground}
@@ -481,18 +483,33 @@ export default function App() {
                 {isTransparent ? 'BG Removed' : 'Remove BG'}
               </button>
 
-              <button
-                onClick={() => setCurrentView('details')}
-                disabled={!imageSource}
+              <div
+                onClick={() => imageSource && setCurrentView('details')}
                 title="Proceed to Details"
                 style={{
-                  background: 'transparent', border: 'none', cursor: imageSource ? 'pointer' : 'not-allowed',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                  opacity: imageSource ? 1 : 0.4
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: imageSource ? 'pointer' : 'not-allowed',
+                  opacity: imageSource ? 1 : 0.4,
+                  padding: '0.375rem 0.75rem',
+                  borderRadius: '0.5rem',
+                  backgroundColor: 'rgba(38, 38, 38, 0.9)',
+                  border: '1px solid rgba(244, 63, 94, 0.4)'
                 }}
               >
-                <img src="/next-icon.png" alt="Next" style={{ width: '2rem', height: '2rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='→'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.5rem';}} />
-              </button>
+                <span style={{
+                  fontSize: '0.9rem',
+                  fontWeight: '700',
+                  fontFamily: 'Georgia, serif',
+                  color: '#fbcfe8',
+                  letterSpacing: '0.02em',
+                  fontStyle: 'italic'
+                }}>
+                  Proceed to details
+                </span>
+                <img src="/next-icon.png" alt="Next" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+              </div>
             </div>
           </div>
         )}
