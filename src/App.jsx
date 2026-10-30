@@ -44,7 +44,7 @@ export default function App() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   // Corner Resizing State
-  const [isResizing, setIsResizing] = useState(null); // 'tl', 'tr', 'bl', 'br', 'tm', 'bm', 'ml', 'mr'
+  const [isResizing, setIsResizing] = useState(null);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, w: 100, h: 100 });
 
   // Delete Confirmation Popup State
@@ -76,7 +76,7 @@ export default function App() {
 
   const fetchWardrobe = async () => {
     try {
-      const { data, error } = await supabase.from('wardrobe_items').select('*').order('created_at', { ascending: false });
+      const { data } = await supabase.from('wardrobe_items').select('*').order('created_at', { ascending: false });
       if (data && data.length > 0) {
         setWardrobeItems(data);
       }
@@ -139,25 +139,25 @@ export default function App() {
       const dx = e.clientX - resizeStart.x;
       const dy = e.clientY - resizeStart.y;
       if (isResizing === 'br') {
-        setWidthScale(Math.max(30, Math.min(250, resizeStart.w + dx)));
-        setHeightScale(Math.max(30, Math.min(250, resizeStart.h + dy)));
+        setWidthScale(Math.max(30, Math.min(300, resizeStart.w + dx)));
+        setHeightScale(Math.max(30, Math.min(300, resizeStart.h + dy)));
       } else if (isResizing === 'bl') {
-        setWidthScale(Math.max(30, Math.min(250, resizeStart.w - dx)));
-        setHeightScale(Math.max(30, Math.min(250, resizeStart.h + dy)));
+        setWidthScale(Math.max(30, Math.min(300, resizeStart.w - dx)));
+        setHeightScale(Math.max(30, Math.min(300, resizeStart.h + dy)));
       } else if (isResizing === 'tr') {
-        setWidthScale(Math.max(30, Math.min(250, resizeStart.w + dx)));
-        setHeightScale(Math.max(30, Math.min(250, resizeStart.h - dy)));
+        setWidthScale(Math.max(30, Math.min(300, resizeStart.w + dx)));
+        setHeightScale(Math.max(30, Math.min(300, resizeStart.h - dy)));
       } else if (isResizing === 'tl') {
-        setWidthScale(Math.max(30, Math.min(250, resizeStart.w - dx)));
-        setHeightScale(Math.max(30, Math.min(250, resizeStart.h - dy)));
+        setWidthScale(Math.max(30, Math.min(300, resizeStart.w - dx)));
+        setHeightScale(Math.max(30, Math.min(300, resizeStart.h - dy)));
       } else if (isResizing === 'bm') {
-        setHeightScale(Math.max(30, Math.min(250, resizeStart.h + dy)));
+        setHeightScale(Math.max(30, Math.min(300, resizeStart.h + dy)));
       } else if (isResizing === 'tm') {
-        setHeightScale(Math.max(30, Math.min(250, resizeStart.h - dy)));
+        setHeightScale(Math.max(30, Math.min(300, resizeStart.h - dy)));
       } else if (isResizing === 'mr') {
-        setWidthScale(Math.max(30, Math.min(250, resizeStart.w + dx)));
+        setWidthScale(Math.max(30, Math.min(300, resizeStart.w + dx)));
       } else if (isResizing === 'ml') {
-        setWidthScale(Math.max(30, Math.min(250, resizeStart.w - dx)));
+        setWidthScale(Math.max(30, Math.min(300, resizeStart.w - dx)));
       }
       return;
     }
@@ -186,22 +186,26 @@ export default function App() {
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imgData.data;
-      
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i], g = data[i + 1], b = data[i + 2];
-        if (r > 200 && g > 200 && b > 200) {
-          data[i + 3] = 0;
+      try {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          if (r > 200 && g > 200 && b > 200) {
+            data[i + 3] = 0;
+          }
         }
+        ctx.putImageData(imgData, 0, 0);
+        setImageSource(canvas.toDataURL('image/png'));
+        setIsTransparent(true);
+      } catch (err) {
+        console.error('Background removal security/canvas error:', err);
       }
-      ctx.putImageData(imgData, 0, 0);
-      setImageSource(canvas.toDataURL('image/png'));
-      setIsTransparent(true);
     };
     img.src = imageSource;
   };
@@ -282,15 +286,16 @@ export default function App() {
     ? wardrobeItems 
     : wardrobeItems.filter(item => item.category === selectedFilter);
 
+  // Exact Gray Crimson #834655 Header Style matching brand artwork
   const brushHeaderStyle = {
     fontSize: '1.85rem',
     fontWeight: '800',
     fontFamily: 'Georgia, serif',
-    color: '#831843',
-    background: 'linear-gradient(135deg, #701a35 0%, #831843 50%, #500724 100%)',
+    color: '#834655',
+    background: 'linear-gradient(135deg, #703845 0%, #834655 50%, #502732 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    filter: 'drop-shadow(1px 1px 2px rgba(131, 24, 67, 0.4))',
+    filter: 'drop-shadow(1px 1px 2px rgba(131, 70, 85, 0.4))',
     margin: 0,
     letterSpacing: '0.04em',
     fontStyle: 'italic'
@@ -317,7 +322,6 @@ export default function App() {
       overflowX: 'hidden',
       width: '100vw'
     }}>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
       <div style={{ width: '100%', maxWidth: '480px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '0 0.5rem' }}>
         
         {/* ================= VIEW 1: HOME DASHBOARD ================= */}
@@ -325,7 +329,7 @@ export default function App() {
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #333', width: '100%', boxSizing: 'border-box' }}>
               <div>
-                <img src="/Sparks & Sequince.png" alt="Sparks & Sequins" style={{ height: '3.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                <img src="/Sparks & Sequince.png" alt="Sparks & Sequins" style={{ height: '4rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
               </div>
               <button
                 onClick={() => { resetEditor(); resetDetailsForm(); setImageSource(null); setCurrentView('source'); }}
@@ -335,7 +339,7 @@ export default function App() {
                   width: '4rem', height: '4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                 }}
               >
-                <img src="/plus-icon.png" alt="Add" style={{ width: '3.25rem', height: '3.25rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='3rem';}} />
+                <img src="/plus-icon.png" alt="Add" style={{ width: '4rem', height: '4rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='3rem';}} />
               </button>
             </div>
 
@@ -352,7 +356,7 @@ export default function App() {
                     fontWeight: '500',
                     whiteSpace: 'nowrap',
                     cursor: 'pointer',
-                    backgroundColor: selectedFilter === cat ? 'rgba(131, 24, 67, 0.7)' : 'rgba(38, 38, 38, 0.8)',
+                    backgroundColor: selectedFilter === cat ? 'rgba(131, 70, 85, 0.7)' : 'rgba(38, 38, 38, 0.8)',
                     color: selectedFilter === cat ? '#ffe4e6' : '#d4d4d4',
                     border: selectedFilter === cat ? '1px solid rgba(244, 63, 94, 0.4)' : '1px solid #525252'
                   }}
@@ -435,7 +439,7 @@ export default function App() {
                   <p style={{ fontSize: '0.85rem', color: '#a3a3a3', margin: 0 }}>Are you sure you want to remove this piece from your digital wardrobe?</p>
                   <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
                     <button onClick={() => setItemToDelete(null)} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(64,64,64,0.6)', border: '1px solid #525252', borderRadius: '0.5rem', color: '#e5e5e5', cursor: 'pointer', fontWeight: '500' }}>Keep</button>
-                    <button onClick={confirmAndDeleteItem} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(131, 24, 67, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', cursor: 'pointer', fontWeight: '500' }}>Remove</button>
+                    <button onClick={confirmAndDeleteItem} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(131, 70, 85, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', cursor: 'pointer', fontWeight: '500' }}>Remove</button>
                   </div>
                 </div>
               </div>
@@ -469,26 +473,24 @@ export default function App() {
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
-            {/* Sourcing Icons Stacked Vertically */}
+            {/* Sourcing Icons Stacked Vertically with Uniform Spacing (1rem gap matching green line) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', boxSizing: 'border-box' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '0.5rem 0', width: '100%', boxSizing: 'border-box' }}>
-                <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
-                  <img src="/camera-icon.jpg" alt="Take a Picture" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
-                  <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
-                </label>
+              <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
+                <img src="/camera-icon.jpg" alt="Take a Picture" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
+                <input type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
+              </label>
 
-                <label title="Google Photos" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
-                  <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
-                  <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
-                </label>
+              <label title="Google Photos" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
+                <img src="/gphotos-icon.png" alt="Google Photos" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
+                <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+              </label>
 
-                <label title="Browse Files" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
-                  <img src="/folder-icon.png" alt="Browse Files" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
-                  <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
-                </label>
-              </div>
+              <label title="Browse Files" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
+                <img src="/folder-icon.png" alt="Browse Files" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
+                <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+              </label>
 
-              {/* Paste Web Link Box (Matching exact width and padding of the 3 boxes above) */}
+              {/* Paste Web Link Box (Uniform spacing & dimensions) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbcfe8', fontSize: '0.9rem', fontWeight: '600' }}>
                   <span>🌐</span> Paste web link
@@ -509,7 +511,7 @@ export default function App() {
                       type="submit" 
                       style={{ 
                         width: '100%', boxSizing: 'border-box', padding: '0.625rem', 
-                        backgroundColor: 'rgba(131, 24, 67, 0.9)', 
+                        backgroundColor: 'rgba(131, 70, 85, 0.9)', 
                         border: '1px solid rgba(244, 63, 94, 0.4)', 
                         borderRadius: '0.5rem', 
                         color: '#ffe4e6', 
@@ -562,7 +564,7 @@ export default function App() {
                   <span style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Drag corners to stretch/resize image</span>
                 </div>
 
-                {/* Interactive Bounding Frame with Pink Corner & Edge Anchors */}
+                {/* Interactive Bounding Frame with Pink Anchor Handles */}
                 <div 
                   onMouseDown={handleMouseDown}
                   onWheel={handleWheel}
@@ -587,15 +589,15 @@ export default function App() {
                       }} 
                     />
 
-                    {/* Pink Anchor Handles on all 4 corners and 4 edge midpoints */}
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tl'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -6, left: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tm'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -6, left: 'calc(50% - 6px)', width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tr'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -6, right: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('ml'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: 'calc(50% - 6px)', left: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'ew-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('mr'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: 'calc(50% - 6px)', right: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'ew-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('bl'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -6, left: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('bm'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -6, left: 'calc(50% - 6px)', width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('br'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -6, right: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #831843', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
+                    {/* Pink Anchor Handles */}
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tl'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -6, left: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tm'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -6, left: 'calc(50% - 6px)', width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tr'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -6, right: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('ml'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: 'calc(50% - 6px)', left: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ew-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('mr'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: 'calc(50% - 6px)', right: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ew-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('bl'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -6, left: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('bm'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -6, left: 'calc(50% - 6px)', width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('br'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -6, right: -6, width: 12, height: 12, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
                   </div>
 
                   <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '0.65rem', color: '#737373', pointerEvents: 'none' }}>
@@ -605,7 +607,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation: Buttons on "Edit item" match style, font, size, and format of Details page */}
+            {/* Bottom Sourcing Navigation */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={removeWhiteBackground}
@@ -731,7 +733,7 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Sizing Section (Size dropdown blank by default) */}
+              {/* Sizing Section */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
                 <div style={{ display: 'flex', gap: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
@@ -780,7 +782,7 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Notes (renamed from Notes / Styling Cues) */}
+              {/* Notes */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Notes</label>
                 <input
@@ -794,7 +796,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar: "Edit Item" always works, takes user to Import from... when uncompleted or editing */}
+            {/* Bottom Bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={() => {
