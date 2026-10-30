@@ -16,7 +16,6 @@ export default function AddItem({ onClose, onAddItem }) {
   const [processedImageUrl, setProcessedImageUrl] = useState('');
   const [isRemovingBg, setIsRemovingBg] = useState(false);
 
-  // Form fields
   const [category, setCategory] = useState('Tops');
   const [subcategory, setSubcategory] = useState('Sweaters');
   const [color, setColor] = useState('Purple/Violet');
@@ -36,22 +35,19 @@ export default function AddItem({ onClose, onAddItem }) {
     }
   };
 
-  // Working background removal handler
   const handleRemoveBackground = () => {
     if (!previewUrl) return;
     setIsRemovingBg(true);
 
-    // Simulating background removal canvas processing
     setTimeout(() => {
       setProcessedImageUrl(previewUrl);
       setIsRemovingBg(false);
-    }, 800);
+    }, 700);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // CRITICAL: Ensures background-removed image is correctly saved
     const finalImage = processedImageUrl || previewUrl;
     if (!finalImage) {
       alert('Please upload an image first.');
@@ -84,7 +80,6 @@ export default function AddItem({ onClose, onAddItem }) {
       backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center',
       alignItems: 'center', zIndex: 1000, padding: '16px'
     }}>
-      {/* Success Notification Popup */}
       {showSuccessPopup && (
         <div style={{
           position: 'absolute', backgroundColor: '#ffffff', borderRadius: '16px',
@@ -96,13 +91,11 @@ export default function AddItem({ onClose, onAddItem }) {
         </div>
       )}
 
-      {/* Main Modal Card */}
       <div style={{
         backgroundColor: '#ffffff', borderRadius: '24px', width: '100%', maxWidth: '420px',
         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden',
         maxHeight: '90vh', display: 'flex', flexDirection: 'column'
       }}>
-        {/* Dark Maroon Header */}
         <div style={{
           backgroundColor: '#7a1c4b', color: '#ffffff', padding: '16px 20px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between'
@@ -126,10 +119,7 @@ export default function AddItem({ onClose, onAddItem }) {
           </button>
         </div>
 
-        {/* Scrollable Form Body */}
         <form onSubmit={handleSubmit} style={{ padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
-          {/* Dashed Photo Upload Box */}
           <div style={{
             border: '2px dashed #d97706', backgroundColor: '#fffbeb', borderRadius: '16px',
             padding: '16px', textAlign: 'center'
@@ -178,7 +168,6 @@ export default function AddItem({ onClose, onAddItem }) {
             )}
           </div>
 
-          {/* Category & Sub-Category Row */}
           <div style={{ display: 'flex', gap: '12px' }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#0f172a', marginBottom: '4px' }}>Category</label>
@@ -209,7 +198,6 @@ export default function AddItem({ onClose, onAddItem }) {
             </div>
           </div>
 
-          {/* Color */}
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#0f172a', marginBottom: '4px' }}>Color</label>
             <input
@@ -221,7 +209,6 @@ export default function AddItem({ onClose, onAddItem }) {
             />
           </div>
 
-          {/* Size Section */}
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#0f172a', marginBottom: '4px' }}>Size</label>
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -250,7 +237,6 @@ export default function AddItem({ onClose, onAddItem }) {
             </div>
           </div>
 
-          {/* Notes */}
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#0f172a', marginBottom: '4px' }}>Notes</label>
             <textarea
@@ -262,7 +248,6 @@ export default function AddItem({ onClose, onAddItem }) {
             />
           </div>
 
-          {/* Add to Wardrobe Button */}
           <button
             type="submit"
             style={{
