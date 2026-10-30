@@ -189,17 +189,19 @@ export default function App() {
     ? wardrobeItems 
     : wardrobeItems.filter(item => item.category === selectedFilter);
 
+  // Updated brushstroke header style capturing the Writing Icon Style (dusty burgundy/plum, hand-painted texture feel)
   const brushHeaderStyle = {
     fontSize: '1.75rem',
-    fontWeight: '700',
-    fontFamily: 'serif',
-    color: '#fbcfe8',
-    background: 'linear-gradient(135deg, #881337 0%, #be123c 50%, #9f1239 100%)',
+    fontWeight: '800',
+    fontFamily: 'Georgia, serif',
+    color: '#831843',
+    background: 'linear-gradient(135deg, #701a35 0%, #831843 50%, #500724 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    filter: 'drop-shadow(1px 1px 2px rgba(136, 19, 55, 0.4))',
+    filter: 'drop-shadow(1px 1px 2px rgba(131, 24, 67, 0.4))',
     margin: 0,
-    letterSpacing: '0.025em'
+    letterSpacing: '0.04em',
+    fontStyle: 'italic'
   };
 
   return (
@@ -229,10 +231,10 @@ export default function App() {
                 title="Add New Item"
                 style={{
                   background: 'transparent', border: 'none', cursor: 'pointer',
-                  width: '3.5rem', height: '3.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                  width: '5rem', height: '5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                 }}
               >
-                <img src="/plus-icon.png" alt="Add" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2.5rem';}} />
+                <img src="/plus-icon.png" alt="Add" style={{ width: '4rem', height: '4rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='3.5rem';}} />
               </button>
             </div>
 
@@ -249,7 +251,7 @@ export default function App() {
                     fontWeight: '500',
                     whiteSpace: 'nowrap',
                     cursor: 'pointer',
-                    backgroundColor: selectedFilter === cat ? 'rgba(136, 19, 55, 0.7)' : 'rgba(38, 38, 38, 0.8)',
+                    backgroundColor: selectedFilter === cat ? 'rgba(131, 24, 67, 0.7)' : 'rgba(38, 38, 38, 0.8)',
                     color: selectedFilter === cat ? '#ffe4e6' : '#d4d4d4',
                     border: selectedFilter === cat ? '1px solid rgba(244, 63, 94, 0.4)' : '1px solid #525252'
                   }}
@@ -330,7 +332,7 @@ export default function App() {
                   <p style={{ fontSize: '0.85rem', color: '#a3a3a3', margin: 0 }}>Are you sure you want to remove this piece from your digital wardrobe?</p>
                   <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
                     <button onClick={() => setItemToDelete(null)} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(64,64,64,0.6)', border: '1px solid #525252', borderRadius: '0.5rem', color: '#e5e5e5', cursor: 'pointer', fontWeight: '500' }}>Keep</button>
-                    <button onClick={confirmAndDeleteItem} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(136, 19, 55, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', cursor: 'pointer', fontWeight: '500' }}>Remove</button>
+                    <button onClick={confirmAndDeleteItem} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(131, 24, 67, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', cursor: 'pointer', fontWeight: '500' }}>Remove</button>
                   </div>
                 </div>
               </div>
@@ -397,7 +399,7 @@ export default function App() {
                       borderRadius: '0.5rem', padding: '0.5rem 0.75rem', fontSize: '0.8rem', color: '#e5e5e5', outline: 'none'
                     }}
                   />
-                  <button type="submit" style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(136, 19, 55, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>Import</button>
+                  <button type="submit" style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(131, 24, 67, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>Import</button>
                 </form>
               </div>
             </div>
@@ -452,7 +454,7 @@ export default function App() {
                     step="0.05" 
                     value={zoom} 
                     onChange={(e) => setZoom(parseFloat(e.target.value))}
-                    style={{ flex: 1, accentColor: '#881337', cursor: 'pointer' }} 
+                    style={{ flex: 1, accentColor: '#831843', cursor: 'pointer' }} 
                   />
                 </div>
               </div>
@@ -553,7 +555,7 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Localized Size Dropdown matching Matrix */}
+              {/* Localized Size Dropdown */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
                 <select
