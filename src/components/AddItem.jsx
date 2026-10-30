@@ -6,44 +6,46 @@ const CATEGORIES = ['Bottoms', 'Dresses', 'Tops', 'Bags', 'Shoes'];
 export default function AddItem({ onClose, onAddItem }) {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const [processedImage, setProcessedImage] = useState('');
+  const [processedImageUrl, setProcessedImageUrl] = useState('');
   const [category, setCategory] = useState('Tops');
   const [subcategory, setSubcategory] = useState('');
   const [color, setColor] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
+  // Handle file selection and preview
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected) {
       setFile(selected);
       const url = URL.createObjectURL(selected);
       setPreviewUrl(url);
-      setProcessedImage(''); // Reset cleared background when a new file is chosen
+      setProcessedImageUrl(''); // Reset processed image on new upload
     }
   };
 
-  // Replace this with your actual background removal/canvas handler if you have one
-  const handleClearBackground = () => {
+  // Simulate or execute background removal / canvas processing
+  const handleProcessImage = () => {
     if (!previewUrl) return;
     setIsProcessing(true);
 
-    // If you use a canvas or background removal library, assign its output URL to setProcessedImage here.
-    // For now, this preserves the edited/processed state cleanly:
+    // Simulating background removal step (replace with your canvas/removal logic)
     setTimeout(() => {
-      setProcessedImage(previewUrl); 
+      // Locking in the processed image URL so it persists
+      setProcessedImageUrl(previewUrl);
       setIsProcessing(false);
-    }, 500);
+    }, 600);
   };
 
+  // Final submit handler for adding to wardrobe
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // CRITICAL: Always prioritize the processed/cleared image over the raw file preview
-    const finalImageUrl = processedImage || previewUrl;
+    // CRITICAL: Always use the processed/background-removed image if available
+    const finalImageUrl = processedImageUrl || previewUrl;
 
     if (!finalImageUrl) {
-      alert('Please select an image first.');
+      alert('Please upload or process an image first.');
       return;
     }
 
@@ -52,20 +54,20 @@ export default function AddItem({ onClose, onAddItem }) {
       category,
       subcategory: subcategory || 'Item',
       color: color || 'Neutral',
-      image_url: finalImageUrl, // Saved with background removed!
+      image_url: finalImageUrl, // Keeps the background-removed image
     };
 
-    // 1. Add to parent wardrobe state
+    // 1. Add item to parent wardrobe state
     onAddItem(newItem);
 
     // 2. Trigger the success popup modal
-    setShowSuccessModal(true);
+    setShowSuccessPopup(true);
 
-    // 3. Close the modal after the popup displays
+    // 3. Close the modal after the popup displays successfully
     setTimeout(() => {
-      setShowSuccessModal(false);
+      setShowSuccessPopup(false);
       onClose();
-    }, 1200);
+    }, 1400);
   };
 
   return (
@@ -75,7 +77,7 @@ export default function AddItem({ onClose, onAddItem }) {
       alignItems: 'center', zIndex: 1000, padding: '16px'
     }}>
       {/* Success Popup Modal */}
-      {showSuccessModal && (
+      {showSuccessPopup && (
         <div style={{
           position: 'absolute', backgroundColor: '#ffffff', borderRadius: '16px',
           padding: '24px 36px', textAlign: 'center', zIndex: 1100,
@@ -119,14 +121,14 @@ export default function AddItem({ onClose, onAddItem }) {
           {previewUrl && (
             <div style={{ textAlign: 'center', backgroundColor: '#f8fafc', padding: '10px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
               <img
-                src={processedImage || previewUrl}
+                src={processedImageUrl || previewUrl}
                 alt="Preview"
                 style={{ maxHeight: '140px', objectFit: 'contain', borderRadius: '8px' }}
               />
               <div style={{ marginTop: '8px' }}>
                 <button
                   type="button"
-                  onClick={handleClearBackground}
+                  onClick={handleProcessImage}
                   disabled={isProcessing}
                   style={{
                     backgroundColor: '#1b2a4a', color: '#ffffff', border: 'none',
