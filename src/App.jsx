@@ -1,23 +1,21 @@
 import React, { useState } from 'react';
 
-// Dropdown options for category and color
 const DETAIL_OPTIONS = {
   category: ['Tops & Blouses', 'Bottoms & Denim', 'Outerwear & Dusters', 'Dresses & Jumpsuits', 'Footwear'],
   color: ['Cool Neutrals', 'Navy Blue', 'Forest Green', 'Rich Burgundy', 'Sage / Olive Green', 'Rose Pink', 'Chocolate Brown', 'Metallic Silver/Gold']
 };
 
 export default function App() {
-  const [currentStep, setCurrentStep] = useState('home'); // 'home', 'source', 'details', 'wardrobe'
+  const [currentStep, setCurrentStep] = useState('home'); // Starts on home
   const [selectedSource, setSelectedSource] = useState(null);
   
-  // Form state for item details (Category, Color, Notes)
   const [details, setDetails] = useState({
     category: '',
     color: '',
     notes: ''
   });
 
-  const handleGoToSource = (sourceType) => {
+  const handleGoToDetails = (sourceType) => {
     setSelectedSource(sourceType);
     setCurrentStep('details');
   };
@@ -121,7 +119,7 @@ export default function App() {
               >
                 <img 
                   src="/undo-arrow-icon.png" 
-                  alt="Back" 
+                  alt="Home" 
                   style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }}
                 />
                 <span style={{ fontSize: '0.75rem', fontWeight: '500', color: '#fbcfe8' }}>Home</span>
@@ -134,7 +132,7 @@ export default function App() {
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <button
-                onClick={() => handleGoToSource('camera')}
+                onClick={() => handleGoToDetails('camera')}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -153,7 +151,7 @@ export default function App() {
               </button>
 
               <button
-                onClick={() => handleGoToSource('upload')}
+                onClick={() => handleGoToDetails('upload')}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -174,7 +172,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Step 3: Streamlined Details Form */}
+        {/* Step 3: Details Form with Category & Color Dropdowns */}
         {currentStep === 'details' && (
           <form onSubmit={handleSaveItem} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
@@ -277,7 +275,7 @@ export default function App() {
           </form>
         )}
 
-        {/* Step 4: Wardrobe / Success View */}
+        {/* Step 4: Success View */}
         {currentStep === 'wardrobe' && (
           <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem 0' }}>
             <div style={{
