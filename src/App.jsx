@@ -6,7 +6,7 @@ const DETAIL_OPTIONS = {
 };
 
 export default function App() {
-  const [currentStep, setCurrentStep] = useState('home'); // Starts on home
+  const [currentStep, setCurrentStep] = useState('home'); // Starts on homepage
   const [selectedSource, setSelectedSource] = useState(null);
   
   const [details, setDetails] = useState({
