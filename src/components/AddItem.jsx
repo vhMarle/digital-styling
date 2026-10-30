@@ -11,13 +11,14 @@ const SUBCATEGORIES = {
 };
 
 export default function AddItem({ onClose, onAddItem }) {
-  // Step management: 1 = Source Selection & Background Removal, 2 = Item Details Form
   const [step, setStep] = useState(1);
 
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [processedImageUrl, setProcessedImageUrl] = useState('');
   const [isRemovingBg, setIsRemovingBg] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
 
   // Form fields (initialized empty)
   const [category, setCategory] = useState('Tops');
@@ -36,6 +37,16 @@ export default function AddItem({ onClose, onAddItem }) {
       const url = URL.createObjectURL(selected);
       setPreviewUrl(url);
       setProcessedImageUrl('');
+    }
+  };
+
+  const handleUrlSubmit = (e) => {
+    e.preventDefault();
+    if (urlInput) {
+      setPreviewUrl(urlInput);
+      setProcessedImageUrl('');
+      setShowUrlInput(false);
+      setUrlInput('');
     }
   };
 
@@ -137,74 +148,92 @@ export default function AddItem({ onClose, onAddItem }) {
         {step === 1 && (
           <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'center' }}>
             
-            {/* Source Selection Icons Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-              
-              {/* Camera */}
-              <button
-                type="button"
-                onClick={() => {
-                  const input = document.getElementById('camera-input');
-                  if (input) input.click();
-                }}
-                style={{
-                  backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
-                  padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                <span style={{ fontSize: '24px' }}>📸</span>
-                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>Camera</span>
-                <input id="camera-input" type="file" accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
-              </button>
+            {/* Source Selection Icons Row/Grid */}
+            {!previewUrl && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  
+                  {/* Camera */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const input = document.getElementById('camera-input');
+                      if (input) input.click();
+                    }}
+                    style={{
+                      backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
+                      padding: '16px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <img src="camera-icon.jpg" alt="Camera" style={{ width: '28px', height: '28px', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#0f172a' }}>Camera</span>
+                    <input id="camera-input" type="file" accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
+                  </button>
 
-              {/* Google Photos */}
-              <button
-                type="button"
-                onClick={() => alert('Google Photos integration selected.')}
-                style={{
-                  backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
-                  padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                <span style={{ fontSize: '24px' }}>🖼️</span>
-                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>Google Photos</span>
-              </button>
+                  {/* Google Photos */}
+                  <button
+                    type="button"
+                    onClick={() => alert('Google Photos integration selected.')}
+                    style={{
+                      backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
+                      padding: '16px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <img src="gphotos-icon.png" alt="Google Photos" style={{ width: '28px', height: '28px', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#0f172a' }}>Photos</span>
+                  </button>
 
-              {/* Browse */}
-              <label
-                style={{
-                  backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
-                  padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                <span style={{ fontSize: '24px' }}>📁</span>
-                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>Browse</span>
-                <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-              </label>
+                  {/* Browse / Folder */}
+                  <label
+                    style={{
+                      backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
+                      padding: '16px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span style={{ fontSize: '24px' }}>📁</span>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#0f172a' }}>Browse</span>
+                    <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+                  </label>
+                </div>
 
-              {/* URL */}
-              <button
-                type="button"
-                onClick={() => {
-                  const url = prompt('Enter image URL:');
-                  if (url) {
-                    setPreviewUrl(url);
-                    setProcessedImageUrl('');
-                  }
-                }}
-                style={{
-                  backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
-                  padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                <span style={{ fontSize: '24px' }}>🔗</span>
-                <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>URL</span>
-              </button>
-            </div>
+                {/* URL Option Below */}
+                <div>
+                  {!showUrlInput ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowUrlInput(true)}
+                      style={{
+                        width: '100%', backgroundColor: '#fffbeb', border: '2px dashed #d97706', borderRadius: '16px',
+                        padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                        cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', color: '#0f172a'
+                      }}
+                    >
+                      <span>🔗</span> Enter Image URL
+                    </button>
+                  ) : (
+                    <form onSubmit={handleUrlSubmit} style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        type="url"
+                        value={urlInput}
+                        onChange={(e) => setUrlInput(e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                        autoFocus
+                      />
+                      <button
+                        type="submit"
+                        style={{ backgroundColor: '#7a1c4b', color: '#fff', border: 'none', borderRadius: '10px', padding: '0 14px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}
+                      >
+                        Load
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Preview & Background Removal Action */}
             {previewUrl && (
@@ -225,6 +254,16 @@ export default function AddItem({ onClose, onAddItem }) {
                     }}
                   >
                     {isRemovingBg ? 'Processing...' : '✨ Clear BG'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPreviewUrl(''); setProcessedImageUrl(''); }}
+                    style={{
+                      backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1',
+                      borderRadius: '12px', padding: '8px 14px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
+                    }}
+                  >
+                    Change Source
                   </button>
                 </div>
                 <button
