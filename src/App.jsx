@@ -10,7 +10,7 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState('home'); // 'home', 'source', 'details', 'wardrobe'
   const [selectedSource, setSelectedSource] = useState(null);
   
-  // Form state for item details (no Season or Occasion)
+  // Form state for item details (Category, Color, Notes)
   const [details, setDetails] = useState({
     category: '',
     color: '',
@@ -44,8 +44,10 @@ export default function App() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1rem',
+      paddingTop: '3rem',
+      paddingBottom: '3rem',
+      paddingLeft: '1rem',
+      paddingRight: '1rem',
       fontFamily: 'sans-serif'
     }}>
       <div style={{
@@ -61,13 +63,13 @@ export default function App() {
         
         {/* Step 1: Homepage / Main Dashboard */}
         {currentStep === 'home' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'center', padding: '1rem 0' }}>
             <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fbcfe8', margin: '0 0 0.25rem 0' }}>Sparks & Sequins</h2>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: '600', color: '#fbcfe8', margin: '0 0 0.35rem 0' }}>Sparks & Sequins</h2>
               <p style={{ fontSize: '0.875rem', color: '#a3a3a3', margin: 0 }}>Digital Wardrobe & Outfit Curation</p>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingTop: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', paddingTop: '0.5rem' }}>
               <button
                 onClick={() => setCurrentStep('source')}
                 style={{
@@ -172,7 +174,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Step 3: Streamlined Details Form (Category, Color, Notes) */}
+        {/* Step 3: Streamlined Details Form */}
         {currentStep === 'details' && (
           <form onSubmit={handleSaveItem} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
