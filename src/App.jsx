@@ -319,27 +319,6 @@ export default function App() {
     ? wardrobeItems 
     : wardrobeItems.filter(item => item.category === selectedFilter);
 
-  // Exact Gray Crimson #834655 Header Style
-  const brushHeaderStyle = {
-    fontSize: '1.85rem',
-    fontWeight: '800',
-    fontFamily: 'Georgia, serif',
-    color: '#834655',
-    background: 'linear-gradient(135deg, #703845 0%, #834655 50%, #502732 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    filter: 'drop-shadow(1px 1px 2px rgba(131, 70, 85, 0.4))',
-    margin: 0,
-    letterSpacing: '0.04em',
-    fontStyle: 'italic'
-  };
-
-  const BrushHeader = ({ text }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-      <h2 style={brushHeaderStyle}>{text}</h2>
-    </div>
-  );
-
   return (
     <div style={{
       minHeight: '100vh',
@@ -360,10 +339,10 @@ export default function App() {
         {/* ================= VIEW 1: HOME DASHBOARD ================= */}
         {currentView === 'home' && (
           <>
-            {/* Header with spark-sequince-logo.png logo and plus button vertically centered */}
+            {/* Header with spark-sequince-logo.png logo (scaled 20% bigger: height 3.6rem) and plus button vertically centered */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderBottom: '1px solid #333', width: '100%', boxSizing: 'border-box' }}>
-              <div style={{ display: 'flex', alignItems: 'center', height: '3.5rem' }}>
-                <img src="/spark-sequince-logo.png" alt="Sparks & Sequins" style={{ height: '3rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
+              <div style={{ display: 'flex', alignItems: 'center', height: '4rem' }}>
+                <img src="/spark-sequince-logo.png" alt="Sparks & Sequins" style={{ height: '3.6rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
                 <span style={{ display: 'none', fontSize: '1.25rem', fontWeight: '800', color: '#834655', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Sparks & Sequins</span>
               </div>
               <button
@@ -502,7 +481,9 @@ export default function App() {
               >
                 <img src="/home-icon.png" alt="Home" style={{ width: '1.75rem', height: '1.75rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='🏠'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.5rem';}} />
               </button>
-              <BrushHeader text="Import from..." />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <h2 style={{ fontSize: '1.85rem', fontWeight: '800', fontFamily: 'Georgia, serif', color: '#834655', background: 'linear-gradient(135deg, #703845 0%, #834655 50%, #502732 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(1px 1px 2px rgba(131, 70, 85, 0.4))', margin: 0, letterSpacing: '0.04em', fontStyle: 'italic' }}>Import from...</h2>
+              </div>
               <div style={{ width: '1.75rem' }}></div>
             </div>
 
@@ -586,7 +567,6 @@ export default function App() {
                 <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
               </button>
               
-              {/* Header with edit-item.png graphic */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <img src="/edit-item.png" alt="Edit item" style={{ height: '2.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
                 <span style={{ display: 'none', fontSize: '1.5rem', fontWeight: '800', color: '#834655', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Edit item</span>
@@ -662,7 +642,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation */}
+            {/* Bottom Sourcing Navigation with next-arrow-button.png hyperlink */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={removeWhiteBackground}
@@ -700,7 +680,7 @@ export default function App() {
                   opacity: imageSource ? 1 : 0.4
                 }}
               >
-                <img src="/next-icon.png" alt="Details" style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='>'; e.target.parentElement.style.color='#fbcfe8';}} />
+                <img src="/next-arrow-button.png" alt="Details" style={{ height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='Next >'; e.target.parentElement.style.color='#fbcfe8';}} />
               </button>
             </div>
           </div>
@@ -728,7 +708,13 @@ export default function App() {
               >
                 <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
               </button>
-              <BrushHeader text="Details" />
+              
+              {/* Details header image matching exact text size and style */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src="/details-header.png" alt="Details" style={{ height: '2.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
+                <h2 style={{ display: 'none', fontSize: '1.85rem', fontWeight: '800', fontFamily: 'Georgia, serif', color: '#834655', margin: 0, fontStyle: 'italic' }}>Details</h2>
+              </div>
+
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
@@ -850,26 +836,26 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar with details-header.png and perfectly sized Bin & Check Mark icons */}
+            {/* Bottom Bar: edit-item.png inside button frame on bottom left, Bin & Check Mark icons on bottom right */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={() => setIsDetailsEditable(!isDetailsEditable)}
-                title="Edit Details"
+                title="Edit Item"
                 style={{
                   background: 'transparent',
-                  border: 'none',
+                  border: '1px solid rgba(251, 207, 232, 0.4)',
+                  borderRadius: '0.5rem',
+                  padding: '0.5rem 1rem',
                   cursor: 'pointer',
-                  padding: 0,
                   display: 'flex',
                   alignItems: 'center',
-                  height: '2.5rem'
+                  justifyContent: 'center'
                 }}
               >
-                <img src="/details-header.png" alt="Edit Item" style={{ height: '2rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='Edit'; e.target.parentElement.style.color='#fbcfe8';}} />
+                <img src="/edit-item.png" alt="Edit Item" style={{ height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='Edit'; e.target.parentElement.style.color='#fbcfe8';}} />
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                {/* Bin Icon Button (Matched to Check Mark size: 2.5rem) */}
                 {activeItemId && (
                   <button
                     onClick={() => setItemToDelete(wardrobeItems.find(i => i.id === activeItemId))}
