@@ -333,18 +333,6 @@ export default function App() {
     ? wardrobeItems 
     : wardrobeItems.filter(item => item.category === selectedFilter);
 
-  const standardButtonFrameStyle = {
-    background: 'transparent',
-    border: '1px solid rgba(251, 207, 232, 0.4)',
-    borderRadius: '0.5rem',
-    padding: '0.5rem 1rem',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxSizing: 'border-box'
-  };
-
   return (
     <div style={{
       minHeight: '100vh',
@@ -569,3 +557,273 @@ export default function App() {
         {/* ================= VIEW 3: IMAGE EDITING STAGE ================= */}
         {currentView === 'editImage' && (
           <div style={{
+            backgroundColor: 'rgba(38, 38, 38, 0.85)',
+            border: '1px solid rgba(82, 82, 82, 0.4)',
+            borderRadius: '1rem',
+            padding: '1.25rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setCurrentView('source')}
+                style={{ background: 'transparent', border: 'none', color: '#fbcfe8', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}
+              >
+                ← Back
+              </button>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#fbcfe8', margin: 0 }}>Adjust Image</h2>
+              <button
+                type="button"
+                onClick={() => setCurrentView('details')}
+                style={{
+                  backgroundColor: '#834655', border: '1px solid rgba(244, 63, 94, 0.4)',
+                  borderRadius: '0.5rem', padding: '0.375rem 0.75rem', color: '#ffe4e6', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer'
+                }}
+              >
+                Next →
+              </button>
+            </div>
+
+            <div 
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onWheel={handleWheel}
+              style={{
+                width: '100%',
+                height: '260px',
+                backgroundColor: 'rgba(23, 23, 23, 0.8)',
+                borderRadius: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                position: 'relative',
+                border: '1px solid #525252'
+              }}
+            >
+              <div
+                onMouseDown={(e) => handleMouseDown(e, null)}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{
+                  width: `${frameWidth}px`,
+                  height: `${frameHeight}px`,
+                  border: '2px dashed rgba(244, 63, 94, 0.8)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  cursor: 'move',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: isTransparent ? 'transparent' : 'rgba(0,0,0,0.2)'
+                }}
+              >
+                {imageSource && (
+                  <img
+                    src={imageSource}
+                    alt="To edit"
+                    style={{
+                      maxWidth: 'none',
+                      maxHeight: 'none',
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
+                      pointerEvents: 'none',
+                      filter: isTransparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none'
+                    }}
+                  />
+                )}
+
+                {/* Resizing Handles */}
+                <div onMouseDown={(e) => handleMouseDown(e, 'nw')} style={{ position: 'absolute', top: 0, left: 0, width: '12px', height: '12px', cursor: 'nwse-resize', zIndex: 3 }} />
+                <div onMouseDown={(e) => handleMouseDown(e, 'ne')} style={{ position: 'absolute', top: 0, right: 0, width: '12px', height: '12px', cursor: 'nesw-resize', zIndex: 3 }} />
+                <div onMouseDown={(e) => handleMouseDown(e, 'sw')} style={{ position: 'absolute', bottom: 0, left: 0, width: '12px', height: '12px', cursor: 'nesw-resize', zIndex: 3 }} />
+                <div onMouseDown={(e) => handleMouseDown(e, 'se')} style={{ position: 'absolute', bottom: 0, right: 0, width: '12px', height: '12px', cursor: 'nwse-resize', zIndex: 3 }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+              <button
+                type="button"
+                onClick={removeWhiteBackground}
+                style={{
+                  flex: 1, padding: '0.625rem', backgroundColor: 'rgba(64,64,64,0.6)',
+                  border: '1px solid #525252', borderRadius: '0.5rem', color: '#e5e5e5',
+                  fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer'
+                }}
+              >
+                🪄 Remove BG
+              </button>
+              <button
+                type="button"
+                onClick={resetEditor}
+                style={{
+                  padding: '0.625rem 1rem', backgroundColor: 'rgba(64,64,64,0.6)',
+                  border: '1px solid #525252', borderRadius: '0.5rem', color: '#e5e5e5',
+                  fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer'
+                }}
+              >
+                Reset
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+              <label style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Zoom: {zoom.toFixed(2)}x</label>
+              <input
+                type="range"
+                min="0.5"
+                max="3.5"
+                step="0.05"
+                value={zoom}
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                style={{ width: '100%', accentColor: '#834655' }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ================= VIEW 4: DETAILS & METADATA FORM ================= */}
+        {currentView === 'details' && (
+          <div style={{
+            backgroundColor: 'rgba(38, 38, 38, 0.85)',
+            border: '1px solid rgba(82, 82, 82, 0.4)',
+            borderRadius: '1rem',
+            padding: '1.25rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040', paddingBottom: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setCurrentView('editImage')}
+                style={{ background: 'transparent', border: 'none', color: '#fbcfe8', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}
+              >
+                ← Back
+              </button>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#fbcfe8', margin: 0 }}>Item Details</h2>
+              <button
+                type="button"
+                onClick={handleSaveToDatabase}
+                style={{
+                  backgroundColor: '#834655', border: '1px solid rgba(244, 63, 94, 0.4)',
+                  borderRadius: '0.5rem', padding: '0.375rem 0.75rem', color: '#ffe4e6', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer'
+                }}
+              >
+                Save ✨
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {/* Category Dropdown */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <label style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setSelectedSubCategory('');
+                  }}
+                  style={{ width: '100%', backgroundColor: '#262626', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.5rem', color: '#e5e5e5', fontSize: '0.85rem' }}
+                >
+                  <option value="">Select Category...</option>
+                  {Object.keys(MATRIX_CATEGORY_MAP).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sub-Category Dropdown */}
+              {selectedCategory && MATRIX_CATEGORY_MAP[selectedCategory] && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Sub-Category</label>
+                  <select
+                    value={selectedSubCategory}
+                    onChange={(e) => setSelectedSubCategory(e.target.value)}
+                    style={{ width: '100%', backgroundColor: '#262626', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.5rem', color: '#e5e5e5', fontSize: '0.85rem' }}
+                  >
+                    <option value="">Select Sub-Category...</option>
+                    {MATRIX_CATEGORY_MAP[selectedCategory].map(sub => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Size Type Dropdown */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <label style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Size System</label>
+                <select
+                  value={selectedSizeType}
+                  onChange={(e) => {
+                    setSelectedSizeType(e.target.value);
+                    setSelectedSize('');
+                  }}
+                  style={{ width: '100%', backgroundColor: '#262626', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.5rem', color: '#e5e5e5', fontSize: '0.85rem' }}
+                >
+                  <option value="">Select Size System...</option>
+                  {SIZE_TYPES.map(st => (
+                    <option key={st} value={st}>{st}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Specific Size Dropdown */}
+              {selectedSizeType && LOCALIZED_SIZES[selectedSizeType] && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <label style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Size</label>
+                  <select
+                    value={selectedSize}
+                    onChange={(e) => setSelectedSize(e.target.value)}
+                    style={{ width: '100%', backgroundColor: '#262626', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.5rem', color: '#e5e5e5', fontSize: '0.85rem' }}
+                  >
+                    <option value="">Select Size...</option>
+                    {LOCALIZED_SIZES[selectedSizeType].map(sz => (
+                      <option key={sz} value={sz}>{sz}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Color Dropdown */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <label style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Color Family</label>
+                <select
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  style={{ width: '100%', backgroundColor: '#262626', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.5rem', color: '#e5e5e5', fontSize: '0.85rem' }}
+                >
+                  <option value="">Select Color...</option>
+                  {RESTRICTED_COLORS.map(col => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Notes Input */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <label style={{ fontSize: '0.75rem', color: '#a3a3a3' }}>Notes / Description</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add styling notes..."
+                  rows="3"
+                  style={{ width: '100%', backgroundColor: '#262626', border: '1px solid #525252', borderRadius: '0.5rem', padding: '0.5rem', color: '#e5e5e5', fontSize: '0.85rem', resize: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
