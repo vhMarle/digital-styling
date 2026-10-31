@@ -64,6 +64,17 @@ export default function App() {
   useEffect(() => {
     fetchWardrobe();
 
+    const channel = supabase
+      .channel('public:wardrobe_items')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'wardrobe_items' },
+        () => {
+          fetchWardrobe();
+        }
+      )
+      .subscribe();
+
     const keepAliveInterval = setInterval(async () => {
       try {
         await supabase.from('wardrobe_items').select('id').limit(1);
@@ -72,7 +83,10 @@ export default function App() {
       }
     }, 15 * 60 * 1000);
 
-    return () => clearInterval(keepAliveInterval);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(keepAliveInterval);
+    };
   }, []);
 
   const fetchWardrobe = async () => {
@@ -319,7 +333,6 @@ export default function App() {
     ? wardrobeItems 
     : wardrobeItems.filter(item => item.category === selectedFilter);
 
-  // Common button styling frame matching the Edit/Update buttons
   const standardButtonFrameStyle = {
     background: 'transparent',
     border: '1px solid rgba(251, 207, 232, 0.4)',
@@ -352,7 +365,6 @@ export default function App() {
         {/* ================= VIEW 1: HOME DASHBOARD ================= */}
         {currentView === 'home' && (
           <>
-            {/* Header with spark-and-sequins-logo.png logo (60% bigger: height 6.0rem) and plus button vertically centered */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderBottom: '1px solid #333', width: '100%', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', height: '6.5rem' }}>
                 <img src="/spark-and-sequins-logo.png" alt="Sparks & Sequins" style={{ height: '6.0rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
@@ -370,7 +382,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Filter Buttons */}
             <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none', width: '100%', boxSizing: 'border-box' }}>
               {['All', ...Object.keys(MATRIX_CATEGORY_MAP)].map(cat => (
                 <button
@@ -393,7 +404,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* Wardrobe Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               {filteredItems.map(item => (
                 <div 
@@ -447,7 +457,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* Deletion Confirmation Warning Popup */}
             {itemToDelete && (
               <div style={{
                 position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
@@ -638,7 +647,6 @@ export default function App() {
                       />
                     </div>
 
-                    {/* Pink anchor handles */}
                     <div onMouseDown={(e) => handleMouseDown(e, 'tl')} style={{ position: 'absolute', top: -5, left: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
                     <div onMouseDown={(e) => handleMouseDown(e, 'tm')} style={{ position: 'absolute', top: -5, left: 'calc(50% - 5px)', width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
                     <div onMouseDown={(e) => handleMouseDown(e, 'tr')} style={{ position: 'absolute', top: -5, right: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
@@ -652,7 +660,6 @@ export default function App() {
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={removeWhiteBackground}
@@ -738,7 +745,6 @@ export default function App() {
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', boxSizing: 'border-box' }}>
-              {/* Category */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Category *</label>
                 <select
@@ -758,7 +764,6 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Sub-Category */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: selectedCategory ? '#d4d4d4' : '#737373' }}>Sub-Category</label>
                 <select
@@ -774,7 +779,6 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Sizing Section (Default blank and active) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
                 <div style={{ display: 'flex', gap: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
@@ -807,7 +811,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Color * */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Color *</label>
                 <select
@@ -823,7 +826,6 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Notes */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Notes</label>
                 <input
@@ -837,7 +839,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {activeItemId && (
@@ -882,7 +883,6 @@ export default function App() {
 
       </div>
 
-      {/* Global Deletion Warning Popup when triggered from Details page */}
       {itemToDelete && currentView === 'details' && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
@@ -894,7 +894,7 @@ export default function App() {
             padding: '1.5rem', width: '90%', maxWidth: '320px', textAlign: 'center',
             display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)'
           }}>
-            <div style={{ fontSize: '2rem' >> '⚠️'}</div>
+            <div style={{ fontSize: '2rem' }}>⚠️</div>
             <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fbcfe8', margin: 0 }}>Delete Item?</h3>
             <p style={{ fontSize: '0.85rem', color: '#a3a3a3', margin: 0 }}>Warning: This action cannot be undone. Are you sure you want to permanently delete this piece from your wardrobe?</p>
             <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
