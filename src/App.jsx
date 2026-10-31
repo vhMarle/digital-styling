@@ -26,8 +26,8 @@ export default function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home', 'source', 'editImage', 'details'
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [wardrobeItems, setWardrobeItems] = useState([
-    { id: 1, category: 'Tops', sub_category: 'Shirts', size_type: 'General', size: 'M', color: 'White', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, frame_width: 260, frame_height: 180, pan_x: 0, pan_y: 0, is_transparent: false },
-    { id: 2, category: 'Bottoms', sub_category: 'Pants', size_type: 'General', size: 'S', color: 'Blue', notes: 'Straight-leg denim', image_url: 'https://via.placeholder.com/150', zoom_level: 1, frame_width: 260, frame_height: 180, pan_x: 0, pan_y: 0, is_transparent: false }
+    { id: 1, category: 'Tops', sub_category: 'Shirts', size_type: '', size: '', color: 'White', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, frame_width: 260, frame_height: 180, pan_x: 0, pan_y: 0, is_transparent: false },
+    { id: 2, category: 'Bottoms', sub_category: 'Pants', size_type: '', size: '', color: 'Blue', notes: 'Straight-leg denim', image_url: 'https://via.placeholder.com/150', zoom_level: 1, frame_width: 260, frame_height: 180, pan_x: 0, pan_y: 0, is_transparent: false }
   ]);
   
   // Image & Interactive Editing State
@@ -212,7 +212,7 @@ export default function App() {
   };
 
   const removeWhiteBackground = () => {
-    if (!imageSource) return;
+    if (!imageSource || isTransparent) return;
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
@@ -319,6 +319,19 @@ export default function App() {
     ? wardrobeItems 
     : wardrobeItems.filter(item => item.category === selectedFilter);
 
+  // Common button styling frame matching the Edit/Update buttons
+  const standardButtonFrameStyle = {
+    background: 'transparent',
+    border: '1px solid rgba(251, 207, 232, 0.4)',
+    borderRadius: '0.5rem',
+    padding: '0.5rem 1rem',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxSizing: 'border-box'
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -339,7 +352,7 @@ export default function App() {
         {/* ================= VIEW 1: HOME DASHBOARD ================= */}
         {currentView === 'home' && (
           <>
-            {/* Header with spark-sequince-logo.png logo (increased 40% bigger: height 5.0rem) and plus button vertically centered */}
+            {/* Header with spark-sequince-logo.png logo and plus button vertically centered */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderBottom: '1px solid #333', width: '100%', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', height: '5.5rem' }}>
                 <img src="/spark-sequince-logo.png" alt="Sparks & Sequins" style={{ height: '5.0rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
@@ -459,7 +472,7 @@ export default function App() {
           </>
         )}
 
-        {/* ================= VIEW 2: SOURCING STAGE ("ImportFrom-header.png") ================= */}
+        {/* ================= VIEW 2: SOURCING STAGE ================= */}
         {currentView === 'source' && (
           <div style={{
             backgroundColor: 'rgba(38, 38, 38, 0.85)',
@@ -482,7 +495,6 @@ export default function App() {
                 <img src="/home-icon.png" alt="Home" style={{ width: '1.75rem', height: '1.75rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='🏠'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.5rem';}} />
               </button>
               
-              {/* ImportFrom-header.png graphic */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <img src="/ImportFrom-header.png" alt="Import from" style={{ height: '2.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
                 <h2 style={{ display: 'none', fontSize: '1.85rem', fontWeight: '800', fontFamily: 'Georgia, serif', color: '#834655', margin: 0, fontStyle: 'italic' }}>Import from...</h2>
@@ -545,7 +557,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= VIEW 3: IMAGE EDITING STAGE ("Edit item") ================= */}
+        {/* ================= VIEW 3: IMAGE EDITING STAGE ================= */}
         {currentView === 'editImage' && (
           <div style={{
             backgroundColor: 'rgba(38, 38, 38, 0.85)',
@@ -581,15 +593,11 @@ export default function App() {
 
             {imageSource && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', boxSizing: 'border-box', alignItems: 'center' }}>
-                
-                {/* Workspace Container for Two-Layer Frame vs Content */}
                 <div style={{
                   width: '100%', height: '240px', backgroundColor: '#171717',
                   borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   overflow: 'hidden', position: 'relative', boxSizing: 'border-box'
                 }}>
-                  
-                  {/* OUTER FRAME (Viewing Window / Bounding Box) */}
                   <div 
                     onMouseDown={(e) => handleMouseDown(e, null)}
                     onWheel={handleWheel}
@@ -608,7 +616,6 @@ export default function App() {
                       touchAction: 'none'
                     }}
                   >
-                    {/* INNER CONTENT (Panned & Scaled Image) */}
                     <div style={{
                       position: 'absolute',
                       top: 0, left: 0, right: 0, bottom: 0,
@@ -631,7 +638,7 @@ export default function App() {
                       />
                     </div>
 
-                    {/* PINK ANCHOR HANDLES Locked to Frame Corners */}
+                    {/* Pink anchor handles */}
                     <div onMouseDown={(e) => handleMouseDown(e, 'tl')} style={{ position: 'absolute', top: -5, left: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
                     <div onMouseDown={(e) => handleMouseDown(e, 'tm')} style={{ position: 'absolute', top: -5, left: 'calc(50% - 5px)', width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
                     <div onMouseDown={(e) => handleMouseDown(e, 'tr')} style={{ position: 'absolute', top: -5, right: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
@@ -641,28 +648,23 @@ export default function App() {
                     <div onMouseDown={(e) => handleMouseDown(e, 'bm')} style={{ position: 'absolute', bottom: -5, left: 'calc(50% - 5px)', width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
                     <div onMouseDown={(e) => handleMouseDown(e, 'br')} style={{ position: 'absolute', bottom: -5, right: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
                   </div>
-
                 </div>
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation: remove-background-button.png & 20% bigger next-arrow-button.png */}
+            {/* Bottom Sourcing Navigation: styled Remove Background button & Next Arrow */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={removeWhiteBackground}
                 disabled={!imageSource || isTransparent}
                 title="Remove Background"
                 style={{
-                  background: 'transparent',
-                  border: 'none',
+                  ...standardButtonFrameStyle,
                   cursor: (imageSource && !isTransparent) ? 'pointer' : 'default',
-                  padding: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  opacity: imageSource ? (isTransparent ? 0.5 : 1) : 0.4
+                  opacity: imageSource ? (isTransparent ? 0.4 : 1) : 0.4
                 }}
               >
-                <img src="/remove-background-button.png" alt="Remove Background" style={{ height: '2.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='Remove BG'; e.target.parentElement.style.color='#fbcfe8';}} />
+                <img src="/remove-background-button.png" alt="Remove Background" style={{ height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='Remove BG'; e.target.parentElement.style.color='#fbcfe8';}} />
               </button>
 
               <button
@@ -686,7 +688,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= VIEW 4: ITEM DETAILS & FINAL SAVE ("Details") ================= */}
+        {/* ================= VIEW 4: ITEM DETAILS & FINAL SAVE ================= */}
         {currentView === 'details' && (
           <div style={{
             backgroundColor: 'rgba(38, 38, 38, 0.85)',
@@ -772,7 +774,7 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Sizing Section */}
+              {/* Sizing Section (Default blank) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
                 <div style={{ display: 'flex', gap: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
@@ -835,25 +837,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
-              <button
-                onClick={() => setIsDetailsEditable(!isDetailsEditable)}
-                title="Edit Item"
-                style={{
-                  background: 'transparent',
-                  border: '1px solid rgba(251, 207, 232, 0.4)',
-                  borderRadius: '0.5rem',
-                  padding: '0.5rem 1rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <img src="/edit-item.png" alt="Edit Item" style={{ height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='Edit'; e.target.parentElement.style.color='#fbcfe8';}} />
-              </button>
-
+            {/* Bottom Bar: Left edit toggle button removed; Right side has Bin and Update/Done buttons */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {activeItemId && (
                   <button
@@ -872,40 +857,22 @@ export default function App() {
                   <button
                     onClick={handleSaveToDatabase}
                     disabled={!selectedCategory || !selectedSize || !selectedColor}
-                    title="Add to Wardrobe"
+                    title={activeItemId ? "Update Item" : "Add to Wardrobe"}
                     style={{
-                      background: 'transparent',
-                      border: '1px solid rgba(251, 207, 232, 0.4)',
-                      borderRadius: '0.5rem',
-                      padding: '0.5rem 1rem',
+                      ...standardButtonFrameStyle,
                       cursor: (selectedCategory && selectedSize && selectedColor) ? 'pointer' : 'not-allowed',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
                       opacity: (selectedCategory && selectedSize && selectedColor) ? 1 : 0.4
                     }}
                   >
-                    <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'sans-serif' }}>
-                      Add to Wardrobe
-                    </span>
+                    <img src="/update-item-button.png" alt={activeItemId ? "Update Item" : "Add to Wardrobe"} style={{ height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText=activeItemId ? 'Update Item' : 'Add to Wardrobe'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='0.85rem'; e.target.parentElement.style.fontWeight='600';}} />
                   </button>
                 ) : (
                   <button
-                    onClick={() => setCurrentView('home')}
-                    title="Done"
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      width: '2.5rem',
-                      height: '2.5rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: 0
-                    }}
+                    onClick={() => setIsDetailsEditable(true)}
+                    title="Enable Editing"
+                    style={standardButtonFrameStyle}
                   >
-                    <img src="/check-mark-icon.png" alt="Done" style={{ width: '2.25rem', height: '2.25rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2.0rem';}} />
+                    <img src="/edit-item.png" alt="Edit Item" style={{ height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='Edit'; e.target.parentElement.style.color='#fbcfe8';}} />
                   </button>
                 )}
               </div>
