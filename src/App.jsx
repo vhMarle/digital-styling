@@ -26,8 +26,8 @@ export default function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home', 'source', 'editImage', 'details'
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [wardrobeItems, setWardrobeItems] = useState([
-    { id: 1, category: 'Tops', sub_category: 'Shirts', size_type: 'General', size: 'M', color: 'White', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, width_scale: 100, height_scale: 100, pan_x: 0, pan_y: 0, is_transparent: false },
-    { id: 2, category: 'Bottoms', sub_category: 'Pants', size_type: 'General', size: 'S', color: 'Blue', notes: 'Straight-leg denim', image_url: 'https://via.placeholder.com/150', zoom_level: 1, width_scale: 100, height_scale: 100, pan_x: 0, pan_y: 0, is_transparent: false }
+    { id: 1, category: 'Tops', sub_category: 'Shirts', size_type: 'General', size: 'M', color: 'White', notes: 'Oversized white button-down', image_url: 'https://via.placeholder.com/150', zoom_level: 1, frame_width: 260, frame_height: 180, pan_x: 0, pan_y: 0, is_transparent: false },
+    { id: 2, category: 'Bottoms', sub_category: 'Pants', size_type: 'General', size: 'S', color: 'Blue', notes: 'Straight-leg denim', image_url: 'https://via.placeholder.com/150', zoom_level: 1, frame_width: 260, frame_height: 180, pan_x: 0, pan_y: 0, is_transparent: false }
   ]);
   
   // Image & Interactive Editing State
@@ -39,15 +39,16 @@ export default function App() {
   const [isTransparent, setIsTransparent] = useState(false);
   const [urlInput, setUrlInput] = useState('');
 
-  // Drag-to-Pan Content Offset State
+  // Drag-to-Pan Content Offset State & Touch Pinch
   const [isDraggingContent, setIsDraggingContent] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [initialTouchDist, setInitialTouchDist] = useState(null);
 
   // Frame Resizing Anchor State
   const [isResizingFrame, setIsResizingFrame] = useState(null);
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, w: 260, h: 180 });
 
-  // Delete Confirmation Popup State
+  // Delete Warning Confirmation Popup State
   const [itemToDelete, setItemToDelete] = useState(null);
 
   // Details Form State & Inspection Mode
@@ -127,7 +128,7 @@ export default function App() {
     setNotes('');
   };
 
-  // Interaction Split: Frame Resizing vs Content Panning
+  // Mouse & Touch Interaction Handlers
   const handleMouseDown = (e, handleType) => {
     e.stopPropagation();
     if (handleType) {
@@ -166,6 +167,42 @@ export default function App() {
   const handleMouseUp = () => {
     setIsDraggingContent(false);
     setIsResizingFrame(null);
+  };
+
+  // Mobile Touch Pinch-to-Zoom & Pan Handlers
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      setInitialTouchDist(dist);
+    } else if (e.touches.length === 1) {
+      setIsDraggingContent(true);
+      setDragStart({ x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y });
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 2 && initialTouchDist) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = dist / initialTouchDist;
+      setZoom(prev => Math.min(Math.max(prev * (factor > 1 ? 1.05 : 0.95), 0.5), 3.5));
+      setInitialTouchDist(dist);
+    } else if (e.touches.length === 1 && isDraggingContent) {
+      setPan({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDraggingContent(false);
+    setInitialTouchDist(null);
   };
 
   const handleWheel = (e) => {
@@ -213,6 +250,8 @@ export default function App() {
       setWardrobeItems(prev => prev.filter(item => item.id !== itemToDelete.id));
     }
     setItemToDelete(null);
+    setCurrentView('home');
+    resetDetailsForm();
   };
 
   const handleSaveToDatabase = async () => {
@@ -226,8 +265,8 @@ export default function App() {
       image_url: imageSource || 'https://via.placeholder.com/150',
       is_transparent: isTransparent,
       zoom_level: zoom,
-      width_scale: frameWidth,
-      height_scale: frameHeight,
+      frame_width: frameWidth,
+      frame_height: frameHeight,
       pan_x: pan.x,
       pan_y: pan.y
     };
@@ -263,8 +302,8 @@ export default function App() {
     setImageSource(item.image_url);
     setIsTransparent(item.is_transparent || false);
     setZoom(item.zoom_level || 1);
-    setFrameWidth(item.width_scale || 260);
-    setFrameHeight(item.height_scale || 180);
+    setFrameWidth(item.frame_width || 260);
+    setFrameHeight(item.frame_height || 180);
     setPan({ x: item.pan_x || 0, y: item.pan_y || 0 });
     setSelectedCategory(item.category || '');
     setSelectedSubCategory(item.sub_category || '');
@@ -321,10 +360,11 @@ export default function App() {
         {/* ================= VIEW 1: HOME DASHBOARD ================= */}
         {currentView === 'home' && (
           <>
-            {/* Header with P&S.png logo and plus button vertically centered with balanced margins */}
+            {/* Header with P&S.png logo and plus button vertically centered */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderBottom: '1px solid #333', width: '100%', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', height: '3.5rem' }}>
-                <img src="/P&S.png" alt="Sparks & Sequins" style={{ height: '3rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+                <img src="/P&S.png" alt="Sparks & Sequins" style={{ height: '3rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
+                <span style={{ display: 'none', fontSize: '1.25rem', fontWeight: '800', color: '#834655', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Sparks & Sequins</span>
               </div>
               <button
                 onClick={() => { resetEditor(); resetDetailsForm(); setImageSource(null); setCurrentView('source'); }}
@@ -381,15 +421,15 @@ export default function App() {
                   }}
                 >
                   <button
-                    onClick={(e) => { e.stopPropagation(); setItemToDelete(item); }}
-                    title="Remove item"
+                    onClick={(e) => { e.stopPropagation(); openExistingItem(item); }}
+                    title="Edit Item"
                     style={{
                       position: 'absolute', bottom: '0.75rem', right: '0.75rem',
-                      background: 'transparent', border: 'none', width: '2.5rem', height: '2.5rem',
+                      background: 'transparent', border: 'none', width: '2.25rem', height: '2.25rem',
                       cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, zIndex: 2
                     }}
                   >
-                    <img src="/minus-icon.png" alt="Remove" style={{ width: '1.75rem', height: '1.75rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='-'; e.target.parentElement.style.color='#fca5a5'; e.target.parentElement.style.fontSize='1.75rem';}} />
+                    <img src="/edit-icon.png" alt="Edit" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✏️'; e.target.parentElement.style.fontSize='1.25rem';}} />
                   </button>
 
                   <div style={{
@@ -402,8 +442,6 @@ export default function App() {
                       alt={item.category} 
                       style={{ 
                         maxHeight: '100%', maxWidth: '100%', 
-                        width: '100%',
-                        height: '100%',
                         objectFit: 'contain',
                         transform: `scale(${item.zoom_level || 1}) translate(${item.pan_x || 0}px, ${item.pan_y || 0}px)`,
                         filter: item.is_transparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none'
@@ -417,7 +455,7 @@ export default function App() {
               ))}
             </div>
 
-            {/* Deletion Confirmation Popup */}
+            {/* Deletion Confirmation Warning Popup */}
             {itemToDelete && (
               <div style={{
                 position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
@@ -425,16 +463,16 @@ export default function App() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999
               }}>
                 <div style={{
-                  backgroundColor: '#262626', border: '1px solid #525252', borderRadius: '1rem',
+                  backgroundColor: '#262626', border: '1px solid #834655', borderRadius: '1rem',
                   padding: '1.5rem', width: '90%', maxWidth: '320px', textAlign: 'center',
                   display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)'
                 }}>
-                  <div style={{ fontSize: '2rem' }}>✨</div>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fbcfe8', margin: 0 }}>Remove Item?</h3>
-                  <p style={{ fontSize: '0.85rem', color: '#a3a3a3', margin: 0 }}>Are you sure you want to remove this piece from your digital wardrobe?</p>
+                  <div style={{ fontSize: '2rem' }}>⚠️</div>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fbcfe8', margin: 0 }}>Delete Item?</h3>
+                  <p style={{ fontSize: '0.85rem', color: '#a3a3a3', margin: 0 }}>Warning: This action cannot be undone. Are you sure you want to permanently delete this piece from your wardrobe?</p>
                   <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
-                    <button onClick={() => setItemToDelete(null)} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(64,64,64,0.6)', border: '1px solid #525252', borderRadius: '0.5rem', color: '#e5e5e5', cursor: 'pointer', fontWeight: '500' }}>Keep</button>
-                    <button onClick={confirmAndDeleteItem} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(131, 70, 85, 0.8)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', cursor: 'pointer', fontWeight: '500' }}>Remove</button>
+                    <button onClick={() => setItemToDelete(null)} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(64,64,64,0.6)', border: '1px solid #525252', borderRadius: '0.5rem', color: '#e5e5e5', cursor: 'pointer', fontWeight: '500' }}>Cancel</button>
+                    <button onClick={confirmAndDeleteItem} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(131, 70, 85, 0.9)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', cursor: 'pointer', fontWeight: '500' }}>Delete</button>
                   </div>
                 </div>
               </div>
@@ -468,7 +506,6 @@ export default function App() {
               <div style={{ width: '1.75rem' }}></div>
             </div>
 
-            {/* Sourcing Icons Stacked Vertically with Uniform Spacing (1rem gap) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', boxSizing: 'border-box' }}>
               <label title="Take a Picture" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #525252', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
                 <img src="/camera-icon.jpg" alt="Take a Picture" style={{ width: '4.5rem', height: '4.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} onError={(e)=>{e.target.style.display='none';}} />
@@ -485,7 +522,6 @@ export default function App() {
                 <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
               </label>
 
-              {/* Paste Web Link Box Styled in Gray Crimson #834655 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: 'rgba(23, 23, 23, 0.6)', border: '1px solid #834655', borderRadius: '0.75rem', padding: '0.875rem', width: '100%', boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#834655', fontSize: '1rem', fontWeight: '700' }}>
                   <span>🌐</span> Paste web link
@@ -549,7 +585,13 @@ export default function App() {
               >
                 <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
               </button>
-              <BrushHeader text="Edit item" />
+              
+              {/* Replaced header with edit-item.png graphic */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src="/edit-item.png" alt="Edit item" style={{ height: '2.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
+                <span style={{ display: 'none', fontSize: '1.5rem', fontWeight: '800', color: '#834655', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Edit item</span>
+              </div>
+
               <div style={{ width: '1.5rem' }}></div>
             </div>
 
@@ -567,15 +609,19 @@ export default function App() {
                   <div 
                     onMouseDown={(e) => handleMouseDown(e, null)}
                     onWheel={handleWheel}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
                     style={{
                       position: 'relative',
                       width: `${frameWidth}px`,
                       height: `${frameHeight}px`,
-                      border: '2px solid #834655', // Gray crimson frame edge
+                      border: '2px solid #834655',
                       backgroundColor: '#111',
                       overflow: 'hidden',
                       cursor: isDraggingContent ? 'grabbing' : 'grab',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      touchAction: 'none'
                     }}
                   >
                     {/* INNER CONTENT (Panned & Scaled Image) */}
@@ -601,7 +647,7 @@ export default function App() {
                       />
                     </div>
 
-                    {/* PINK ANCHOR HANDLES (For Resizing Frame Bounding Box) */}
+                    {/* PINK ANCHOR HANDLES Locked to Frame Corners */}
                     <div onMouseDown={(e) => handleMouseDown(e, 'tl')} style={{ position: 'absolute', top: -5, left: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
                     <div onMouseDown={(e) => handleMouseDown(e, 'tm')} style={{ position: 'absolute', top: -5, left: 'calc(50% - 5px)', width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
                     <div onMouseDown={(e) => handleMouseDown(e, 'tr')} style={{ position: 'absolute', top: -5, right: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
@@ -804,7 +850,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar */}
+            {/* Bottom Bar with Bin & Check Mark */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={() => {
@@ -831,51 +877,90 @@ export default function App() {
                 </span>
               </button>
 
-              {isDetailsEditable ? (
-                <button
-                  onClick={handleSaveToDatabase}
-                  disabled={!selectedCategory || !selectedSize || !selectedColor}
-                  title="Add to Wardrobe"
-                  style={{
-                    background: 'transparent',
-                    border: '1px solid rgba(251, 207, 232, 0.4)',
-                    borderRadius: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    cursor: (selectedCategory && selectedSize && selectedColor) ? 'pointer' : 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: (selectedCategory && selectedSize && selectedColor) ? 1 : 0.4
-                  }}
-                >
-                  <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'sans-serif' }}>
-                    Add to Wardrobe
-                  </span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => setCurrentView('home')}
-                  title="Done"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    width: '3rem',
-                    height: '3rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 0
-                  }}
-                >
-                  <img src="/check-mark-icon.png" alt="Done" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2.0rem';}} />
-                </button>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                {/* Bin Icon Button */}
+                {activeItemId && (
+                  <button
+                    onClick={() => setItemToDelete(wardrobeItems.find(i => i.id === activeItemId))}
+                    title="Delete item"
+                    style={{
+                      background: 'transparent', border: 'none', cursor: 'pointer',
+                      width: '3rem', height: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                    }}
+                  >
+                    <img src="/bin-icon.png" alt="Delete" style={{ width: '1.75rem', height: '1.75rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='🗑️'; e.target.parentElement.style.fontSize='1.5rem';}} />
+                  </button>
+                )}
+
+                {isDetailsEditable ? (
+                  <button
+                    onClick={handleSaveToDatabase}
+                    disabled={!selectedCategory || !selectedSize || !selectedColor}
+                    title="Add to Wardrobe"
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid rgba(251, 207, 232, 0.4)',
+                      borderRadius: '0.5rem',
+                      padding: '0.5rem 1rem',
+                      cursor: (selectedCategory && selectedSize && selectedColor) ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: (selectedCategory && selectedSize && selectedColor) ? 1 : 0.4
+                    }}
+                  >
+                    <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'sans-serif' }}>
+                      Add to Wardrobe
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setCurrentView('home')}
+                    title="Done"
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      width: '3rem',
+                      height: '3rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0
+                    }}
+                  >
+                    <img src="/check-mark-icon.png" alt="Done" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2.0rem';}} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
 
       </div>
+
+      {/* Global Deletion Warning Popup when triggered from Details page */}
+      {itemToDelete && currentView === 'details' && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999
+        }}>
+          <div style={{
+            backgroundColor: '#262626', border: '1px solid #834655', borderRadius: '1rem',
+            padding: '1.5rem', width: '90%', maxWidth: '320px', textAlign: 'center',
+            display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)'
+          }}>
+            <div style={{ fontSize: '2rem' }}>⚠️</div>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fbcfe8', margin: 0 }}>Delete Item?</h3>
+            <p style={{ fontSize: '0.85rem', color: '#a3a3a3', margin: 0 }}>Warning: This action cannot be undone. Are you sure you want to permanently delete this piece from your wardrobe?</p>
+            <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
+              <button onClick={() => setItemToDelete(null)} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(64,64,64,0.6)', border: '1px solid #525252', borderRadius: '0.5rem', color: '#e5e5e5', cursor: 'pointer', fontWeight: '500' }}>Cancel</button>
+              <button onClick={confirmAndDeleteItem} style={{ flex: 1, padding: '0.625rem', backgroundColor: 'rgba(131, 70, 85, 0.9)', border: '1px solid rgba(244, 63, 94, 0.4)', borderRadius: '0.5rem', color: '#ffe4e6', cursor: 'pointer', fontWeight: '500' }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
