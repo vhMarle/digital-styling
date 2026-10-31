@@ -360,10 +360,10 @@ export default function App() {
         {/* ================= VIEW 1: HOME DASHBOARD ================= */}
         {currentView === 'home' && (
           <>
-            {/* Header with P&S.png logo and plus button vertically centered */}
+            {/* Header with spark-sequince-logo.png logo and plus button vertically centered */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderBottom: '1px solid #333', width: '100%', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', height: '3.5rem' }}>
-                <img src="/P&S.png" alt="Sparks & Sequins" style={{ height: '3rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
+                <img src="/spark-sequince-logo.png" alt="Sparks & Sequins" style={{ height: '3rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
                 <span style={{ display: 'none', fontSize: '1.25rem', fontWeight: '800', color: '#834655', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Sparks & Sequins</span>
               </div>
               <button
@@ -586,7 +586,7 @@ export default function App() {
                 <img src="/back-icon.png" alt="Back" style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='←'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.25rem';}} />
               </button>
               
-              {/* Replaced header with edit-item.png graphic */}
+              {/* Header with edit-item.png graphic */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <img src="/edit-item.png" alt="Edit item" style={{ height: '2.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
                 <span style={{ display: 'none', fontSize: '1.5rem', fontWeight: '800', color: '#834655', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Edit item</span>
@@ -850,45 +850,36 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar with Bin & Check Mark */}
+            {/* Bottom Bar with details-header.png and perfectly sized Bin & Check Mark icons */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
-                onClick={() => {
-                  if (!isDetailsEditable) {
-                    setIsDetailsEditable(true);
-                  } else {
-                    setCurrentView('source');
-                  }
-                }}
-                title="Edit Item"
+                onClick={() => setIsDetailsEditable(!isDetailsEditable)}
+                title="Edit Details"
                 style={{
                   background: 'transparent',
-                  border: '1px solid rgba(251, 207, 232, 0.4)',
-                  borderRadius: '0.5rem',
-                  padding: '0.5rem 1rem',
+                  border: 'none',
                   cursor: 'pointer',
+                  padding: 0,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  height: '2.5rem'
                 }}
               >
-                <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#fbcfe8', fontFamily: 'sans-serif' }}>
-                  Edit Item
-                </span>
+                <img src="/details-header.png" alt="Edit Item" style={{ height: '2rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='Edit'; e.target.parentElement.style.color='#fbcfe8';}} />
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                {/* Bin Icon Button */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {/* Bin Icon Button (Matched to Check Mark size: 2.5rem) */}
                 {activeItemId && (
                   <button
                     onClick={() => setItemToDelete(wardrobeItems.find(i => i.id === activeItemId))}
                     title="Delete item"
                     style={{
                       background: 'transparent', border: 'none', cursor: 'pointer',
-                      width: '3rem', height: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                      width: '2.5rem', height: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                     }}
                   >
-                    <img src="/bin-icon.png" alt="Delete" style={{ width: '1.75rem', height: '1.75rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='🗑️'; e.target.parentElement.style.fontSize='1.5rem';}} />
+                    <img src="/bin-icon.png" alt="Delete" style={{ width: '2.25rem', height: '2.25rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='🗑️'; e.target.parentElement.style.fontSize='1.5rem';}} />
                   </button>
                 )}
 
@@ -921,15 +912,15 @@ export default function App() {
                       background: 'transparent',
                       border: 'none',
                       cursor: 'pointer',
-                      width: '3rem',
-                      height: '3rem',
+                      width: '2.5rem',
+                      height: '2.5rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       padding: 0
                     }}
                   >
-                    <img src="/check-mark-icon.png" alt="Done" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2.0rem';}} />
+                    <img src="/check-mark-icon.png" alt="Done" style={{ width: '2.25rem', height: '2.25rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2.0rem';}} />
                   </button>
                 )}
               </div>
