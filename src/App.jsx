@@ -33,19 +33,19 @@ export default function App() {
   // Image & Interactive Editing State
   const [imageSource, setImageSource] = useState(null);
   const [zoom, setZoom] = useState(1);
-  const [widthScale, setWidthScale] = useState(100);
-  const [heightScale, setHeightScale] = useState(100);
+  const [frameWidth, setFrameWidth] = useState(260);
+  const [frameHeight, setFrameHeight] = useState(180);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isTransparent, setIsTransparent] = useState(false);
   const [urlInput, setUrlInput] = useState('');
 
-  // Drag-to-Pan Mouse States (Content Offset inside Frame)
-  const [isDragging, setIsDragging] = useState(false);
+  // Drag-to-Pan Content Offset State
+  const [isDraggingContent, setIsDraggingContent] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // Corner Resizing State (Frame Bounding Box)
-  const [isResizing, setIsResizing] = useState(null);
-  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, w: 100, h: 100 });
+  // Frame Resizing Anchor State
+  const [isResizingFrame, setIsResizingFrame] = useState(null);
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, w: 260, h: 180 });
 
   // Delete Confirmation Popup State
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -110,8 +110,8 @@ export default function App() {
 
   const resetEditor = () => {
     setZoom(1);
-    setWidthScale(100);
-    setHeightScale(100);
+    setFrameWidth(260);
+    setFrameHeight(180);
     setPan({ x: 0, y: 0 });
     setIsTransparent(false);
   };
@@ -127,42 +127,36 @@ export default function App() {
     setNotes('');
   };
 
-  const handleMouseDown = (e) => {
-    if (isResizing) return;
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-    e.preventDefault();
+  // Interaction Split: Frame Resizing vs Content Panning
+  const handleMouseDown = (e, handleType) => {
+    e.stopPropagation();
+    if (handleType) {
+      setIsResizingFrame(handleType);
+      setResizeStart({ x: e.clientX, y: e.clientY, w: frameWidth, h: frameHeight });
+    } else {
+      setIsDraggingContent(true);
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
   };
 
   const handleMouseMove = (e) => {
-    if (isResizing) {
+    if (isResizingFrame) {
       const dx = e.clientX - resizeStart.x;
       const dy = e.clientY - resizeStart.y;
-      if (isResizing === 'br') {
-        setWidthScale(Math.max(40, Math.min(300, resizeStart.w + dx)));
-        setHeightScale(Math.max(40, Math.min(300, resizeStart.h + dy)));
-      } else if (isResizing === 'bl') {
-        setWidthScale(Math.max(40, Math.min(300, resizeStart.w - dx)));
-        setHeightScale(Math.max(40, Math.min(300, resizeStart.h + dy)));
-      } else if (isResizing === 'tr') {
-        setWidthScale(Math.max(40, Math.min(300, resizeStart.w + dx)));
-        setHeightScale(Math.max(40, Math.min(300, resizeStart.h - dy)));
-      } else if (isResizing === 'tl') {
-        setWidthScale(Math.max(40, Math.min(300, resizeStart.w - dx)));
-        setHeightScale(Math.max(40, Math.min(300, resizeStart.h - dy)));
-      } else if (isResizing === 'bm') {
-        setHeightScale(Math.max(40, Math.min(300, resizeStart.h + dy)));
-      } else if (isResizing === 'tm') {
-        setHeightScale(Math.max(40, Math.min(300, resizeStart.h - dy)));
-      } else if (isResizing === 'mr') {
-        setWidthScale(Math.max(40, Math.min(300, resizeStart.w + dx)));
-      } else if (isResizing === 'ml') {
-        setWidthScale(Math.max(40, Math.min(300, resizeStart.w - dx)));
-      }
+      let newW = resizeStart.w;
+      let newH = resizeStart.h;
+
+      if (isResizingFrame.includes('r')) newW = Math.max(100, resizeStart.w + dx);
+      if (isResizingFrame.includes('l')) newW = Math.max(100, resizeStart.w - dx);
+      if (isResizingFrame.includes('b')) newH = Math.max(80, resizeStart.h + dy);
+      if (isResizingFrame.includes('t')) newH = Math.max(80, resizeStart.h - dy);
+
+      setFrameWidth(newW);
+      setFrameHeight(newH);
       return;
     }
 
-    if (!isDragging) return;
+    if (!isDraggingContent) return;
     setPan({
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y
@@ -170,8 +164,8 @@ export default function App() {
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
-    setIsResizing(null);
+    setIsDraggingContent(false);
+    setIsResizingFrame(null);
   };
 
   const handleWheel = (e) => {
@@ -232,8 +226,8 @@ export default function App() {
       image_url: imageSource || 'https://via.placeholder.com/150',
       is_transparent: isTransparent,
       zoom_level: zoom,
-      width_scale: widthScale,
-      height_scale: heightScale,
+      width_scale: frameWidth,
+      height_scale: frameHeight,
       pan_x: pan.x,
       pan_y: pan.y
     };
@@ -269,8 +263,8 @@ export default function App() {
     setImageSource(item.image_url);
     setIsTransparent(item.is_transparent || false);
     setZoom(item.zoom_level || 1);
-    setWidthScale(item.width_scale || 100);
-    setHeightScale(item.height_scale || 100);
+    setFrameWidth(item.width_scale || 260);
+    setFrameHeight(item.height_scale || 180);
     setPan({ x: item.pan_x || 0, y: item.pan_y || 0 });
     setSelectedCategory(item.category || '');
     setSelectedSubCategory(item.sub_category || '');
@@ -327,19 +321,20 @@ export default function App() {
         {/* ================= VIEW 1: HOME DASHBOARD ================= */}
         {currentView === 'home' && (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #333', width: '100%', boxSizing: 'border-box' }}>
-              <div>
-                <img src="/Sparks & Sequince.png" alt="Sparks & Sequins" style={{ height: '4rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
+            {/* Header with P&S.png logo and plus button vertically centered with balanced margins */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderBottom: '1px solid #333', width: '100%', boxSizing: 'border-box' }}>
+              <div style={{ display: 'flex', alignItems: 'center', height: '3.5rem' }}>
+                <img src="/P&S.png" alt="Sparks & Sequins" style={{ height: '3rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none';}} />
               </div>
               <button
                 onClick={() => { resetEditor(); resetDetailsForm(); setImageSource(null); setCurrentView('source'); }}
                 title="Add New Item"
                 style={{
                   background: 'transparent', border: 'none', cursor: 'pointer',
-                  width: '4rem', height: '4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                  width: '3.5rem', height: '3.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                 }}
               >
-                <img src="/plus-icon.png" alt="Add" style={{ width: '4rem', height: '4rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='3rem';}} />
+                <img src="/plus-icon.png" alt="Add" style={{ width: '3.25rem', height: '3.25rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='+'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2.5rem';}} />
               </button>
             </div>
 
@@ -407,8 +402,8 @@ export default function App() {
                       alt={item.category} 
                       style={{ 
                         maxHeight: '100%', maxWidth: '100%', 
-                        width: `${item.width_scale || 100}%`,
-                        height: `${item.height_scale || 100}%`,
+                        width: '100%',
+                        height: '100%',
                         objectFit: 'contain',
                         transform: `scale(${item.zoom_level || 1}) translate(${item.pan_x || 0}px, ${item.pan_y || 0}px)`,
                         filter: item.is_transparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none'
@@ -559,55 +554,69 @@ export default function App() {
             </div>
 
             {imageSource && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', boxSizing: 'border-box' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', boxSizing: 'border-box', alignItems: 'center' }}>
                 
-                {/* Interactive Bounding Frame (Viewing Window) with Content Dragging & Pink Anchor Handles */}
-                <div 
-                  onMouseDown={handleMouseDown}
-                  onWheel={handleWheel}
-                  style={{
-                    width: '100%', height: '220px', backgroundColor: '#171717',
-                    borderRadius: '0.5rem', border: '1px solid #834655', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab', position: 'relative', boxSizing: 'border-box'
-                  }}
-                >
-                  <div style={{ 
-                    position: 'relative', 
-                    width: `${widthScale}px`, 
-                    height: `${heightScale}px`, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    overflow: 'hidden'
-                  }}>
-                    <img 
-                      src={imageSource} 
-                      alt="Preview Sourced" 
-                      draggable={false}
-                      style={{ 
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
-                        filter: isTransparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none'
-                      }} 
-                    />
+                {/* Workspace Container for Two-Layer Frame vs Content */}
+                <div style={{
+                  width: '100%', height: '240px', backgroundColor: '#171717',
+                  borderRadius: '0.5rem', border: '1px solid #525252', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  overflow: 'hidden', position: 'relative', boxSizing: 'border-box'
+                }}>
+                  
+                  {/* OUTER FRAME (Viewing Window / Bounding Box) */}
+                  <div 
+                    onMouseDown={(e) => handleMouseDown(e, null)}
+                    onWheel={handleWheel}
+                    style={{
+                      position: 'relative',
+                      width: `${frameWidth}px`,
+                      height: `${frameHeight}px`,
+                      border: '2px solid #834655', // Gray crimson frame edge
+                      backgroundColor: '#111',
+                      overflow: 'hidden',
+                      cursor: isDraggingContent ? 'grabbing' : 'grab',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    {/* INNER CONTENT (Panned & Scaled Image) */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      pointerEvents: 'none'
+                    }}>
+                      <img 
+                        src={imageSource} 
+                        alt="Content Preview" 
+                        draggable={false}
+                        style={{ 
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          filter: isTransparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none'
+                        }} 
+                      />
+                    </div>
 
-                    {/* Pink Anchor Handles on Bounding Frame Corners & Edges */}
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tl'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -4, left: -4, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tm'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -4, left: 'calc(50% - 5px)', width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('tr'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: -4, right: -4, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('ml'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: 'calc(50% - 5px)', left: -4, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ew-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('mr'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', top: 'calc(50% - 5px)', right: -4, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ew-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('bl'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -4, left: -4, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('bm'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -4, left: 'calc(50% - 5px)', width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
-                    <div onMouseDown={(e) => { e.stopPropagation(); setIsResizing('br'); setResizeStart({ x: e.clientX, y: e.clientY, w: widthScale, h: heightScale }); }} style={{ position: 'absolute', bottom: -4, right: -4, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
+                    {/* PINK ANCHOR HANDLES (For Resizing Frame Bounding Box) */}
+                    <div onMouseDown={(e) => handleMouseDown(e, 'tl')} style={{ position: 'absolute', top: -5, left: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => handleMouseDown(e, 'tm')} style={{ position: 'absolute', top: -5, left: 'calc(50% - 5px)', width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => handleMouseDown(e, 'tr')} style={{ position: 'absolute', top: -5, right: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => handleMouseDown(e, 'ml')} style={{ position: 'absolute', top: 'calc(50% - 5px)', left: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ew-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => handleMouseDown(e, 'mr')} style={{ position: 'absolute', top: 'calc(50% - 5px)', right: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ew-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => handleMouseDown(e, 'bl')} style={{ position: 'absolute', bottom: -5, left: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nesw-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => handleMouseDown(e, 'bm')} style={{ position: 'absolute', bottom: -5, left: 'calc(50% - 5px)', width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'ns-resize', zIndex: 10 }} />
+                    <div onMouseDown={(e) => handleMouseDown(e, 'br')} style={{ position: 'absolute', bottom: -5, right: -5, width: 10, height: 10, backgroundColor: '#f472b6', border: '1px solid #834655', borderRadius: '50%', cursor: 'nwse-resize', zIndex: 10 }} />
                   </div>
+
                 </div>
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation: "Remove BG" & next-icon.png button perfectly unified with Details page buttons */}
+            {/* Bottom Sourcing Navigation */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={removeWhiteBackground}
@@ -687,7 +696,7 @@ export default function App() {
                   alt="Item Preview" 
                   style={{ 
                     maxHeight: '100%', maxWidth: '100%', 
-                    width: `${widthScale}%`, height: `${heightScale}%`, objectFit: 'contain',
+                    objectFit: 'contain',
                     transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`, 
                     filter: isTransparent ? 'drop-shadow(0px 0px 2px rgba(255,255,255,0.5))' : 'none' 
                   }} 
@@ -859,7 +868,7 @@ export default function App() {
                     padding: 0
                   }}
                 >
-                  <img src="/check-mark-icon.png" alt="Done" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2rem';}} />
+                  <img src="/check-mark-icon.png" alt="Done" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='2.0rem';}} />
                 </button>
               )}
             </div>
