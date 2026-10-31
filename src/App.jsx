@@ -352,10 +352,10 @@ export default function App() {
         {/* ================= VIEW 1: HOME DASHBOARD ================= */}
         {currentView === 'home' && (
           <>
-            {/* Header with spark-sequince-logo.png logo and plus button vertically centered */}
+            {/* Header with spark-and-sequins-logo.png logo (60% bigger: height 6.0rem) and plus button vertically centered */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderBottom: '1px solid #333', width: '100%', boxSizing: 'border-box' }}>
-              <div style={{ display: 'flex', alignItems: 'center', height: '5.5rem' }}>
-                <img src="/spark-sequince-logo.png" alt="Sparks & Sequins" style={{ height: '5.0rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
+              <div style={{ display: 'flex', alignItems: 'center', height: '6.5rem' }}>
+                <img src="/spark-and-sequins-logo.png" alt="Sparks & Sequins" style={{ height: '6.0rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
                 <span style={{ display: 'none', fontSize: '1.25rem', fontWeight: '800', color: '#834655', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Sparks & Sequins</span>
               </div>
               <button
@@ -492,15 +492,15 @@ export default function App() {
                 title="Home"
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
               >
-                <img src="/home-icon.png" alt="Home" style={{ width: '1.75rem', height: '1.75rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='🏠'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.5rem';}} />
+                <img src="/home-icon.png" alt="Home" style={{ height: '2.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='🏠'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.5rem';}} />
               </button>
               
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/ImportFrom-header.png" alt="Import from" style={{ height: '2.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
+                <img src="/import-from-header.png" alt="Import from" style={{ height: '2.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.nextSibling.style.display='block';}} />
                 <h2 style={{ display: 'none', fontSize: '1.85rem', fontWeight: '800', fontFamily: 'Georgia, serif', color: '#834655', margin: 0, fontStyle: 'italic' }}>Import from...</h2>
               </div>
 
-              <div style={{ width: '1.75rem' }}></div>
+              <div style={{ width: '2.5rem' }}></div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', boxSizing: 'border-box' }}>
@@ -652,7 +652,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Bottom Sourcing Navigation: styled Remove Background button & Next Arrow */}
+            {/* Bottom Sourcing Navigation */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <button
                 onClick={removeWhiteBackground}
@@ -774,7 +774,7 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Sizing Section (Default blank) */}
+              {/* Sizing Section (Default blank and active) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', boxSizing: 'border-box' }}>
                 <label style={{ fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#d4d4d4' }}>Size *</label>
                 <div style={{ display: 'flex', gap: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
@@ -837,7 +837,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bottom Bar: Left edit toggle button removed; Right side has Bin and Update/Done buttons */}
+            {/* Bottom Bar */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {activeItemId && (
@@ -864,7 +864,7 @@ export default function App() {
                       opacity: (selectedCategory && selectedSize && selectedColor) ? 1 : 0.4
                     }}
                   >
-                    <img src="/update-item-button.png" alt={activeItemId ? "Update Item" : "Add to Wardrobe"} style={{ height: '1.25rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText=activeItemId ? 'Update Item' : 'Add to Wardrobe'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='0.85rem'; e.target.parentElement.style.fontWeight='600';}} />
+                    <img src="/check-mark-icon.png" alt={activeItemId ? "Update Item" : "Add to Wardrobe"} style={{ height: '1.5rem', objectFit: 'contain' }} onError={(e)=>{e.target.style.display='none'; e.target.parentElement.innerText='✓'; e.target.parentElement.style.color='#fbcfe8'; e.target.parentElement.style.fontSize='1.5rem';}} />
                   </button>
                 ) : (
                   <button
@@ -894,7 +894,7 @@ export default function App() {
             padding: '1.5rem', width: '90%', maxWidth: '320px', textAlign: 'center',
             display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)'
           }}>
-            <div style={{ fontSize: '2rem' }}>⚠️</div>
+            <div style={{ fontSize: '2rem' >> '⚠️'}</div>
             <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#fbcfe8', margin: 0 }}>Delete Item?</h3>
             <p style={{ fontSize: '0.85rem', color: '#a3a3a3', margin: 0 }}>Warning: This action cannot be undone. Are you sure you want to permanently delete this piece from your wardrobe?</p>
             <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
